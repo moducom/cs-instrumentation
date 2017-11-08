@@ -28,10 +28,13 @@ namespace Moducom.Instrumentation.Abstract
         /// </summary>
         /// <typeparam name="T"></typeparam>
         public interface IChildProvider<T>
+            where T: INamed
         {
             IEnumerable<T> Children { get; }
 
             T GetChild(string name);
+
+            void AddChild(T child);
         }
 
         public interface IWithChildren : IChildProvider<INode> { }

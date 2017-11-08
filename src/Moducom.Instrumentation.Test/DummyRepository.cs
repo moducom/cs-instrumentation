@@ -8,9 +8,31 @@ namespace Moducom.Instrumentation.Test
 {
     public class DummyRepository : IRepository
     {
-        Node rootNode;
+        Node rootNode = new Node("[root]");
 
-        public INode this[string path] => throw new NotImplementedException();
+        public INode this[string path]
+        {
+            get
+            {
+                string[] splitPaths = path.Split('/');
+
+                Node currentNode = rootNode;
+
+                foreach(var name in splitPaths)
+                {
+                    var node = (Node)currentNode.GetChild(name);
+
+                    if(node == null)
+                    {
+                        // TODO: have a configuration flag to determine auto add
+                        node = new Node(name);
+                        currentNode.AddChild(node);
+                    }
+                }
+
+                return currentNode;
+            }
+        }
 
         public INode RootNode => rootNode;
 
@@ -46,6 +68,11 @@ namespace Moducom.Instrumentation.Test
                 throw new IndexOutOfRangeException();
             }
 
+            public void AddChild(INode node)
+            {
+                children.Value.Add(node.Name, (Node)node);
+            }
+
             public object GetLabelValue(string label)
             {
                 throw new NotImplementedException();
@@ -54,6 +81,11 @@ namespace Moducom.Instrumentation.Test
             public void SetLabels(object labels)
             {
                 throw new NotImplementedException();
+            }
+
+            public Node(string name)
+            {
+                this.name = name;
             }
         }
     }
