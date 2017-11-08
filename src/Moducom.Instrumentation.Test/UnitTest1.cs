@@ -1,4 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Moducom.Instrumentation.Abstract;
+using System.Linq;
 
 namespace Moducom.Instrumentation.Test
 {
@@ -8,6 +10,11 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void TestMethod1()
         {
+            var repo = new DummyRepository();
+
+            INode node = repo["counter/main"];
+
+            node.Children.ToArray();
         }
     }
 }

@@ -19,6 +19,12 @@ namespace Moducom.Instrumentation.Abstract
 
                 return value;
             }
+            set
+            {
+                // We can just brute force it too... still counts as a lazy load, 
+                // incase we want to construct things differently
+                this.value = value;
+            }
         }
     }
 }

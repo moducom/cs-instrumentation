@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
+using System.Reflection;
 
 namespace Moducom.Instrumentation.Test
 {
@@ -28,6 +29,8 @@ namespace Moducom.Instrumentation.Test
                         node = new Node(name);
                         currentNode.AddChild(node);
                     }
+
+                    currentNode = node;
                 }
 
                 return currentNode;
@@ -40,6 +43,7 @@ namespace Moducom.Instrumentation.Test
         {
             LazyLoader<Dictionary<string, Node>> children;
             LazyLoader<Dictionary<string, object>> labels;
+            SparseDictionary<string, object> test;
             string name;
 
             public object Value { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
@@ -48,6 +52,8 @@ namespace Moducom.Instrumentation.Test
             {
                 get
                 {
+                    test.ContainsKey("test");
+
                     if (children.IsAllocated) return children.Value.Values;
 
                     return Enumerable.Empty<INode>();
@@ -63,9 +69,13 @@ namespace Moducom.Instrumentation.Test
             /// <returns></returns>
             public INode GetChild(string name)
             {
-                if (children.IsAllocated) return children.Value[name];
+                if (children.IsAllocated)
+                {
+                    children.Value.TryGetValue(name, out Node value);
+                    return value;
+                }
 
-                throw new IndexOutOfRangeException();
+                return null;
             }
 
             public void AddChild(INode node)
@@ -75,12 +85,27 @@ namespace Moducom.Instrumentation.Test
 
             public object GetLabelValue(string label)
             {
-                throw new NotImplementedException();
+                if (!labels.IsAllocated) return null;
+
+                return labels.Value[label];
             }
 
             public void SetLabels(object labels)
             {
-                throw new NotImplementedException();
+                if (labels is IDictionary<string, object> dictionaryLabels)
+                {
+                    // Would be tempting to use this directly, but who knows what our
+                    // caller later wants to do with labels, so copy it
+                    // be aware that the item itself is gonna be a shallow copy
+                    this.labels.Value = new Dictionary<string, object>(dictionaryLabels);
+                }
+                else
+                {
+                    PropertyInfo[] properties = labels.GetType().GetProperties();
+
+                    foreach (var property in properties)
+                        this.labels.Value.Add(property.Name, property.GetValue(labels));
+                }
             }
 
             public Node(string name)
