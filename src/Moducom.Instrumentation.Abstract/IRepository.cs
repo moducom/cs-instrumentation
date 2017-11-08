@@ -11,4 +11,8 @@ namespace Moducom.Instrumentation.Abstract
 
         INode this[string path] { get; }
     }
+
+    public static class IRepositoryExtensions
+    {
+    }
 }

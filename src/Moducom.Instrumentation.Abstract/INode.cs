@@ -56,4 +56,39 @@ namespace Moducom.Instrumentation.Abstract
     {
 
     }
+
+
+    public static class INodeExtensions
+    {
+        /// <summary>
+        /// Stock standard tree traversal
+        /// </summary>
+        /// <param name="startNode">top of tree to search from</param>
+        /// <param name="splitPaths">broken out path components</param>
+        /// <param name="nodeFactory"></param>
+        /// <returns></returns>
+        public static INode FindNodeByPath(this INode startNode, IEnumerable<string> splitPaths, Func<string, INode> nodeFactory)
+        {
+            INode currentNode = startNode;
+
+            foreach (var name in splitPaths)
+            {
+                INode node = currentNode.GetChild(name);
+
+                if (node == null)
+                {
+                    // If no way to create a new node, then we basically abort (node not found)
+                    if (nodeFactory == null) return null;
+
+                    // TODO: have a configuration flag to determine auto add
+                    node = nodeFactory(name);
+                    currentNode.AddChild(node);
+                }
+
+                currentNode = node;
+            }
+
+            return currentNode;
+        }
+    }
 }

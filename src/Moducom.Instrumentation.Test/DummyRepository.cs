@@ -17,23 +17,7 @@ namespace Moducom.Instrumentation.Test
             {
                 string[] splitPaths = path.Split('/');
 
-                Node currentNode = rootNode;
-
-                foreach(var name in splitPaths)
-                {
-                    var node = (Node)currentNode.GetChild(name);
-
-                    if(node == null)
-                    {
-                        // TODO: have a configuration flag to determine auto add
-                        node = new Node(name);
-                        currentNode.AddChild(node);
-                    }
-
-                    currentNode = node;
-                }
-
-                return currentNode;
+                return RootNode.FindNodeByPath(splitPaths, name => new Node(name));
             }
         }
 
