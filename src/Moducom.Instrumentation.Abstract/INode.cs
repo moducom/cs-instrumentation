@@ -57,10 +57,14 @@ namespace Moducom.Instrumentation.Abstract
 
     }
 
-
-    public interface IMetricValue :
-        Experimental.IWithValue,
+    public interface IMetricBase :
         Experimental.IWithLabels
+    {
+
+    }
+
+    public interface IMetricValue : IMetricBase,
+        Experimental.IWithValue
     {
 
     }

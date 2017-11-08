@@ -25,13 +25,11 @@ namespace Moducom.Instrumentation.Test
 
         public class Node : INode
         {
-            public class ValueItem : IMetricValue
+            public class MetricBase : IMetricBase
             {
                 SparseDictionary<string, object> labels;
 
                 public IDictionary<string, object> Labels => labels;
-
-                public object Value { get; set; }
 
                 public object GetLabelValue(string label)
                 {
@@ -46,12 +44,18 @@ namespace Moducom.Instrumentation.Test
                     // which isn't exactly what we're after
                     //this.labels.Concat(LabelHelper(labels));
 
-                    foreach(var label in LabelHelper(labels))
+                    foreach (var label in LabelHelper(labels))
                         this.labels.Add(label);
                 }
             }
 
+            public class ValueItem : MetricBase, IMetricValue
+            {
+                public object Value { get; set; }
+            }
+
             LinkedList<ValueItem> values = new LinkedList<ValueItem>();
+            LinkedList<MetricBase> _values = new LinkedList<MetricBase>();
 
             LazyLoader<Dictionary<string, object>> labels;
             SparseDictionary<string, Node> children;
@@ -136,6 +140,35 @@ namespace Moducom.Instrumentation.Test
                 return value;
             }
 
+            internal class Counter : MetricBase, ICounter
+            {
+                public void Decrement(double byAmount)
+                {
+                    throw new NotImplementedException();
+                }
+
+                public void Increment(double byAmount)
+                {
+                    throw new NotImplementedException();
+                }
+            }
+
+
+            internal T AddMetric<T>()
+                where T: MetricBase, new()
+            {
+                var metric = new T();
+
+                _values.AddLast(metric);
+
+                return metric;
+            }
+
+            public ICounter AddCounter()
+            {
+                return AddMetric<Counter>();
+            }
+
             public void SetLabels(object labels)
             {
                 // TODO: Use LabelHelper
@@ -165,6 +198,17 @@ namespace Moducom.Instrumentation.Test
             {
                 this.name = name;
             }
+        }
+    }
+
+    public class NullCounter : ICounter
+    {
+        public void Decrement(double byAmount)
+        {
+        }
+
+        public void Increment(double byAmount)
+        {
         }
     }
 }

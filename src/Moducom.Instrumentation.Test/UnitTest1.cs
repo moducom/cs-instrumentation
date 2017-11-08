@@ -24,5 +24,20 @@ namespace Moducom.Instrumentation.Test
 
             _node.GetValuesByLabels(new { instance = 1 }).ToArray();
         }
+
+        [TestMethod]
+        public void CounterMetricTest()
+        {
+            var repo = new DummyRepository();
+
+            INode node = repo["counter/main"];
+
+            var _node = ((DummyRepository.Node)node);
+
+            var _value = _node.AddValueInternal();
+
+            _value.SetLabels(new { instance = 1 });
+            _value.Value = 5;
+        }
     }
 }
