@@ -15,6 +15,14 @@ namespace Moducom.Instrumentation.Test
             INode node = repo["counter/main"];
 
             node.Children.ToArray();
+
+            var _node = ((DummyRepository.Node)node);
+
+            var _value = _node.AddValueInternal();
+
+            _value.SetLabels(new { instance = 1 });
+
+            _node.GetValuesByLabels(new { instance = 1 }).ToArray();
         }
     }
 }

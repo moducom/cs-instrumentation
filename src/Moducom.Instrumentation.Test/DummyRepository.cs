@@ -9,7 +9,7 @@ namespace Moducom.Instrumentation.Test
 {
     public class DummyRepository : IRepository
     {
-        Node rootNode = new Node("[root]");
+        readonly Node rootNode = new Node("[root]");
 
         public INode this[string path]
         {
@@ -25,6 +25,34 @@ namespace Moducom.Instrumentation.Test
 
         public class Node : INode
         {
+            public class ValueItem : IMetricValue
+            {
+                SparseDictionary<string, object> labels;
+
+                public IDictionary<string, object> Labels => labels;
+
+                public object Value { get; set; }
+
+                public object GetLabelValue(string label)
+                {
+                    throw new NotImplementedException();
+                }
+
+                public void SetLabels(object labels)
+                {
+                    this.labels.Clear();
+
+                    // this doesnt work because Concat spits out a new enumeration of both
+                    // which isn't exactly what we're after
+                    //this.labels.Concat(LabelHelper(labels));
+
+                    foreach(var label in LabelHelper(labels))
+                        this.labels.Add(label);
+                }
+            }
+
+            LinkedList<ValueItem> values = new LinkedList<ValueItem>();
+
             LazyLoader<Dictionary<string, object>> labels;
             SparseDictionary<string, Node> children;
             readonly string name;
@@ -62,8 +90,56 @@ namespace Moducom.Instrumentation.Test
                 return retVal;
             }
 
+            /// <summary>
+            /// Turn from either anonymous object or dictionary into a key/value label list
+            /// </summary>
+            /// <param name="labels"></param>
+            /// <returns></returns>
+            static IEnumerable<KeyValuePair<string, object>> LabelHelper(object labels)
+            {
+                if (labels is IDictionary<string, object> dictionaryLabels)
+                    return dictionaryLabels;
+                else
+                    return from n in labels.GetType().GetProperties()
+                           select KeyValuePair.Create(n.Name, n.GetValue(labels));
+            }
+
+            // Search for all values with the matching provided labels
+            public IEnumerable<IMetricValue> GetValuesByLabels(object labels)
+            {
+                //var _labels = LabelHelper(labels);
+
+                foreach(var value in values)
+                {
+                    foreach (var label in LabelHelper(labels))
+                    {
+                        if(value.Labels.ContainsKey(label.Key))
+                        {
+                            // FIX: DbNull represents "wildcard" value and only match on key
+                            // this is not super intuitive though, so find a better approach
+                            if (label.Value == DBNull.Value)
+                                yield return value;
+                            else if (label.Value.Equals(value.Labels[label.Key]))
+                                yield return value;
+                        }
+                    }
+                }
+            }
+
+
+            public IMetricValue AddValueInternal()
+            {
+                var value = new ValueItem();
+
+                values.AddLast(value);
+
+                return value;
+            }
+
             public void SetLabels(object labels)
             {
+                // TODO: Use LabelHelper
+
                 if (labels is IDictionary<string, object> dictionaryLabels)
                 {
                     // Would be tempting to use this directly, but who knows what our
@@ -73,7 +149,12 @@ namespace Moducom.Instrumentation.Test
                 }
                 else
                 {
+                    // NOTE: Maybe some of the 'walker' stuff could be useful here
                     PropertyInfo[] properties = labels.GetType().GetProperties();
+
+                    /*
+                    this.labels.Value.Concat(properties.Select(
+                        x => KeyValuePair.Create(x.Name, x.GetValue(labels)))); */
 
                     foreach (var property in properties)
                         this.labels.Value.Add(property.Name, property.GetValue(labels));

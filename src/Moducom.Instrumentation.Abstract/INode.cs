@@ -58,6 +58,14 @@ namespace Moducom.Instrumentation.Abstract
     }
 
 
+    public interface IMetricValue :
+        Experimental.IWithValue,
+        Experimental.IWithLabels
+    {
+
+    }
+
+
     public static class INodeExtensions
     {
         /// <summary>
