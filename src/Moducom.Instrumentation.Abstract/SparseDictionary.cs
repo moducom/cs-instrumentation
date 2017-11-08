@@ -21,7 +21,7 @@ namespace Moducom.Instrumentation.Abstract
         {
             get
             {
-                if (value.IsAllocated) return value.Value[key];
+                if (value.IsAllocated) return value.value[key];
 
                 throw new KeyNotFoundException();
             }
@@ -34,14 +34,14 @@ namespace Moducom.Instrumentation.Abstract
         {
             get
             {
-                if (value.IsAllocated) return value.Value.Values;
+                if (value.IsAllocated) return value.value.Values;
 
                 // Can't use .Empty because that's just an IEnumeration
                 return new TValue[0];
             }
         }
 
-        public int Count => value.IsAllocated ? value.Value.Count : 0;
+        public int Count => value.IsAllocated ? value.value.Count : 0;
 
         public bool IsReadOnly => throw new NotImplementedException();
 
@@ -57,7 +57,7 @@ namespace Moducom.Instrumentation.Abstract
 
         public void Clear()
         {
-            if (value.IsAllocated) value.Value.Clear();
+            if (value.IsAllocated) value.value.Clear();
         }
 
         public bool Contains(KeyValuePair<TKey, TValue> item)
@@ -67,7 +67,7 @@ namespace Moducom.Instrumentation.Abstract
 
         public bool ContainsKey(TKey key)
         {
-            if (value.IsAllocated) return value.Value.ContainsKey(key);
+            if (value.IsAllocated) return value.value.ContainsKey(key);
 
             return false;
         }
@@ -96,7 +96,13 @@ namespace Moducom.Instrumentation.Abstract
 
         public bool TryGetValue(TKey key, out TValue value)
         {
-            throw new NotImplementedException();
+            if(this.value.IsAllocated)
+            {
+                return this.value.value.TryGetValue(key, out value);
+            }
+
+            value = default(TValue);
+            return false;
         }
 
         IEnumerator IEnumerable.GetEnumerator()

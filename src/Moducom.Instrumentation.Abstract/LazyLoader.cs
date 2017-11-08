@@ -7,7 +7,7 @@ namespace Moducom.Instrumentation.Abstract
 {
     public struct LazyLoader<T> where T: class, new()
     {
-        T value;
+        internal T value;
 
         public bool IsAllocated => value != default(T);
 

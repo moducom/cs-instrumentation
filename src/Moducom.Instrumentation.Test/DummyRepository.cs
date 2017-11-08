@@ -41,24 +41,13 @@ namespace Moducom.Instrumentation.Test
 
         public class Node : INode
         {
-            LazyLoader<Dictionary<string, Node>> children;
             LazyLoader<Dictionary<string, object>> labels;
-            SparseDictionary<string, object> test;
-            string name;
+            SparseDictionary<string, Node> children;
+            readonly string name;
 
             public object Value { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
-            public IEnumerable<INode> Children
-            {
-                get
-                {
-                    test.ContainsKey("test");
-
-                    if (children.IsAllocated) return children.Value.Values;
-
-                    return Enumerable.Empty<INode>();
-                }
-            }
+            public IEnumerable<INode> Children => children.Values;
 
             public string Name => name;
 
@@ -69,25 +58,24 @@ namespace Moducom.Instrumentation.Test
             /// <returns></returns>
             public INode GetChild(string name)
             {
-                if (children.IsAllocated)
-                {
-                    children.Value.TryGetValue(name, out Node value);
-                    return value;
-                }
-
-                return null;
+                children.TryGetValue(name, out Node value);
+                return value;
             }
 
             public void AddChild(INode node)
             {
-                children.Value.Add(node.Name, (Node)node);
+                children.Add(node.Name, (Node)node);
             }
 
             public object GetLabelValue(string label)
             {
                 if (!labels.IsAllocated) return null;
 
-                return labels.Value[label];
+                object retVal;
+
+                labels.Value.TryGetValue(label, out retVal);
+
+                return retVal;
             }
 
             public void SetLabels(object labels)
