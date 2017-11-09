@@ -57,7 +57,20 @@ namespace Moducom.Instrumentation.Abstract
         public interface IMetricsProvider
         {
             void AddMetric(IMetricBase metric);
-            IEnumerable<IMetricBase> GetMetrics(object labels);
+
+            /// <summary>
+            /// Experimental factory version
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="key"></param>
+            T AddMetric<T>(string key = null) where T : IMetricBase;
+
+            /// <summary>
+            /// Retrieve all metrics associated with this node, filtered by labels
+            /// </summary>
+            /// <param name="labels"></param>
+            /// <returns></returns>
+            IEnumerable<IMetricBase> GetMetrics(object labels = null);
         }
     }
 
@@ -76,6 +89,34 @@ namespace Moducom.Instrumentation.Abstract
 
     public static class INodeExtensions
     {
+        /// <summary>
+        /// Factory version
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public static IMetric<T> AddMetricExperimental<T>(this INode node, object labels = null)
+        {
+            var metric = node.AddMetric<IMetric<T>>();
+
+            if (labels != null) metric.SetLabels(labels);
+
+            return metric;
+        }
+
+        /// <summary>
+        /// Factory version
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public static ICounter AddCounterExperimental(this INode node, object labels = null)
+        {
+            var metric = node.AddMetric<ICounter>();
+
+            if (labels != null) metric.SetLabels(labels);
+
+            return metric;
+        }
     }
 
 

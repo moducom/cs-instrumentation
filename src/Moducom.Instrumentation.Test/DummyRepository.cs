@@ -70,6 +70,13 @@ namespace Moducom.Instrumentation.Test
             {
                 //var _labels = LabelHelper(labels);
 
+                if (labels == null)
+                {
+                    foreach (var value in metrics) yield return value;
+
+                    yield break;
+                }
+
                 foreach(var value in metrics)
                 {
                     foreach (var label in LabelHelper(labels))
@@ -92,6 +99,37 @@ namespace Moducom.Instrumentation.Test
             {
                 metrics.AddLast(metric);
             }
+
+
+            public T AddMetric<T>(string key)
+                where T: IMetricBase
+            {
+                if(typeof(T) == typeof(ICounter))
+                {
+                    var retVal = new Counter();
+
+                    return (T) (IMetricBase) retVal;
+                }
+                else
+                {
+                    var t = typeof(T);
+                    var underlyingValueType = t.GenericTypeArguments.First();
+
+                    var genericType = t.GetGenericTypeDefinition();
+
+                    if (genericType == typeof(IMetric<>))
+                    {
+                        var typeToCreate = typeof(Metric<>).MakeGenericType(underlyingValueType);
+
+                        object retVal = Activator.CreateInstance(typeToCreate);
+
+                        return (T)retVal;
+                    }
+
+                    return default(T);
+                }
+            }
+
 
             public Node(string name)
             {
@@ -124,7 +162,20 @@ namespace Moducom.Instrumentation.Test
 
     public class Metric<T> : MetricBase, IMetric<T>
     {
-        public T Value { get; set; }
+        T value;
+
+        // TODO: COnsider making this into PropertyChangedNotification
+        public event Action<IMetric<T>> ValueChanged;
+
+        public T Value
+        {
+            get => value;
+            set
+            {
+                this.value = value;
+                ValueChanged?.Invoke(this);
+            }
+        }
     }
 
 
@@ -134,14 +185,19 @@ namespace Moducom.Instrumentation.Test
 
         public double Value => value;
 
+        public event Action<ICounter> Incremented;
+        public event Action<ICounter> Decremented;
+
         public void Decrement(double byAmount)
         {
             value -= byAmount;
+            Incremented?.Invoke(this);
         }
 
         public void Increment(double byAmount)
         {
             value += byAmount;
+            Decremented?.Invoke(this);
         }
     }
 
@@ -177,6 +233,7 @@ namespace Moducom.Instrumentation.Test
     {
         public static ICounter AddCounter(this INode node)
         {
+            // TODO: We need to create these counters from a factory
             var counter = new Counter();
             node.AddMetric(counter);
             return counter;

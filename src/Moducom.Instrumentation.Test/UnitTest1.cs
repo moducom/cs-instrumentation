@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moducom.Instrumentation.Abstract;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,6 +9,16 @@ namespace Moducom.Instrumentation.Test
     [TestClass]
     public class UnitTest1
     {
+        void setup(INode node)
+        {
+            node.AddCounter(new { instance = 1 });
+            node.AddCounter(new { instance = 2 });
+
+            var subNode = node.FindChildByPath(new[] { "subnode" }, key => new DummyRepository.Node(key));
+
+            subNode.AddCounter(new { instance = 3 });
+        }
+
         [TestMethod]
         public void TestMethod1()
         {
@@ -15,12 +26,11 @@ namespace Moducom.Instrumentation.Test
 
             INode node = repo["counter/main"];
 
+            setup(node);
+
             Assert.AreEqual("main", node.Name);
 
             node.Children.ToArray();
-
-            node.AddCounter(new { instance = 1 });
-            node.AddCounter(new { instance = 2 });
 
             IEnumerable<IMetricBase> metrics = node.GetMetrics(new { instance = 1 }).ToArray();
 
@@ -43,6 +53,48 @@ namespace Moducom.Instrumentation.Test
 
             value.SetLabels(new { instance = 1 });
             value.Increment(1);
+        }
+
+
+        [TestMethod]
+        public void CounterLabelsTest()
+        {
+            var repo = new DummyRepository();
+
+            INode node = repo["counter/main"];
+
+            setup(node);
+
+            var metrics = node.GetMetrics(new { instance = DBNull.Value }).ToArray();
+
+            Assert.AreEqual(1, metrics[0].GetLabelValue("instance"));
+            Assert.AreEqual(2, metrics[1].GetLabelValue("instance"));
+
+            var metrics2 = node.GetMetrics().ToArray();
+
+            Assert.AreEqual(1, metrics2[0].GetLabelValue("instance"));
+            Assert.AreEqual(2, metrics2[1].GetLabelValue("instance"));
+        }
+
+
+        [TestMethod]
+        public void FactoryTest()
+        {
+            var repo = new DummyRepository();
+
+            INode node = repo["counter/main"];
+
+            setup(node);
+
+            var counter = node.AddCounterExperimental(new { test = 1 });
+
+            counter.Increment(1);
+
+            // NOTE: discouraged to add different types of metrics under one node
+            var describer = node.AddMetricExperimental<string>();
+
+            describer.SetLabels(new { test = 1 });
+            describer.Value = "Test";
         }
     }
 }
