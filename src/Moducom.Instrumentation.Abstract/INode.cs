@@ -7,9 +7,15 @@ namespace Moducom.Instrumentation.Abstract
 {
     namespace Experimental
     {
-        public interface IWithLabels
+        public interface ILabelsProvider
         {
-            object GetLabelValue(string label);
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="label"></param>
+            /// <param name="value"></param>
+            /// <returns></returns>
+            bool GetLabelValue(string label, out object value);
 
             /// <summary>
             /// 
@@ -46,18 +52,24 @@ namespace Moducom.Instrumentation.Abstract
         {
             string Name { get; }
         }
+
+
+        public interface IMetricsProvider
+        {
+            void AddMetric(IMetricBase metric);
+            IEnumerable<IMetricBase> GetMetrics(object labels);
+        }
     }
 
     public interface INode :
-        Experimental.IWithLabels,
         Experimental.IWithChildren,
+        Experimental.IMetricsProvider,
         Experimental.INamed
     {
-
     }
 
     public interface IMetricBase :
-        Experimental.IWithLabels
+        Experimental.ILabelsProvider
     {
 
     }

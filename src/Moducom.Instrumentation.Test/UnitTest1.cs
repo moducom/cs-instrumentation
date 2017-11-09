@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moducom.Instrumentation.Abstract;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Moducom.Instrumentation.Test
@@ -16,13 +17,17 @@ namespace Moducom.Instrumentation.Test
 
             node.Children.ToArray();
 
-            var _node = ((DummyRepository.Node)node);
+            node.AddCounter(new { instance = 1 });
+            node.AddCounter(new { instance = 2 });
 
-            var _value = _node.AddCounter();
+            IEnumerable<IMetricBase> metrics = node.GetMetrics(new { instance = 1 }).ToArray();
 
-            _value.SetLabels(new { instance = 1 });
+            foreach(var metric in metrics)
+            {
+                metric.GetLabelValue("instance", out object value);
 
-            _node.GetValuesByLabels(new { instance = 1 }).ToArray();
+                Assert.AreEqual(1, value);
+            }
         }
 
         [TestMethod]
@@ -32,12 +37,10 @@ namespace Moducom.Instrumentation.Test
 
             INode node = repo["counter/main"];
 
-            var _node = ((DummyRepository.Node)node);
+            var value = node.AddCounter();
 
-            var _value = _node.AddCounter();
-
-            _value.SetLabels(new { instance = 1 });
-            _value.Increment(1);
+            value.SetLabels(new { instance = 1 });
+            value.Increment(1);
         }
     }
 }
