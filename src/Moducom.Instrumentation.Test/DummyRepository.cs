@@ -101,14 +101,14 @@ namespace Moducom.Instrumentation.Test
             }
 
 
-            public T AddMetric<T>(string key)
-                where T: IMetricBase
+            public T CreateMetric<T>(string key)
+                where T : IMetricBase
             {
-                if(typeof(T) == typeof(ICounter))
+                if (typeof(T) == typeof(ICounter))
                 {
                     var retVal = new Counter();
 
-                    return (T) (IMetricBase) retVal;
+                    return (T)(IMetricBase)retVal;
                 }
                 else
                 {
@@ -128,6 +128,17 @@ namespace Moducom.Instrumentation.Test
 
                     return default(T);
                 }
+            }
+
+
+            public T AddMetric<T>(string key)
+                where T: IMetricBase
+            {
+                T metric = CreateMetric<T>(key);
+
+                metrics.AddLast(metric);
+
+                return metric;
             }
 
 

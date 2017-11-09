@@ -54,6 +54,12 @@ namespace Moducom.Instrumentation.Abstract
         }
 
 
+        public interface IMetricsFactory
+        {
+            T CreateMetric<T>(string key = null) where T : IMetricBase;
+        }
+
+
         public interface IMetricsProvider
         {
             void AddMetric(IMetricBase metric);
@@ -86,6 +92,16 @@ namespace Moducom.Instrumentation.Abstract
     {
 
     }
+
+
+    public static class IMetricsProviderExtensions
+    {
+        public static IMetricBase GetMetric(this Experimental.IMetricsProvider metricsProvider, object labels = null)
+        {
+            return metricsProvider.GetMetrics(labels).Single();
+        }
+    }
+
 
     public static class INodeExtensions
     {
