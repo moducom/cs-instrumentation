@@ -76,20 +76,34 @@ namespace Moducom.Instrumentation.Abstract
 
     public static class INodeExtensions
     {
+    }
+
+
+    public static class IChildProviderExtensions
+    {
         /// <summary>
         /// Stock standard tree traversal
         /// </summary>
-        /// <param name="startNode">top of tree to search from</param>
+        /// <param name="startNode">top of tree to search from.  MUST be convertible to type T directly</param>
         /// <param name="splitPaths">broken out path components</param>
         /// <param name="nodeFactory"></param>
+        /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static INode FindNodeByPath(this INode startNode, IEnumerable<string> splitPaths, Func<string, INode> nodeFactory)
+        public static T FindChildByPath<T>(this Experimental.IChildProvider<T> startNode, IEnumerable<string> splitPaths, 
+            Func<string, T> nodeFactory)
+            where T: class, Experimental.INamed
         {
-            INode currentNode = startNode;
+            Experimental.IChildProvider<T> currentNode = startNode;
+
+            // The ChildProvider must also be a type of T for this to work
+            T node = (T)currentNode;
 
             foreach (var name in splitPaths)
             {
-                INode node = currentNode.GetChild(name);
+                // We may encounter some nodes which are not child provider nodes
+                if (currentNode == null) continue;
+
+                node = currentNode.GetChild(name);
 
                 if (node == null)
                 {
@@ -101,10 +115,10 @@ namespace Moducom.Instrumentation.Abstract
                     currentNode.AddChild(node);
                 }
 
-                currentNode = node;
+                currentNode = node as Experimental.IChildProvider<T>;
             }
 
-            return currentNode;
+            return node;
         }
     }
 }

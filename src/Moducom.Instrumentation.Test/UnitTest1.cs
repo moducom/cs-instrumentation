@@ -15,6 +15,8 @@ namespace Moducom.Instrumentation.Test
 
             INode node = repo["counter/main"];
 
+            Assert.AreEqual("main", node.Name);
+
             node.Children.ToArray();
 
             node.AddCounter(new { instance = 1 });

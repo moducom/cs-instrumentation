@@ -17,7 +17,7 @@ namespace Moducom.Instrumentation.Test
             {
                 string[] splitPaths = path.Split('/');
 
-                return RootNode.FindNodeByPath(splitPaths, name => new Node(name));
+                return RootNode.FindChildByPath(splitPaths, name => new Node(name));
             }
         }
 
