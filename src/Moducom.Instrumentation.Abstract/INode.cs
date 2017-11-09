@@ -5,6 +5,8 @@ using System.Text;
 
 namespace Moducom.Instrumentation.Abstract
 {
+    // NOTE: Change all "providers" because those lean towards read only
+    // perhaps call them "repos"?  That implies more data storage than we're doing though
     namespace Experimental
     {
         public interface ILabelsProvider
@@ -24,13 +26,9 @@ namespace Moducom.Instrumentation.Abstract
             void SetLabels(object labels);
         }
 
-        public interface IWithValue
-        {
-            object Value { get; set; }
-        }
-
         /// <summary>
         /// TODO: move this to a non-instrumentation-specific place (maybe fact.extensions.collections)
+        /// TODO: removed INamed requirement (AddChild will need to take name as part of parameter)
         /// </summary>
         /// <typeparam name="T"></typeparam>
         public interface IChildProvider<T>
