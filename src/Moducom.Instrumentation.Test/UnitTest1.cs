@@ -18,7 +18,7 @@ namespace Moducom.Instrumentation.Test
 
             var _node = ((DummyRepository.Node)node);
 
-            var _value = _node.AddValueInternal();
+            var _value = _node.AddCounter();
 
             _value.SetLabels(new { instance = 1 });
 
@@ -34,10 +34,10 @@ namespace Moducom.Instrumentation.Test
 
             var _node = ((DummyRepository.Node)node);
 
-            var _value = _node.AddValueInternal();
+            var _value = _node.AddCounter();
 
             _value.SetLabels(new { instance = 1 });
-            _value.Value = 5;
+            _value.Increment(1);
         }
     }
 }

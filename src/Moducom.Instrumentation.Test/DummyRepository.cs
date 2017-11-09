@@ -49,12 +49,6 @@ namespace Moducom.Instrumentation.Test
                 }
             }
 
-            public class ValueItem : MetricBase, IMetricValue
-            {
-                public object Value { get; set; }
-            }
-
-            LinkedList<ValueItem> values = new LinkedList<ValueItem>();
             LinkedList<MetricBase> _values = new LinkedList<MetricBase>();
 
             LazyLoader<Dictionary<string, object>> labels;
@@ -109,11 +103,11 @@ namespace Moducom.Instrumentation.Test
             }
 
             // Search for all values with the matching provided labels
-            public IEnumerable<IMetricValue> GetValuesByLabels(object labels)
+            public IEnumerable<IMetricBase> GetValuesByLabels(object labels)
             {
                 //var _labels = LabelHelper(labels);
 
-                foreach(var value in values)
+                foreach(var value in _values)
                 {
                     foreach (var label in LabelHelper(labels))
                     {
@@ -131,26 +125,27 @@ namespace Moducom.Instrumentation.Test
             }
 
 
-            public IMetricValue AddValueInternal()
-            {
-                var value = new ValueItem();
-
-                values.AddLast(value);
-
-                return value;
-            }
-
             internal class Counter : MetricBase, ICounter
             {
+                double value = 0;
+
+                public double Value => value;
+
                 public void Decrement(double byAmount)
                 {
-                    throw new NotImplementedException();
+                    value -= byAmount;
                 }
 
                 public void Increment(double byAmount)
                 {
-                    throw new NotImplementedException();
+                    value += byAmount;
                 }
+            }
+
+
+            internal class Metric<T> : MetricBase, IMetric<T>
+            {
+                public T Value => throw new NotImplementedException();
             }
 
 
@@ -207,8 +202,19 @@ namespace Moducom.Instrumentation.Test
         {
         }
 
+        public object GetLabelValue(string label)
+        {
+            return null;
+        }
+
         public void Increment(double byAmount)
         {
         }
+
+        public void SetLabels(object labels)
+        {
+        }
+
+        public double Value => 0;
     }
 }

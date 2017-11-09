@@ -50,7 +50,6 @@ namespace Moducom.Instrumentation.Abstract
 
     public interface INode :
         Experimental.IWithLabels,
-        Experimental.IWithValue,
         Experimental.IWithChildren,
         Experimental.INamed
     {
@@ -62,13 +61,6 @@ namespace Moducom.Instrumentation.Abstract
     {
 
     }
-
-    public interface IMetricValue : IMetricBase,
-        Experimental.IWithValue
-    {
-
-    }
-
 
     public static class INodeExtensions
     {
