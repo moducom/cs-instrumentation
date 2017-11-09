@@ -21,10 +21,18 @@ namespace Moducom.Instrumentation.Abstract
         where T: IComparable
     {
         void Increment(T byAmount);
-        void Decrement(T byAmount);
     }
 
+
+    /// <summary>
+    /// Increment-only metric
+    /// </summary>
     public interface ICounter : ICounter<double> { }
+
+    public interface IGauge<T> : IMetric<T>
+    {
+        void Decrement(T byAmount);
+    }
 
     public static class IMetricExtensions
     {

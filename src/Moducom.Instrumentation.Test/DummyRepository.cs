@@ -197,18 +197,11 @@ namespace Moducom.Instrumentation.Test
         public double Value => value;
 
         public event Action<ICounter> Incremented;
-        public event Action<ICounter> Decremented;
-
-        public void Decrement(double byAmount)
-        {
-            value -= byAmount;
-            Incremented?.Invoke(this);
-        }
 
         public void Increment(double byAmount)
         {
             value += byAmount;
-            Decremented?.Invoke(this);
+            Incremented?.Invoke(this);
         }
     }
 
@@ -228,10 +221,6 @@ namespace Moducom.Instrumentation.Test
 
     public class NullCounter : NullMetric, ICounter
     {
-        public void Decrement(double byAmount)
-        {
-        }
-
         public void Increment(double byAmount)
         {
         }

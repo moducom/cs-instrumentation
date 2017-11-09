@@ -58,6 +58,9 @@ namespace Moducom.Instrumentation.Abstract
         }
 
 
+        /// <summary>
+        /// Can supply and modify metric contents
+        /// </summary>
         public interface IMetricsProvider
         {
             void AddMetric(IMetricBase metric);
@@ -78,6 +81,10 @@ namespace Moducom.Instrumentation.Abstract
         }
     }
 
+    /// <summary>
+    /// Can have child nodes, can maintain a list of metrics within it
+    /// and is named
+    /// </summary>
     public interface INode :
         Experimental.IWithChildren,
         Experimental.IMetricsProvider,
@@ -85,10 +92,32 @@ namespace Moducom.Instrumentation.Abstract
     {
     }
 
+
+    /// <summary>
+    /// Mainly amounts to something that can interact directly with labels
+    /// </summary>
     public interface IMetricBase :
         Experimental.ILabelsProvider
     {
 
+    }
+
+    namespace Experimental
+    {
+        /// <summary>
+        /// Fuses node and metric TYPE together since we don't want
+        /// different metric types in one node 
+        /// </summary>
+        public interface IMetricNode<T> : IMetricsProvider
+            where T : IMetricBase
+        {
+            // Ala https://github.com/phnx47/Prometheus.Client
+            T Labels(object labels);
+        }
+
+        public interface ICounterNode : IMetricNode<ICounter> { }
+
+        public interface IGaugeNode : IMetricNode<IGauge<double>> { }
     }
 
 
@@ -131,6 +160,11 @@ namespace Moducom.Instrumentation.Abstract
 
             return metric;
         }
+    }
+
+
+    public static class IMetricNodeExtensions
+    {
     }
 
 
