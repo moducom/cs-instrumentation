@@ -98,7 +98,7 @@ namespace Moducom.Instrumentation.Abstract
             return repository[path].GetMetrics(labels).OfType<ICounter>().Single();
         }
 
-        public static Experimental.ICounterNode GetCounterExperimental(this IRepository repository, string path)
+        public static Experimental.ICounterNode GetCounterNodeExperimental(this IRepository repository, string path)
         {
             return new Experimental.CounterNodeWrapperExperimental(repository[path]);
         }

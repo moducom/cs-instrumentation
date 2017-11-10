@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moducom.Instrumentation.Abstract;
+using Moducom.Instrumentation.Abstract.Experimental;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -95,6 +96,22 @@ namespace Moducom.Instrumentation.Test
 
             describer.SetLabels(new { test = 1 });
             describer.Value = "Test";
+        }
+
+
+        [TestMethod]
+        public void CounterNodeExperimentalTest()
+        {
+            var repo = new DummyRepository();
+
+            ICounterNode node = repo.GetCounterNodeExperimental("counter/main");
+
+            node.Labels(new { instance = 1 }).Increment();
+            node.Labels(new { instance = 2 }).Increment(77);
+            node.Labels(new { instance = 1 }).Increment();
+
+            Assert.AreEqual(2, node.Labels(new { instance = 1 }).Value);
+            Assert.AreEqual(77, node.Labels(new { instance = 2 }).Value);
         }
     }
 }

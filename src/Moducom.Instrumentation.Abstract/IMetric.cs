@@ -20,6 +20,9 @@ namespace Moducom.Instrumentation.Abstract
     public interface ICounter<T> : IMetricBase<T>
         where T: IComparable
     {
+        // FIX: Kind of a flaw, you can throw a negative number into here
+        // maybe a counter should really just be an integer counter and save the
+        // decimal behaviors for IGauge
         void Increment(T byAmount);
     }
 
@@ -42,6 +45,12 @@ namespace Moducom.Instrumentation.Abstract
                 throw new KeyNotFoundException(label);
 
             return value;
+        }
+
+
+        public static void Increment(this ICounter counter)
+        {
+            counter.Increment(1);
         }
     }
 }
