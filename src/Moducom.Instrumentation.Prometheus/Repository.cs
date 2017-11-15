@@ -5,11 +5,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using PRO = global::Prometheus;
+using global::Prometheus.Client;
+using global::Prometheus.Client.Collectors;
+
 namespace Moducom.Instrumentation.Prometheus
 {
     internal class Repository : IRepository
     {
-        public INode this[string path] => throw new NotImplementedException();
+        ICollectorRegistry registry = CollectorRegistry.Instance;
+
+        public INode this[string path]
+        {
+            get
+            {
+                registry.CollectAll().Single(x => x.name == path);
+                return null;
+            }
+        }
 
         public INode RootNode => throw new NotImplementedException();
     }

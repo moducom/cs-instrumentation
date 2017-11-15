@@ -7,9 +7,14 @@ using System.Threading.Tasks;
 
 namespace Moducom.Instrumentation.Prometheus
 {
-    public class CounterMetric : ICounter
+    public class CounterMetric : IMetricBase, ICounter
     {
-        global::Prometheus.Client.ICounter nativeCounter;
+        readonly global::Prometheus.Client.ICounter nativeCounter;
+
+        public CounterMetric(global::Prometheus.Client.ICounter nativeCounter)
+        {
+            this.nativeCounter = nativeCounter;
+        }
 
         public double Value => throw new NotImplementedException();
 
