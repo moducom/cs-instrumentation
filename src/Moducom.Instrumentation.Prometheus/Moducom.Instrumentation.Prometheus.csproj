@@ -8,4 +8,8 @@
     <PackageReference Include="Prometheus.Client" Version="1.3.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Moducom.Instrumentation.Abstract\Moducom.Instrumentation.Abstract.csproj" />
+  </ItemGroup>
+
 </Project>
