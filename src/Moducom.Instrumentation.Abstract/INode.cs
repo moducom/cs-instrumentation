@@ -117,6 +117,10 @@ namespace Moducom.Instrumentation.Abstract
             T Labels(object labels);
         }
 
+        /// <summary>
+        /// Fuses node and metric counter TYPE together (but not counter INSTANCE)
+        /// so is a semi-counter factory
+        /// </summary>
         public interface ICounterNode : IMetricNode<ICounter> { }
 
         public interface IGaugeNode : IMetricNode<IGauge<double>> { }
