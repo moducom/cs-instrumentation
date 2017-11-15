@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Moducom.Instrumentation.Abstract\Moducom.Instrumentation.Abstract.csproj" />
+    <ProjectReference Include="..\Moducom.Instrumentation.Prometheus\Moducom.Instrumentation.Prometheus.csproj" />
   </ItemGroup>
 
 </Project>
