@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moducom.Instrumentation.Abstract;
 using Moducom.Instrumentation.Abstract.Experimental;
+using Moducom.Instrumentation.Experimental;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace Moducom.Instrumentation.Test
             node.AddCounter(new { instance = 1 });
             node.AddCounter(new { instance = 2 });
 
-            var subNode = node.FindChildByPath(new[] { "subnode" }, key => new DummyRepository.Node(key));
+            var subNode = node.FindChildByPath(new[] { "subnode" }, key => new MemoryRepository.Node(key));
 
             subNode.AddCounter(new { instance = 3 });
         }
@@ -23,7 +24,7 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void TestMethod1()
         {
-            var repo = new DummyRepository();
+            var repo = new MemoryRepository();
 
             INode node = repo["counter/main"];
 
@@ -46,7 +47,7 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void CounterMetricTest()
         {
-            var repo = new DummyRepository();
+            var repo = new MemoryRepository();
 
             INode node = repo["counter/main"];
 
@@ -60,7 +61,7 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void CounterLabelsTest()
         {
-            var repo = new DummyRepository();
+            var repo = new MemoryRepository();
 
             INode node = repo["counter/main"];
 
@@ -81,7 +82,7 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void FactoryTest()
         {
-            var repo = new DummyRepository();
+            var repo = new MemoryRepository();
 
             INode node = repo["counter/main"];
 
@@ -102,7 +103,7 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void CounterNodeExperimentalTest()
         {
-            var repo = new DummyRepository();
+            var repo = new MemoryRepository();
 
             ICounterNode node = repo.GetCounterNodeExperimental("counter/main");
 

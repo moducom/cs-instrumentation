@@ -5,9 +5,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
 
-namespace Moducom.Instrumentation.Test
+namespace Moducom.Instrumentation.Experimental
 {
-    public class DummyRepository : IRepository
+    // TODO: Probably getting NETSTANDARD1_6 will be easy, but not important right now
+#if NET40 || NETSTANDARD2_0
+    public class MemoryRepository : IRepository
     {
         readonly Node rootNode = new Node("[root]");
 
@@ -58,7 +60,9 @@ namespace Moducom.Instrumentation.Test
                     return dictionaryLabels;
                 else
                     return from n in labels.GetType().GetProperties()
-                           select KeyValuePair.Create(n.Name, n.GetValue(labels));
+                           select new KeyValuePair<string, object>(n.Name, n.GetValue(labels, null));
+                            // NOTE: This was working, but doesnt now.  Not sure what circumstances this is OK for
+                           //select KeyValuePair.Create(n.Name, n.GetValue(labels, null));
             }
 
             /// <summary>
@@ -113,7 +117,11 @@ namespace Moducom.Instrumentation.Test
                 else
                 {
                     var t = typeof(T);
+#if NET40
+                    var underlyingValueType = t.GetGenericArguments().First();
+#else
                     var underlyingValueType = t.GenericTypeArguments.First();
+#endif
 
                     var genericType = t.GetGenericTypeDefinition();
 
@@ -149,7 +157,6 @@ namespace Moducom.Instrumentation.Test
         }
     }
 
-
     public class MetricBase : IMetricBase
     {
         SparseDictionary<string, object> labels;
@@ -165,7 +172,7 @@ namespace Moducom.Instrumentation.Test
             // which isn't exactly what we're after
             //this.labels.Concat(LabelHelper(labels));
 
-            foreach (var label in DummyRepository.Node.LabelHelper(labels))
+            foreach (var label in MemoryRepository.Node.LabelHelper(labels))
                 this.labels.Add(label);
         }
     }
@@ -249,4 +256,5 @@ namespace Moducom.Instrumentation.Test
             return counter;
         }
     }
-}
+#endif
+            }
