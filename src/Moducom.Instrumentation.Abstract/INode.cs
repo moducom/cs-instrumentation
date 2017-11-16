@@ -24,6 +24,8 @@ namespace Moducom.Instrumentation.Abstract
             /// </summary>
             /// <param name="labels">Can be either an anonymous object or an IDictionary of string and object</param>
             void SetLabels(object labels);
+
+            IEnumerable<string> Labels { get; }
         }
 
         /// <summary>

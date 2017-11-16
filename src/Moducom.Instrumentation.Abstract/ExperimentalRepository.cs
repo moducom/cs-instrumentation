@@ -175,6 +175,8 @@ namespace Moducom.Instrumentation.Experimental
             foreach (var label in MemoryRepository.Node.LabelHelper(labels))
                 this.labels.Add(label);
         }
+
+        public IEnumerable<string> Labels => labels.Keys;
     }
 
 
@@ -224,6 +226,8 @@ namespace Moducom.Instrumentation.Experimental
         public void SetLabels(object labels)
         {
         }
+
+        public IEnumerable<string> Labels => Enumerable.Empty<string>();
     }
 
     public class NullCounter : NullMetric, ICounter

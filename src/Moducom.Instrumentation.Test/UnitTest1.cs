@@ -4,6 +4,7 @@ using Moducom.Instrumentation.Abstract.Experimental;
 using Moducom.Instrumentation.Experimental;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Moducom.Instrumentation.Test
@@ -19,6 +20,10 @@ namespace Moducom.Instrumentation.Test
             var subNode = node.FindChildByPath(new[] { "subnode" }, key => new MemoryRepository.Node(key));
 
             subNode.AddCounter(new { instance = 3 });
+
+            subNode = node.FindChildByPath(new[] { "subnode2" }, key => new MemoryRepository.Node(key));
+
+            subNode.AddCounter(new { instance = 1 }).Increment();
         }
 
         [TestMethod]
@@ -113,6 +118,24 @@ namespace Moducom.Instrumentation.Test
 
             Assert.AreEqual(2, node.Labels(new { instance = 1 }).Value);
             Assert.AreEqual(77, node.Labels(new { instance = 2 }).Value);
+        }
+
+
+        [TestMethod]
+        public void TextFileDumpTest()
+        {
+            var repo = new MemoryRepository();
+
+            setup(repo["counter/main"]);
+
+            var d = new TextFileDump(repo);
+
+            var writer = new StringWriter();
+
+            d.Dump(writer);
+
+            writer.Flush();
+            var result = writer.ToString();
         }
     }
 }
