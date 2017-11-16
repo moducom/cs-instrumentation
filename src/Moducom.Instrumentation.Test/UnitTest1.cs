@@ -104,6 +104,16 @@ namespace Moducom.Instrumentation.Test
             describer.Value = "Test";
         }
 
+        [TestMethod]
+        public void CounterExperimentalTest()
+        {
+            var repo = new MemoryRepository();
+
+            ICounter node = repo.GetCounterExperimental("counter/main");
+
+            node.Increment();
+        }
+
 
         [TestMethod]
         public void CounterNodeExperimentalTest()

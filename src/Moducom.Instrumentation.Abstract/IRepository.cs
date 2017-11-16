@@ -85,6 +85,7 @@ namespace Moducom.Instrumentation.Abstract
     public static class IRepositoryExtensions
     {
         /// <summary>
+        /// Get existing or new counter at the specified path with the specified labels
         /// </summary>
         /// <param name="repository"></param>
         /// <param name="path"></param>
@@ -95,7 +96,16 @@ namespace Moducom.Instrumentation.Abstract
         /// </remarks>
         public static ICounter GetCounterExperimental(this IRepository repository, string path, object labels = null)
         {
-            return repository[path].GetMetrics(labels).OfType<ICounter>().Single();
+            INode node = repository[path];
+            var counters =  node.GetMetrics(labels).OfType<ICounter>();
+
+            if (counters.Any()) return counters.Single();
+
+            var counter = node.AddMetric<ICounter>();
+
+            counter.SetLabels(labels);
+
+            return counter;
         }
 
         public static Experimental.ICounterNode GetCounterNodeExperimental(this IRepository repository, string path)

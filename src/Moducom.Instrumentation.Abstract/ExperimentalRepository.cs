@@ -56,6 +56,8 @@ namespace Moducom.Instrumentation.Experimental
             /// <returns></returns>
             internal static IEnumerable<KeyValuePair<string, object>> LabelHelper(object labels)
             {
+                if (labels == null) return Enumerable.Empty<KeyValuePair<string, object>>();
+
                 if (labels is IDictionary<string, object> dictionaryLabels)
                     return dictionaryLabels;
                 else
