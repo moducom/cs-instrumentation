@@ -85,18 +85,22 @@ namespace Moducom.Instrumentation.Experimental
 
                 foreach(var value in metrics)
                 {
+                    bool isMatched = true;
+
                     foreach (var label in LabelHelper(labels))
                     {
-                        if(value.GetLabelValue(label.Key, out object targetLabelValue))
+                        if (value.GetLabelValue(label.Key, out object targetLabelValue))
                         {
                             // FIX: DbNull represents "wildcard" value and only match on key
                             // this is not super intuitive though, so find a better approach
-                            if (label.Value == DBNull.Value)
-                                yield return value;
-                            else if (label.Value.Equals(targetLabelValue))
-                                yield return value;
+                            if (label.Value == DBNull.Value) { }
+                            else if (label.Value.Equals(targetLabelValue)) { }
+                            else isMatched = false;
                         }
+                        else isMatched = false;
                     }
+
+                    if (isMatched) yield return value;
                 }
             }
 
