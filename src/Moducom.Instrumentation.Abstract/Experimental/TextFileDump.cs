@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace Moducom.Instrumentation.Experimental
 {
@@ -26,6 +27,7 @@ namespace Moducom.Instrumentation.Experimental
         }
     }
 
+    // TODO: Rename this to WriterDump or similar since it isnt text file specific
     public class TextFileDump
     {
         readonly IRepository repository;
@@ -68,4 +70,33 @@ namespace Moducom.Instrumentation.Experimental
             Dump(writer, repository.RootNode, 0);
         }
     }
+
+#if !NETSTANDARD1_6
+    public class TextFileDumpDaemon : IDisposable
+    {
+        Timer timer;
+        readonly string filepath;
+        readonly TextFileDump dump;
+
+        public TextFileDumpDaemon(string filepath, IRepository repository)
+        {
+            timer = new Timer(TimerCallback, null, 20000, 5000);
+            this.filepath = filepath;
+            dump = new TextFileDump(repository);
+        }
+
+        public void Dispose()
+        {
+            timer.Dispose();
+        }
+
+        protected void TimerCallback(object state)
+        {
+            using (var writer = new StreamWriter(filepath, false))
+            {
+                dump.Dump(writer);
+            }
+        }
+    }
+#endif
 }
