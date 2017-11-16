@@ -216,6 +216,7 @@ namespace Moducom.Instrumentation.Experimental
         }
     }
 
+#endif
 
     public class NullMetric : IMetricBase
     {
@@ -242,6 +243,7 @@ namespace Moducom.Instrumentation.Experimental
     }
 
 
+#if !NETSTANDARD1_6
     public static class INodeExtensions
     {
         public static ICounter AddCounter(this INode node)
@@ -263,4 +265,4 @@ namespace Moducom.Instrumentation.Experimental
         }
     }
 #endif
-            }
+}

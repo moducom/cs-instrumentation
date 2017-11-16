@@ -96,16 +96,24 @@ namespace Moducom.Instrumentation.Abstract
         /// </remarks>
         public static ICounter GetCounterExperimental(this IRepository repository, string path, object labels = null)
         {
-            INode node = repository[path];
-            var counters =  node.GetMetrics(labels).OfType<ICounter>();
+            try
+            {
+                INode node = repository[path];
+                var counters = node.GetMetrics(labels).OfType<ICounter>();
 
-            if (counters.Any()) return counters.Single();
+                if (counters.Any()) return counters.Single();
 
-            var counter = node.AddMetric<ICounter>();
+                var counter = node.AddMetric<ICounter>();
 
-            counter.SetLabels(labels);
+                counter.SetLabels(labels);
 
-            return counter;
+                return counter;
+            }
+            catch(Exception e)
+            {
+                // FIX: Log instrumentation failure somehow
+                return new Instrumentation.Experimental.NullCounter();
+            }
         }
 
         public static Experimental.ICounterNode GetCounterNodeExperimental(this IRepository repository, string path)
