@@ -132,6 +132,12 @@ namespace Moducom.Instrumentation.Experimental
 
                     return (T)(IMetricBase)retVal;
                 }
+                else if (typeof(T) == typeof(IHistogram<double>))
+                {
+                    var retVal = new Histogram();
+
+                    return (T)(IMetricBase)retVal;
+                }
                 else
                 {
                     var t = typeof(T);
@@ -242,6 +248,36 @@ namespace Moducom.Instrumentation.Experimental
             value -= byAmount;
             Decremented?.Invoke(this);
         }
+    }
+
+
+    /// <summary>
+    /// Needs more work binning/bucketing not worked out at all
+    /// </summary>
+    internal class Histogram : MetricBase, IHistogram<double>
+    {
+        internal class Item
+        {
+            DateTime timeStamp = DateTime.Now;
+            internal double value;
+            internal string bin; // aka bucket
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        LinkedList<Item> items = new LinkedList<Item>();
+
+        public double Value
+        {
+            set
+            {
+                var item = new Item { value = value };
+                items.AddLast(item);
+            }
+        }
+
+        internal IEnumerable<Item> Values => items;
     }
 
 #endif

@@ -170,5 +170,16 @@ namespace Moducom.Instrumentation.Test
 
             gauge.Increment(5);
         }
+
+
+        [TestMethod]
+        public void HistogramTest()
+        {
+            var repo = new MemoryRepository();
+
+            var histogram = repo["gauge/main"].GetMetricExperimental<IHistogram<double>>();
+
+            histogram.Value = 5;
+        }
     }
 }

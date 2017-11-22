@@ -10,6 +10,11 @@ namespace Moducom.Instrumentation.Abstract
         T Value { get; }
     }
 
+    public interface IMetricSetter<T> : IMetricBase
+    {
+        T Value { set; }
+    }
+
 
     public interface IMetric<T> : IMetricBase<T>
     {
@@ -43,7 +48,7 @@ namespace Moducom.Instrumentation.Abstract
     public interface IGauge : IGauge<double> { }
 
 
-    public interface IHistogram<T> : IMetricBase<T> { }
+    public interface IHistogram<T> : IMetricSetter<T> { }
 
     public static class IMetricExtensions
     {
