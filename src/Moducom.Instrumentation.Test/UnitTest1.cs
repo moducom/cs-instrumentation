@@ -159,5 +159,16 @@ namespace Moducom.Instrumentation.Test
             node.Increment();
 
         }
+
+
+        [TestMethod]
+        public void GaugeTest()
+        {
+            var repo = new MemoryRepository();
+
+            var gauge = repo["gauge/main"].GetMetricExperimental<IGauge>();
+
+            gauge.Increment(5);
+        }
     }
 }

@@ -99,6 +99,7 @@ namespace Moducom.Instrumentation.Abstract
             try
             {
                 INode node = repository[path];
+                /*
                 // get all counters which match the specified label
                 var _counters = node.GetMetrics(labels).ToArray();
                 var counters = _counters.OfType<ICounter>();
@@ -110,7 +111,9 @@ namespace Moducom.Instrumentation.Abstract
 
                 counter.SetLabels(labels);
 
-                return counter;
+                return counter; */
+
+                return node.GetMetricExperimental<ICounter>(labels);
             }
             catch(Exception e)
             {

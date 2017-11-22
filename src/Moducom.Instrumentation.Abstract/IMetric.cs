@@ -32,10 +32,18 @@ namespace Moducom.Instrumentation.Abstract
     /// </summary>
     public interface ICounter : ICounter<double> { }
 
-    public interface IGauge<T> : IMetric<T>
+    public interface IGauge<T> : ICounter<T>
+        where T : IComparable
     {
+        // Mimicking prometheus approach, but I still feel an "adjust" might be more appropriate
+        // rather than Increment/Decrement (again because it's all signed operations anyway)
         void Decrement(T byAmount);
     }
+
+    public interface IGauge : IGauge<double> { }
+
+
+    public interface IHistogram<T> : IMetricBase<T> { }
 
     public static class IMetricExtensions
     {

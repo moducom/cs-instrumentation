@@ -111,12 +111,24 @@ namespace Moducom.Instrumentation.Experimental
             }
 
 
+            /// <summary>
+            /// Interim factory method, to be replaced by IoC/DI
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="key"></param>
+            /// <returns></returns>
             public T CreateMetric<T>(string key)
                 where T : IMetricBase
             {
                 if (typeof(T) == typeof(ICounter))
                 {
                     var retVal = new Counter();
+
+                    return (T)(IMetricBase)retVal;
+                }
+                else if (typeof(T) == typeof(IGauge))
+                {
+                    var retVal = new Gauge();
 
                     return (T)(IMetricBase)retVal;
                 }
@@ -207,7 +219,7 @@ namespace Moducom.Instrumentation.Experimental
 
     internal class Counter : MetricBase, ICounter
     {
-        double value = 0;
+        protected double value = 0;
 
         public double Value => value;
 
@@ -217,6 +229,18 @@ namespace Moducom.Instrumentation.Experimental
         {
             value += byAmount;
             Incremented?.Invoke(this);
+        }
+    }
+
+
+    internal class Gauge : Counter, IGauge
+    {
+        public event Action<IGauge> Decremented;
+
+        public void Decrement(double byAmount)
+        {
+            value -= byAmount;
+            Decremented?.Invoke(this);
         }
     }
 
