@@ -264,7 +264,7 @@ namespace Moducom.Instrumentation.Experimental
 
         internal class Item : IHistogramNode<double>
         {
-            DateTime timeStamp = DateTime.Now;
+            internal readonly DateTime timeStamp = DateTime.Now;
             internal double value;
 
             DateTime IHistogramNode<double>.TimeStamp => timeStamp;
@@ -292,6 +292,13 @@ namespace Moducom.Instrumentation.Experimental
                     value = value
                 };
                 items.AddLast(item);
+
+                // FIX: Cheap and nasty auto prune, only hold on to 30 minutes data
+                // We need to prune in more places and with more configurability
+                while(DateTime.Now.Subtract(items.First.Value.timeStamp).TotalMinutes > 30)
+                {
+                    items.RemoveFirst();
+                }
             }
         }
 
