@@ -74,5 +74,53 @@ namespace Moducom.Instrumentation.Abstract
         {
             counter.Increment(1);
         }
+
+
+        //const DateTime _minValue = DateTime.MinValue;
+
+
+        /// <summary>
+        /// Get sum of all values, starting from the specified timestamp
+        /// TODO: *might* want a binning version, or might just wait until we plug into proper metrics codebase
+        /// </summary>
+        /// <param name="histogram"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// NOTE: Beware, this code probably won't work with a plugin provider like prometheus - pretty sure it won't
+        /// expose the raw histogram data for us
+        /// </remarks>
+        public static double GetSum(this IHistogram<double> histogram, DateTime startFrom)
+        {
+            return histogram.Values.SkipWhile(x => x.TimeStamp < startFrom).Sum(x => x.Value);
+        }
+
+
+        /// <summary>
+        /// Get count of all values, starting from the specified timestamp
+        /// TODO: *might* want a binning version, or might just wait until we plug into proper metrics codebase
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="histogram"></param>
+        /// <param name="startFrom"></param>
+        /// <returns></returns>
+        public static double GetCount<T>(this IHistogram<T> histogram, DateTime startFrom)
+        {
+            return histogram.Values.SkipWhile(x => x.TimeStamp < startFrom).Count();
+        }
+
+
+        /// <summary>
+        /// Get average of all values starting from specified timestamp - no binning
+        /// TODO: *might* want a binning version, or might just wait until we plug into proper metrics codebase
+        /// </summary>
+        /// <param name="histogram"></param>
+        /// <param name="startFrom"></param>
+        /// <returns></returns>
+        public static double GetAverage(this IHistogram<double> histogram, DateTime startFrom)
+        {
+            var count = histogram.GetCount(startFrom);
+            double average = histogram.GetSum(startFrom) / count;
+            return average;
+        }
     }
 }

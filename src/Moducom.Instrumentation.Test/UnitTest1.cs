@@ -194,6 +194,10 @@ namespace Moducom.Instrumentation.Test
             Assert.AreEqual(10, values[1].Value);
             Assert.IsTrue(values[1].TimeStamp > testStart);
             Assert.IsTrue(values[1].TimeStamp < testEnd);
+
+            Assert.AreEqual(2, histogram.GetCount(DateTime.MinValue));
+            Assert.AreEqual(15, histogram.GetSum(DateTime.MinValue));
+            Assert.AreEqual(7.5, histogram.GetAverage(DateTime.MinValue));
         }
     }
 }
