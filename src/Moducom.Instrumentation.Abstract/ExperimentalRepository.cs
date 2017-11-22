@@ -256,11 +256,26 @@ namespace Moducom.Instrumentation.Experimental
     /// </summary>
     internal class Histogram : MetricBase, IHistogram<double>
     {
-        internal class Item
+        // adapted from https://github.com/phnx47/Prometheus.Client/blob/master/src/Prometheus.Client/Histogram.cs
+        readonly double[] bins;
+        static readonly double[] defaultBins = { .005, .01, .025, .05, .075, .1, .25, .5, .75, 1, 2.5, 5, 7.5, 10 };
+        // NOTE: for binning across entire time spectrum only
+        readonly ulong[] binCounts;
+
+        internal class Item : IHistogramNode<double>
         {
             DateTime timeStamp = DateTime.Now;
             internal double value;
-            internal string bin; // aka bucket
+
+            DateTime IHistogramNode<double>.TimeStamp => timeStamp;
+
+            double IHistogramNode<double>.Value => value;
+        }
+
+        internal Histogram(double[] bins = null)
+        {
+            this.bins = bins ?? defaultBins;
+            binCounts = new ulong[this.bins.Length];
         }
 
         /// <summary>
@@ -272,12 +287,15 @@ namespace Moducom.Instrumentation.Experimental
         {
             set
             {
-                var item = new Item { value = value };
+                var item = new Item
+                {
+                    value = value
+                };
                 items.AddLast(item);
             }
         }
 
-        internal IEnumerable<Item> Values => items;
+        public IEnumerable<IHistogramNode<double>> Values => items;
     }
 
 #endif

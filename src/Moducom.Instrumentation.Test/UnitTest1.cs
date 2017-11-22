@@ -179,7 +179,21 @@ namespace Moducom.Instrumentation.Test
 
             var histogram = repo["gauge/main"].GetMetricExperimental<IHistogram<double>>();
 
+            var testStart = DateTime.Now;
+
             histogram.Value = 5;
+            histogram.Value = 10;
+
+            var testEnd = DateTime.Now;
+
+            var values = histogram.Values.ToArray();
+
+            Assert.AreEqual(5, values[0].Value);
+            Assert.IsTrue(values[0].TimeStamp > testStart);
+            Assert.IsTrue(values[0].TimeStamp < testEnd);
+            Assert.AreEqual(10, values[1].Value);
+            Assert.IsTrue(values[1].TimeStamp > testStart);
+            Assert.IsTrue(values[1].TimeStamp < testEnd);
         }
     }
 }

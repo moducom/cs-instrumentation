@@ -48,7 +48,16 @@ namespace Moducom.Instrumentation.Abstract
     public interface IGauge : IGauge<double> { }
 
 
-    public interface IHistogram<T> : IMetricSetter<T> { }
+    public interface IHistogram<T> : IMetricSetter<T>
+    {
+        IEnumerable<IHistogramNode<T>> Values { get; }
+    }
+
+    public interface IHistogramNode<T>
+    {
+        T Value { get; }
+        DateTime TimeStamp { get; }
+    }
 
     public static class IMetricExtensions
     {
