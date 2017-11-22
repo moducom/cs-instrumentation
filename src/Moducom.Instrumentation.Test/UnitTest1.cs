@@ -147,5 +147,17 @@ namespace Moducom.Instrumentation.Test
             writer.Flush();
             var result = writer.ToString();
         }
+
+
+        [TestMethod]
+        public void LabelBreakerTest()
+        {
+            var repo = new MemoryRepository();
+
+            ICounter node = repo.GetCounterExperimental("counter/main", new { fail = true });
+
+            node.Increment();
+
+        }
     }
 }
