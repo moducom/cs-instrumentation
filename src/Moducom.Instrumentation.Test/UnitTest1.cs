@@ -35,7 +35,6 @@ namespace Moducom.Instrumentation.Test
             var gauge = node.GetMetricExperimental<IGauge>(new { instance = 3 });
 
             gauge.Value = 5;
-            //node.A
         }
 
         [TestMethod]
@@ -150,6 +149,8 @@ namespace Moducom.Instrumentation.Test
 
             setup(repo["counter/main"]);
             setup2(repo["gauge/main"]);
+
+            repo["uptime"].AddUptimeGauge();
 
             var d = new TextFileDump(repo);
 

@@ -257,6 +257,22 @@ namespace Moducom.Instrumentation.Experimental
     }
 
 
+    internal class UptimeGauge : MetricBase, IGauge
+    {
+        // initialized at first "mention" of UptimeGauge
+        static readonly DateTime Start = DateTime.Now;
+
+        public void Increment(double byAmount) => throw new InvalidOperationException();
+        public void Decrement(double byAmount) => throw new InvalidOperationException();
+
+        public double Value
+        {
+            get => DateTime.Now.Subtract(Start).TotalMinutes;
+            set => throw new InvalidOperationException();
+        }
+    }
+
+
     /// <summary>
     /// Needs more work binning/bucketing not worked out at all
     /// </summary>
@@ -347,6 +363,20 @@ namespace Moducom.Instrumentation.Experimental
             var counter = new Counter();
             node.AddMetric(counter);
             return counter;
+        }
+
+
+        /// <summary>
+        /// NOTE: Probably won't translate well to prometheus.io
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public static IGauge AddUptimeGauge(this INode node)
+        {
+            var gauge = new UptimeGauge();
+            node.AddMetric(gauge);
+            //if (labels != null) gauge.SetLabels(labels);
+            return gauge;
         }
 
 
