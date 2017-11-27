@@ -37,6 +37,24 @@ namespace Moducom.Instrumentation.Experimental
             this.repository = repository;
         }
 
+
+        protected void Dump(TextWriter writer, IMetricBase metric)
+        {
+            // FIX: have to compare if it's a gauge first, because gauge currently extends counter...
+            if (metric is IGauge g)
+            {
+                writer.Write($"gauge = {g.Value}");
+            }
+            else if (metric is ICounter c)
+            {
+                writer.Write($"counter = {c.Value}");
+            }
+
+            writer.Write("  ");
+
+            writer.WriteLine(metric.Labels.Select(n => n + '=' + metric.GetLabelValue(n)).ToString(","));
+        }
+
         protected void Dump(TextWriter writer, INode node, int level)
         {
             //string indent = Enumerable.Repeat(' ', level).ToString();
@@ -48,15 +66,7 @@ namespace Moducom.Instrumentation.Experimental
             {
                 writer.Write(indent + "  - ");
 
-                if (metric is ICounter)
-                {
-                    writer.Write("counter = ");
-                    writer.Write(((ICounter)metric).Value);
-                }
-
-                writer.Write("  ");
-
-                writer.WriteLine(metric.Labels.Select(n => n + '=' + metric.GetLabelValue(n)).ToString(","));
+                Dump(writer, metric);
             }
 
             foreach (INode childNode in node.Children)

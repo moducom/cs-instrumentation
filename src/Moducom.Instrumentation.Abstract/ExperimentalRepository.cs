@@ -248,6 +248,12 @@ namespace Moducom.Instrumentation.Experimental
             value -= byAmount;
             Decremented?.Invoke(this);
         }
+
+        public new double Value
+        {
+            get => this.value;
+            set { this.value = value; }
+        }
     }
 
 

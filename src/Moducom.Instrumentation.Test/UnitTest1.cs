@@ -26,6 +26,18 @@ namespace Moducom.Instrumentation.Test
             subNode.AddCounter(new { instance = 1 }).Increment();
         }
 
+        /// <summary>
+        /// This one also adds gauges 
+        /// </summary>
+        /// <param name="node"></param>
+        static void setup2(INode node)
+        {
+            var gauge = node.GetMetricExperimental<IGauge>(new { instance = 3 });
+
+            gauge.Value = 5;
+            //node.A
+        }
+
         [TestMethod]
         public void TestMethod1()
         {
@@ -137,6 +149,7 @@ namespace Moducom.Instrumentation.Test
             var repo = new MemoryRepository();
 
             setup(repo["counter/main"]);
+            setup2(repo["gauge/main"]);
 
             var d = new TextFileDump(repo);
 

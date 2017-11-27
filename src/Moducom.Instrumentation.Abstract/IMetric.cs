@@ -18,7 +18,7 @@ namespace Moducom.Instrumentation.Abstract
 
     public interface IMetric<T> : IMetricBase<T>
     {
-        T Value { get; set; }
+        new T Value { get; set; }
     }
 
 
@@ -37,7 +37,9 @@ namespace Moducom.Instrumentation.Abstract
     /// </summary>
     public interface ICounter : ICounter<double> { }
 
-    public interface IGauge<T> : ICounter<T>
+    public interface IGauge<T> : ICounter<T>, 
+        IMetric<T>
+        //IMetricSetter<T> // would prefer this approach but haven't quite cracked the nut on .NET get/set property in different interfaces
         where T : IComparable
     {
         // Mimicking prometheus approach, but I still feel an "adjust" might be more appropriate
