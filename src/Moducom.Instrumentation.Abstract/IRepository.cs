@@ -29,9 +29,9 @@ namespace Moducom.Instrumentation.Abstract
                 node.AddMetric(metric);
             }
 
-            public T AddMetric<T>(string key = null) where T : IMetricBase
+            public TMetric AddMetric<TMetric>(string key = null) where TMetric : IMetricBase
             {
-                return node.AddMetric<T>(key);
+                return node.AddMetric<TMetric>(key);
             }
 
             public IEnumerable<IMetricBase> GetMetrics(object labels = null)
@@ -115,7 +115,7 @@ namespace Moducom.Instrumentation.Abstract
 
                 return node.GetMetricExperimental<ICounter>(labels);
             }
-            catch(Exception e)
+            catch(Exception)
             {
                 // FIX: Log instrumentation failure somehow
                 return new Instrumentation.Experimental.NullCounter();
