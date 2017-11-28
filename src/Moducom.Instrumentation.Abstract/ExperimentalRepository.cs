@@ -8,7 +8,7 @@ using System.Reflection;
 namespace Moducom.Instrumentation.Experimental
 {
     // TODO: Probably getting NETSTANDARD1_6 will be easy, but not important right now
-#if NET40 || NETSTANDARD2_0
+#if NET40 || NET46 || NETSTANDARD2_0
     public class MemoryRepository : IRepository
     {
         readonly Node rootNode = new Node("[root]");
