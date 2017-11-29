@@ -89,6 +89,10 @@ namespace Moducom.Instrumentation.Experimental
         readonly TextFileDump dump;
         readonly IRepository repository;
 
+        public event Action<Exception> Error;
+        public event Action Heartbeat;
+        public event Action Shutdown;
+
         public TextFileDumpDaemon(string filepath, IRepository repository)
         {
             timer = new Timer(TimerCallback, null, 20000, 5000);
@@ -97,18 +101,36 @@ namespace Moducom.Instrumentation.Experimental
             this.repository = repository;
         }
 
+        // Test empty call just to ensure we don't get optimized away
+        // 100% unsure if it makes a difference
+        public void DummyBegin()
+        {
+            // Would do proper logger but alas CLR issues still are present
+            System.Diagnostics.Debug.WriteLine("DummyBegin called");
+        }
+
         public void Dispose()
         {
+            Shutdown?.Invoke();
             timer.Dispose();
         }
 
         protected void TimerCallback(object state)
         {
-            repository.GetCounterExperimental("internal/timer_callback").Increment();
-
-            using (var writer = new StreamWriter(filepath, false))
+            try
             {
-                dump.Dump(writer);
+                Heartbeat?.Invoke();
+
+                repository.GetCounterExperimental("internal/timer_callback").Increment();
+
+                using (var writer = new StreamWriter(filepath, false))
+                {
+                    dump.Dump(writer);
+                }
+            }
+            catch(Exception e)
+            {
+                Error?.Invoke(e);
             }
         }
     }
