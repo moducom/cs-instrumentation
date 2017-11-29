@@ -87,12 +87,14 @@ namespace Moducom.Instrumentation.Experimental
         Timer timer;
         readonly string filepath;
         readonly TextFileDump dump;
+        readonly IRepository repository;
 
         public TextFileDumpDaemon(string filepath, IRepository repository)
         {
             timer = new Timer(TimerCallback, null, 20000, 5000);
             this.filepath = filepath;
             dump = new TextFileDump(repository);
+            this.repository = repository;
         }
 
         public void Dispose()
@@ -102,6 +104,8 @@ namespace Moducom.Instrumentation.Experimental
 
         protected void TimerCallback(object state)
         {
+            repository.GetCounterExperimental("internal/timer_callback").Increment();
+
             using (var writer = new StreamWriter(filepath, false))
             {
                 dump.Dump(writer);
