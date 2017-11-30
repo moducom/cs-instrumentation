@@ -3,7 +3,7 @@
   <metadata>
     <!-- Required elements-->
     <id>Moducom.Instrumentation.Abstract</id>
-    <version>0.9.0</version>
+    <version>0.9.0-alpha000</version>
     <description>Core instrumentation abstractions for sprinkling throughout your code</description>
     <authors>Malachi Burke</authors>
 
@@ -14,5 +14,6 @@
   <files>
     <file src="bin/Debug/net46/Moducom.Instrumentation.Abstract.dll" target="lib\net46" />
     <file src="bin/Debug/net40/Moducom.Instrumentation.Abstract.dll" target="lib\net40" />
+    <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.dll" target="lib\netstandard1.6" />
   </files>
 </package>
