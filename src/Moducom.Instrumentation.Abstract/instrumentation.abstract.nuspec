@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <!-- Required elements-->
+    <id>Moducom.Instrumentation.Abstract</id>
+    <version>0.9.0</version>
+    <description>Core instrumentation abstractions for sprinkling throughout your code</description>
+    <authors>Malachi Burke</authors>
+
+    <!-- Optional elements -->
+    <!-- ... -->
+  </metadata>
+  <!-- Optional 'files' node -->
+  <files>
+    <file src="bin/Debug/net46/Moducom.Instrumentation.Abstract.dll" target="lib\net46" />
+    <file src="bin/Debug/net40/Moducom.Instrumentation.Abstract.dll" target="lib\net40" />
+  </files>
+</package>
