@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net46;netstandard1.6</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Moducom.Instrumentation.Abstract\Moducom.Instrumentation.Abstract.csproj" />
+  </ItemGroup>
+
+</Project>
