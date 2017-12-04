@@ -14,7 +14,12 @@
   <!-- Optional 'files' node -->
   <files>
     <file src="bin/Debug/net46/Moducom.Instrumentation.Abstract.dll" target="lib\net46" />
+    <file src="bin/Debug/net46/Moducom.Instrumentation.Abstract.pdb" target="lib\net46" />
     <file src="bin/Debug/net40/Moducom.Instrumentation.Abstract.dll" target="lib\net40" />
+    <file src="bin/Debug/net40/Moducom.Instrumentation.Abstract.pdb" target="lib\net40" />
     <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.dll" target="lib\netstandard1.6" />
+    <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.pdb" target="lib\netstandard1.6" />
+    <!-- experimentally adding cs files also, due to TeamCity TW-32067 -->
+    <file src="*.cs" />
   </files>
 </package>
