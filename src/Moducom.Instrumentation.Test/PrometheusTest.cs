@@ -32,5 +32,11 @@ namespace Moducom.Instrumentation.Test
             // dummy code so far
             var p = new PRO.Provider();
         }
+
+        [TestMethod]
+        public void PrometheusProviderTest()
+        {
+            var r = new PRO.Repository();
+        }
     }
 }
