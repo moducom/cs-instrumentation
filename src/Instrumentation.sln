@@ -9,7 +9,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moducom.Instrumentation.Tes
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moducom.Instrumentation.Prometheus", "Moducom.Instrumentation.Prometheus\Moducom.Instrumentation.Prometheus.csproj", "{6A8D0135-EC5C-4727-BA00-A66C887F8968}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moducom.Instrumentation.Prometheus.TestServer", "Moducom.Instrumentation.Prometheus.TestServer\Moducom.Instrumentation.Prometheus.TestServer.csproj", "{39DB2E6B-C1F9-472F-94D5-0D1297E2851C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moducom.Instrumentation.Prometheus.TestExporter", "Moducom.Instrumentation.Prometheus.TestServer\Moducom.Instrumentation.Prometheus.TestExporter.csproj", "{39DB2E6B-C1F9-472F-94D5-0D1297E2851C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
