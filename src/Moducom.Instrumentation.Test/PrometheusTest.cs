@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using PRO = Moducom.Instrumentation.Prometheus;
+using MOD = Moducom.Instrumentation.Abstract;
 using Prometheus.Client;
 using Prometheus.Client.Collectors;
 
@@ -29,6 +30,10 @@ namespace Moducom.Instrumentation.Test
             // interestingly this does work, so null labels permitted
             counter.Inc();
 
+            // grabs same metric... OK that will get us off the ground for a working codebase
+            // Just have to decide if we are gonna maintain our own repo tree or not
+            global::Prometheus.Client.Counter counter2 = Metrics.CreateCounter("myCounter", "Description of my counter", "allowed_label");
+
             // dummy code so far
             var p = new PRO.Provider();
         }
@@ -36,7 +41,18 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void PrometheusProviderTest()
         {
+            var c = Metrics.CreateCounter("test", "TEST");
+            Metrics.CreateCounter("root_test", "TEST");
+
             var r = new PRO.Repository();
+
+            var metric = r["test"];
+
+            c.Inc();
+
+            var counter = MOD.INodeExtensions.AddCounterExperimental(metric);
+
+            var metric2 = r["test"].AddMetric<MOD.ICounter>();
         }
     }
 }
