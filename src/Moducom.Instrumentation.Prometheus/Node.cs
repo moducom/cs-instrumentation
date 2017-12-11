@@ -60,15 +60,13 @@ namespace Moducom.Instrumentation.Prometheus
             metricsFamily.metric.Add(_metric);
         }
 
-        public T AddMetric<T>(string key = null) where T : IMetricBase
-        {
-            return GetMetric<T>(null);
-        }
-
-        public IEnumerable<IMetricBase> GetMetrics(object labels = null)
+        public IEnumerable<IMetricBase> GetMetrics(object labels)
         {
             throw new NotImplementedException();
         }
+
+
+        public IEnumerable<IMetricBase> Metrics => throw new NotImplementedException();
 
 
         /// <summary>
@@ -103,7 +101,7 @@ namespace Moducom.Instrumentation.Prometheus
         }
     }
 
-
+    /*
     public class MetricNode<T> : Abstract.Experimental.IMetricNode<T>
         where T: IMetricBase
     {
@@ -126,5 +124,5 @@ namespace Moducom.Instrumentation.Prometheus
         {
             throw new NotImplementedException();
         }
-    }
+    } */
 }

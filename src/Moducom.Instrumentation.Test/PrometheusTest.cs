@@ -56,11 +56,20 @@ namespace Moducom.Instrumentation.Test
 
             c.Inc();
 
-            var counter = MOD.INodeExtensions.AddCounterExperimental(metric);
+            var counter = metric.GetCounter();
+            //var counter = MOD.INodeExtensions.AddCounterExperimental(metric);
 
             c.Inc();
 
-            var metric2 = r["test"].AddMetric<MOD.ICounter>();
+            //var metric2 = r["test"].AddMetric<MOD.ICounter>();
+            var metric2 = r["test"].GetMetric<MOD.ICounter>();
+        }
+
+
+        [TestMethod]
+        public void PrometheusLabelBreakerTest()
+        {
+
         }
     }
 }

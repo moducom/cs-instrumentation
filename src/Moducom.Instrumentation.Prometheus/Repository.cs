@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using PRO = global::Prometheus;
 using global::Prometheus.Client;
 using global::Prometheus.Client.Collectors;
+using Moducom.Instrumentation.Abstract.Experimental;
 
 namespace Moducom.Instrumentation.Prometheus
 {
@@ -16,9 +17,9 @@ namespace Moducom.Instrumentation.Prometheus
     {
         static ICollectorRegistry registry = CollectorRegistry.Instance;
 
-        protected override Node CreateNode(string name)
+        protected override Node CreateNode(MOD.INode parent, string name)
         {
-            return new Node(null, name);
+            return new Node(parent, name);
         }
 
         new // temporarily tagging as new as we pull in base classes
@@ -70,10 +71,27 @@ namespace Moducom.Instrumentation.Prometheus
         public override MOD.INode RootNode => throw new NotImplementedException();
     }
 
+
+    /*
+    internal class MetricFactory : IMetricFactory
+    {
+        PRO.Client.MetricFactory factory = PRO.Client.Metrics.DefaultFactory;
+
+        public T CreateMetric<T>(string key, object labels = null) 
+            where T : ILabelsProvider, MOD.IValueGetter
+        {
+            //new CounterMetric()
+        }
+    } */
+
     internal class RepositoryExperimental : MOD.IRepository
     {
+        public event Action<object, MOD.INode> NodeCreated;
+
         internal class Node : MOD.INode
         {
+            public event Action<object, MOD.INode> ChildAdded;
+
             public IEnumerable<MOD.INode> Children => throw new NotImplementedException();
 
             readonly string name;
@@ -111,35 +129,39 @@ namespace Moducom.Instrumentation.Prometheus
                 throw new NotImplementedException();
             }
 
-            public T AddMetric<T>(string key = null) where T : MOD.IMetricBase
-            {
-                if(typeof(T) == typeof(MOD.ICounter))
-                {
-                    // FIX: convert key from either anonymous type or dictionary to the 
-                    // label names
-                    var nativeCounter = Metrics.CreateCounter(GetFullNodeName(), null, null);
-
-                    // this gets the particular instance associated with label values
-                    // FIX: convert key from either anonymous type or dictionary to the
-                    // label values
-                    var child = nativeCounter.Labels(null);
-
-                    // FIX: Do we really need to carry labels into the metric too?  I guess we do, in our architecture
-                    return (T)(object)(new CounterWrapper(child));
-
-                }
-                throw new NotImplementedException();
-            }
-
             public MOD.INode GetChild(string name)
             {
                 throw new NotImplementedException();
             }
 
-            public IEnumerable<MOD.IMetricBase> GetMetrics(object labels = null)
+
+            public T GetMetric<T>(object labels) where T: 
+                Abstract.IValueGetter,
+                Abstract.Experimental.ILabelsProvider
+            {
+                var labelEnum = Experimental.MemoryRepository.LabelHelper(labels);
+
+                var factory = PRO.Client.Metrics.DefaultFactory;
+
+                if(typeof(T) == typeof(ICounter))
+                {
+                    var nativeCounter = factory.CreateCounter(GetFullNodeName(), "TBD", labelEnum.Select(x => x.Key).ToArray());
+
+                    nativeCounter.Labels(labelEnum.Select(x => x.Value.ToString()).ToArray());
+
+                    var wrapped = new CounterMetric(nativeCounter);
+                    return (T)(object)wrapped;
+                }
+                //PRO.Client.Metrics.
+                return default(T);
+            }
+
+            public IEnumerable<MOD.IMetricBase> GetMetrics(object labels)
             {
                 throw new NotImplementedException();
             }
+
+            public IEnumerable<MOD.IMetricBase> Metrics => throw new NotImplementedException();
         }
 
         internal class CounterWrapper : MOD.ICounter
