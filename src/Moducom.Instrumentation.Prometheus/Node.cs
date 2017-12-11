@@ -28,14 +28,12 @@ namespace Moducom.Instrumentation.Prometheus
         // so that we can get fully-qualified name
         INode parent;
 
-        readonly string name;
-
-        internal Node(string name) : base(name) { }
+        internal Node(INode parent, string name) : base(name) { this.parent = parent; }
 
         protected string GetFullName()
         {
             INode node = this.parent;
-            string fullname = name;
+            string fullname = Name;
 
             while(node != null)
             {

@@ -18,7 +18,7 @@ namespace Moducom.Instrumentation.Prometheus
 
         protected override Node CreateNode(string name)
         {
-            return new Node(name);
+            return new Node(null, name);
         }
 
         new // temporarily tagging as new as we pull in base classes
@@ -41,7 +41,7 @@ namespace Moducom.Instrumentation.Prometheus
                 {
                     var counter = Metrics.CreateCounter("test", "test");
 
-                    var node = new Node(name);
+                    var node = new Node(null, name);
 
                     node.AddMetric(new CounterMetric(counter));
 
@@ -49,7 +49,7 @@ namespace Moducom.Instrumentation.Prometheus
                 }
                 else
                 {
-                    var node = new Node(name);
+                    var node = new Node(null, name);
 
                     node.metricsFamily = metricFamily;
 
