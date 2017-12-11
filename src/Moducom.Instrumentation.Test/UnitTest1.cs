@@ -32,7 +32,7 @@ namespace Moducom.Instrumentation.Test
         /// <param name="node"></param>
         static void setup2(INode node)
         {
-            var gauge = node.GetMetricExperimental<IGauge>(new { instance = 3 });
+            var gauge = node.GetMetric<IGauge>(new { instance = 3 });
 
             gauge.Value = 5;
         }
@@ -113,7 +113,7 @@ namespace Moducom.Instrumentation.Test
             // NOTE: discouraged to add different types of metrics under one node
             // right now the GetMetric code can't handle two different types with the same label
             // so we push in test = 2 for now
-            var describer = node.AddMetricExperimental<string>(new { test = 2 });
+            var describer = node.GetGenericMetric<string>(new { test = 2 });
 
             //describer.SetLabels(new { test = 1 });
             describer.Value = "Test";
@@ -157,7 +157,7 @@ namespace Moducom.Instrumentation.Test
             setup(repo["counter/main"]);
             setup2(repo["gauge/main"]);
 
-            repo["uptime"].AddUptimeGauge();
+            repo["uptime"].GetGauge();
 
             var d = new TextFileDump(repo);
 
@@ -201,7 +201,7 @@ namespace Moducom.Instrumentation.Test
         {
             var repo = new MemoryRepository();
 
-            var histogram = repo["gauge/main"].GetMetricExperimental<IHistogram<double>>();
+            var histogram = repo["gauge/main"].GetMetric<IHistogram<double>>();
 
             var testStart = DateTime.Now;
 

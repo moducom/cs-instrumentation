@@ -372,43 +372,4 @@ namespace Moducom.Instrumentation.Experimental
 
         public double Value => 0;
     }
-
-
-#if !NETSTANDARD1_6
-    public static class INodeExtensions
-    {
-        public static ICounter AddCounter(this INode node)
-        {
-            // TODO: We need to create these counters from a factory
-            var counter = new Counter();
-            node.AddMetric(counter);
-            return counter;
-        }
-
-
-        /// <summary>
-        /// NOTE: Probably won't translate well to prometheus.io
-        /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
-        public static IGauge AddUptimeGauge(this INode node)
-        {
-            var gauge = new UptimeGauge();
-            node.AddMetric(gauge);
-            //if (labels != null) gauge.SetLabels(labels);
-            return gauge;
-        }
-
-
-        /*
-        public static ICounter AddCounter(this INode node, object labels)
-        {
-            ICounter counter = node.AddCounter();
-
-            counter.SetLabels(labels);
-
-            return counter;
-        } */
-    }
-#endif
 }
