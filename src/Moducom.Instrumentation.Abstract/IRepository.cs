@@ -25,16 +25,6 @@ namespace Moducom.Instrumentation.Abstract
                 this.node = node;
             }
 
-            public void AddMetric(IMetricBase metric)
-            {
-                node.AddMetric(metric);
-            }
-
-            public TMetric AddMetric<TMetric>(string key = null) where TMetric : IMetricBase
-            {
-                return node.AddMetric<TMetric>(key);
-            }
-
             public IEnumerable<IMetricBase> GetMetrics(object labels = null)
             {
                 return node.GetMetrics(labels);
@@ -66,9 +56,7 @@ namespace Moducom.Instrumentation.Abstract
                     ICounter counter = null;
 
                     node.AddMetric(counter); */
-                    T counter = node.AddMetric<T>();
-
-                    counter.SetLabels(labels);
+                    T counter = node.GetMetric<T>(labels);
 
                     return counter;
                 }

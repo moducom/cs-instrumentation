@@ -1,10 +1,18 @@
-﻿using Moducom.Instrumentation.Abstract;
+﻿#if !NETSTANDARD1_6
+#define ENABLE_CONTRACTS
+#endif
+
+using Moducom.Instrumentation.Abstract;
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
 using Moducom.Instrumentation.Abstract.Experimental;
+
+#if ENABLE_CONTRACTS
+using System.Diagnostics.Contracts;
+#endif
 
 namespace Moducom.Instrumentation.Experimental
 {
@@ -119,14 +127,9 @@ namespace Moducom.Instrumentation.Experimental
             /// <returns></returns>
             public IEnumerable<IMetricBase> GetMetrics(object labels)
             {
-                //var _labels = LabelHelper(labels);
-
-                if (labels == null)
-                {
-                    foreach (var value in metrics) yield return value;
-
-                    yield break;
-                }
+#if ENABLE_CONTRACTS
+                Contract.Requires(labels != null);
+#endif
 
                 foreach(var value in metrics)
                 {
@@ -158,22 +161,6 @@ namespace Moducom.Instrumentation.Experimental
             }
 
 
-            /// <summary>
-            /// FIX: Phase this out, misnamed factory method
-            /// </summary>
-            /// <typeparam name="T"></typeparam>
-            /// <param name="key"></param>
-            /// <returns></returns>
-            public T AddMetric<T>(string key)
-                where T: IMetricBase
-            {
-                T metric = metricFactory.CreateMetric<T>(key);
-
-                metrics.AddLast(metric);
-
-                return metric;
-            }
-
             public T GetMetric<T>(object labels = null)
                 where T: ILabelsProvider, IValueGetter
             {
@@ -182,7 +169,7 @@ namespace Moducom.Instrumentation.Experimental
                 if (labels == null)
                     // Since null labels into GetMetrics retrieves *ALL* labels, filter further
                     // for a none label
-                    foundMetric = GetMetrics(null).SingleOrDefault(x => !x.Labels.Any());
+                    foundMetric = metrics.SingleOrDefault(x => !x.Labels.Any());
                 else
                     // FIX: One and only design decision one not fully fleshed out
                     foundMetric = GetMetrics(labels).SingleOrDefault();

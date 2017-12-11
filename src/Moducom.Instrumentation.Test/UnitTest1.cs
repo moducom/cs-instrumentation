@@ -90,7 +90,7 @@ namespace Moducom.Instrumentation.Test
             Assert.AreEqual(1, metrics[0].GetLabelValue("instance"));
             Assert.AreEqual(2, metrics[1].GetLabelValue("instance"));
 
-            var metrics2 = node.GetMetrics().ToArray();
+            var metrics2 = node.Metrics.ToArray();
 
             Assert.AreEqual(1, metrics2[0].GetLabelValue("instance"));
             Assert.AreEqual(2, metrics2[1].GetLabelValue("instance"));

@@ -102,13 +102,6 @@ namespace Moducom.Instrumentation.Abstract
         public interface IMetricsCollection : IMetricsProvider
         {
             void AddMetric(IMetricBase metric);
-
-            /// <summary>
-            /// Experimental factory version
-            /// </summary>
-            /// <typeparam name="T"></typeparam>
-            /// <param name="key"></param>
-            T AddMetric<T>(string key = null) where T : IMetricBase;
         }
     }
 
@@ -119,7 +112,7 @@ namespace Moducom.Instrumentation.Abstract
     public interface INode :
         Experimental.IWithChildren,
         Experimental.IMetricProvider,
-        Experimental.IMetricsCollection,
+        Experimental.IMetricsProvider,
         Experimental.INamed
     {
     }
