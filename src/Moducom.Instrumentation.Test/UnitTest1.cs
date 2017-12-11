@@ -1,8 +1,10 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moducom.Instrumentation.Abstract;
 using Moducom.Instrumentation.Abstract.Experimental;
+using Moducom.Instrumentation.Experimental;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Moducom.Instrumentation.Test
@@ -15,15 +17,30 @@ namespace Moducom.Instrumentation.Test
             node.AddCounter(new { instance = 1 });
             node.AddCounter(new { instance = 2 });
 
-            var subNode = node.FindChildByPath(new[] { "subnode" }, key => new DummyRepository.Node(key));
+            var subNode = node.FindChildByPath(new[] { "subnode" }, key => new MemoryRepository.Node(key));
 
             subNode.AddCounter(new { instance = 3 });
+
+            subNode = node.FindChildByPath(new[] { "subnode2" }, key => new MemoryRepository.Node(key));
+
+            subNode.AddCounter(new { instance = 1 }).Increment();
+        }
+
+        /// <summary>
+        /// This one also adds gauges 
+        /// </summary>
+        /// <param name="node"></param>
+        static void setup2(INode node)
+        {
+            var gauge = node.GetMetricExperimental<IGauge>(new { instance = 3 });
+
+            gauge.Value = 5;
         }
 
         [TestMethod]
         public void TestMethod1()
         {
-            var repo = new DummyRepository();
+            var repo = new MemoryRepository();
 
             INode node = repo["counter/main"];
 
@@ -46,7 +63,7 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void CounterMetricTest()
         {
-            var repo = new DummyRepository();
+            var repo = new MemoryRepository();
 
             INode node = repo["counter/main"];
 
@@ -60,7 +77,7 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void CounterLabelsTest()
         {
-            var repo = new DummyRepository();
+            var repo = new MemoryRepository();
 
             INode node = repo["counter/main"];
 
@@ -81,7 +98,7 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void FactoryTest()
         {
-            var repo = new DummyRepository();
+            var repo = new MemoryRepository();
 
             INode node = repo["counter/main"];
 
@@ -98,11 +115,21 @@ namespace Moducom.Instrumentation.Test
             describer.Value = "Test";
         }
 
+        [TestMethod]
+        public void CounterExperimentalTest()
+        {
+            var repo = new MemoryRepository();
+
+            ICounter node = repo.GetCounterExperimental("counter/main");
+
+            node.Increment();
+        }
+
 
         [TestMethod]
         public void CounterNodeExperimentalTest()
         {
-            var repo = new DummyRepository();
+            var repo = new MemoryRepository();
 
             ICounterNode node = repo.GetCounterNodeExperimental("counter/main");
 
@@ -112,6 +139,79 @@ namespace Moducom.Instrumentation.Test
 
             Assert.AreEqual(2, node.Labels(new { instance = 1 }).Value);
             Assert.AreEqual(77, node.Labels(new { instance = 2 }).Value);
+        }
+
+
+        [TestMethod]
+        public void TextFileDumpTest()
+        {
+            var repo = new MemoryRepository();
+
+            setup(repo["counter/main"]);
+            setup2(repo["gauge/main"]);
+
+            repo["uptime"].AddUptimeGauge();
+
+            var d = new TextFileDump(repo);
+
+            var writer = new StringWriter();
+
+            d.Dump(writer);
+
+            writer.Flush();
+            var result = writer.ToString();
+        }
+
+
+        [TestMethod]
+        public void LabelBreakerTest()
+        {
+            var repo = new MemoryRepository();
+
+            ICounter node = repo.GetCounterExperimental("counter/main", new { fail = true });
+
+            node.Increment();
+
+        }
+
+
+        [TestMethod]
+        public void GaugeTest()
+        {
+            var repo = new MemoryRepository();
+
+            var gauge = repo["gauge/main"].GetMetricExperimental<IGauge>();
+
+            gauge.Increment(5);
+        }
+
+
+        [TestMethod]
+        public void HistogramTest()
+        {
+            var repo = new MemoryRepository();
+
+            var histogram = repo["gauge/main"].GetMetricExperimental<IHistogram<double>>();
+
+            var testStart = DateTime.Now;
+
+            histogram.Value = 5;
+            histogram.Value = 10;
+
+            var testEnd = DateTime.Now;
+
+            var values = histogram.Values.ToArray();
+
+            Assert.AreEqual(5, values[0].Value);
+            Assert.IsTrue(values[0].TimeStamp > testStart);
+            Assert.IsTrue(values[0].TimeStamp < testEnd);
+            Assert.AreEqual(10, values[1].Value);
+            Assert.IsTrue(values[1].TimeStamp > testStart);
+            Assert.IsTrue(values[1].TimeStamp < testEnd);
+
+            Assert.AreEqual(2, histogram.GetCount(DateTime.MinValue));
+            Assert.AreEqual(15, histogram.GetSum(DateTime.MinValue));
+            Assert.AreEqual(7.5, histogram.GetAverage(DateTime.MinValue));
         }
     }
 }

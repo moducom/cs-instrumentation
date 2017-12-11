@@ -29,9 +29,9 @@ namespace Moducom.Instrumentation.Abstract
                 node.AddMetric(metric);
             }
 
-            public T AddMetric<T>(string key = null) where T : IMetricBase
+            public TMetric AddMetric<TMetric>(string key = null) where TMetric : IMetricBase
             {
-                return node.AddMetric<T>(key);
+                return node.AddMetric<TMetric>(key);
             }
 
             public IEnumerable<IMetricBase> GetMetrics(object labels = null)
@@ -85,6 +85,7 @@ namespace Moducom.Instrumentation.Abstract
     public static class IRepositoryExtensions
     {
         /// <summary>
+        /// Get existing or new counter at the specified path with the specified labels
         /// </summary>
         /// <param name="repository"></param>
         /// <param name="path"></param>
@@ -95,7 +96,30 @@ namespace Moducom.Instrumentation.Abstract
         /// </remarks>
         public static ICounter GetCounterExperimental(this IRepository repository, string path, object labels = null)
         {
-            return repository[path].GetMetrics(labels).OfType<ICounter>().Single();
+            try
+            {
+                INode node = repository[path];
+                /*
+                // get all counters which match the specified label
+                var _counters = node.GetMetrics(labels).ToArray();
+                var counters = _counters.OfType<ICounter>();
+
+                // should only ever be one
+                if (counters.Any()) return counters.Single();
+
+                var counter = node.AddMetric<ICounter>();
+
+                counter.SetLabels(labels);
+
+                return counter; */
+
+                return node.GetMetricExperimental<ICounter>(labels);
+            }
+            catch(Exception)
+            {
+                // FIX: Log instrumentation failure somehow
+                return new Instrumentation.Experimental.NullCounter();
+            }
         }
 
         public static Experimental.ICounterNode GetCounterNodeExperimental(this IRepository repository, string path)

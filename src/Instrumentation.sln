@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moducom.Instrumentation.Pro
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moducom.Instrumentation.Prometheus.TestExporter", "Moducom.Instrumentation.Prometheus.TestServer\Moducom.Instrumentation.Prometheus.TestExporter.csproj", "{39DB2E6B-C1F9-472F-94D5-0D1297E2851C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moducom.Instrumentation.Experimental", "Moducom.Instrumentation.Experimental\Moducom.Instrumentation.Experimental.csproj", "{4A991BB2-0766-4331-8C00-158E18C371B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{39DB2E6B-C1F9-472F-94D5-0D1297E2851C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39DB2E6B-C1F9-472F-94D5-0D1297E2851C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39DB2E6B-C1F9-472F-94D5-0D1297E2851C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A991BB2-0766-4331-8C00-158E18C371B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A991BB2-0766-4331-8C00-158E18C371B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A991BB2-0766-4331-8C00-158E18C371B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A991BB2-0766-4331-8C00-158E18C371B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

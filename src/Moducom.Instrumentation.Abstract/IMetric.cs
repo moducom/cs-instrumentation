@@ -10,10 +10,15 @@ namespace Moducom.Instrumentation.Abstract
         T Value { get; }
     }
 
+    public interface IMetricSetter<T> : IMetricBase
+    {
+        T Value { set; }
+    }
+
 
     public interface IMetric<T> : IMetricBase<T>
     {
-        T Value { get; set; }
+        new T Value { get; set; }
     }
 
 
@@ -32,9 +37,28 @@ namespace Moducom.Instrumentation.Abstract
     /// </summary>
     public interface ICounter : ICounter<double> { }
 
-    public interface IGauge<T> : IMetric<T>
+    public interface IGauge<T> : ICounter<T>, 
+        IMetric<T>
+        //IMetricSetter<T> // would prefer this approach but haven't quite cracked the nut on .NET get/set property in different interfaces
+        where T : IComparable
     {
+        // Mimicking prometheus approach, but I still feel an "adjust" might be more appropriate
+        // rather than Increment/Decrement (again because it's all signed operations anyway)
         void Decrement(T byAmount);
+    }
+
+    public interface IGauge : IGauge<double> { }
+
+
+    public interface IHistogram<T> : IMetricSetter<T>
+    {
+        IEnumerable<IHistogramNode<T>> Values { get; }
+    }
+
+    public interface IHistogramNode<T>
+    {
+        T Value { get; }
+        DateTime TimeStamp { get; }
     }
 
     public static class IMetricExtensions
@@ -51,6 +75,54 @@ namespace Moducom.Instrumentation.Abstract
         public static void Increment(this ICounter counter)
         {
             counter.Increment(1);
+        }
+
+
+        //const DateTime _minValue = DateTime.MinValue;
+
+
+        /// <summary>
+        /// Get sum of all values, starting from the specified timestamp
+        /// TODO: *might* want a binning version, or might just wait until we plug into proper metrics codebase
+        /// </summary>
+        /// <param name="histogram"></param>
+        /// <returns></returns>
+        /// <remarks>
+        /// NOTE: Beware, this code probably won't work with a plugin provider like prometheus - pretty sure it won't
+        /// expose the raw histogram data for us
+        /// </remarks>
+        public static double GetSum(this IHistogram<double> histogram, DateTime startFrom)
+        {
+            return histogram.Values.SkipWhile(x => x.TimeStamp < startFrom).Sum(x => x.Value);
+        }
+
+
+        /// <summary>
+        /// Get count of all values, starting from the specified timestamp
+        /// TODO: *might* want a binning version, or might just wait until we plug into proper metrics codebase
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="histogram"></param>
+        /// <param name="startFrom"></param>
+        /// <returns></returns>
+        public static double GetCount<T>(this IHistogram<T> histogram, DateTime startFrom)
+        {
+            return histogram.Values.SkipWhile(x => x.TimeStamp < startFrom).Count();
+        }
+
+
+        /// <summary>
+        /// Get average of all values starting from specified timestamp - no binning
+        /// TODO: *might* want a binning version, or might just wait until we plug into proper metrics codebase
+        /// </summary>
+        /// <param name="histogram"></param>
+        /// <param name="startFrom"></param>
+        /// <returns></returns>
+        public static double GetAverage(this IHistogram<double> histogram, DateTime startFrom)
+        {
+            var count = histogram.GetCount(startFrom);
+            double average = histogram.GetSum(startFrom) / count;
+            return average;
         }
     }
 }

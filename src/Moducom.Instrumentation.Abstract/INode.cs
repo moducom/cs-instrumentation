@@ -24,6 +24,8 @@ namespace Moducom.Instrumentation.Abstract
             /// </summary>
             /// <param name="labels">Can be either an anonymous object or an IDictionary of string and object</param>
             void SetLabels(object labels);
+
+            IEnumerable<string> Labels { get; }
         }
 
         /// <summary>
@@ -147,6 +149,28 @@ namespace Moducom.Instrumentation.Abstract
             var metric = node.AddMetric<IMetric<T>>();
 
             if (labels != null) metric.SetLabels(labels);
+
+            return metric;
+        }
+
+        /// <summary>
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="node"></param>
+        /// <param name="labels"></param>
+        /// <returns></returns>
+        public static T GetMetricExperimental<T>(this INode node, object labels = null)
+            where T: IMetricBase
+        {
+            var _metrics = node.GetMetrics(labels).ToArray();
+            var metrics = _metrics.OfType<T>();
+
+            // should only ever be one
+            if (metrics.Any()) return metrics.Single();
+
+            var metric = node.AddMetric<T>();
+
+            metric.SetLabels(labels);
 
             return metric;
         }

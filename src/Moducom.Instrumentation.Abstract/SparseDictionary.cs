@@ -28,7 +28,15 @@ namespace Moducom.Instrumentation.Abstract
             set => this.value.Value[key] = value;
         }
 
-        public ICollection<TKey> Keys => throw new NotImplementedException();
+        public ICollection<TKey> Keys
+        {
+            get
+            {
+                if (value.IsAllocated) return value.value.Keys;
+
+                return new TKey[0];
+            }
+        }
 
         public ICollection<TValue> Values
         {

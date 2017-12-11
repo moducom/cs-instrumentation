@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <!-- Required elements-->
+    <id>Moducom.Instrumentation.Experimental</id>
+    <version>0.0.0</version>
+    <description>Experimental instrumentation code</description>
+    <authors>Malachi Burke</authors>
+
+    <!-- Optional elements -->
+    <releaseNotes>Won't bump to 1.0.0 until TC is auto versioning the builds for us</releaseNotes>
+    <!-- ... -->
+  </metadata>
+  <!-- Optional 'files' node -->
+  <files>
+    <file src="bin/Debug/net46/Moducom.Instrumentation.Experimental.dll" target="lib\net46" />
+    <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Experimental.dll" target="lib\netstandard1.6" />
+  </files>
+</package>

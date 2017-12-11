@@ -5,9 +5,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
 
-namespace Moducom.Instrumentation.Test
+namespace Moducom.Instrumentation.Experimental
 {
-    public class DummyRepository : IRepository
+    // TODO: Probably getting NETSTANDARD1_6 will be easy, but not important right now
+#if NET40 || NET46 || NETSTANDARD2_0
+    public class MemoryRepository : IRepository
     {
         readonly Node rootNode = new Node("[root]");
 
@@ -54,11 +56,15 @@ namespace Moducom.Instrumentation.Test
             /// <returns></returns>
             internal static IEnumerable<KeyValuePair<string, object>> LabelHelper(object labels)
             {
+                if (labels == null) return Enumerable.Empty<KeyValuePair<string, object>>();
+
                 if (labels is IDictionary<string, object> dictionaryLabels)
                     return dictionaryLabels;
                 else
                     return from n in labels.GetType().GetProperties()
-                           select KeyValuePair.Create(n.Name, n.GetValue(labels));
+                           select new KeyValuePair<string, object>(n.Name, n.GetValue(labels, null));
+                            // NOTE: This was working, but doesnt now.  Not sure what circumstances this is OK for
+                           //select KeyValuePair.Create(n.Name, n.GetValue(labels, null));
             }
 
             /// <summary>
@@ -79,18 +85,22 @@ namespace Moducom.Instrumentation.Test
 
                 foreach(var value in metrics)
                 {
+                    bool isMatched = true;
+
                     foreach (var label in LabelHelper(labels))
                     {
-                        if(value.GetLabelValue(label.Key, out object targetLabelValue))
+                        if (value.GetLabelValue(label.Key, out object targetLabelValue))
                         {
                             // FIX: DbNull represents "wildcard" value and only match on key
                             // this is not super intuitive though, so find a better approach
-                            if (label.Value == DBNull.Value)
-                                yield return value;
-                            else if (label.Value.Equals(targetLabelValue))
-                                yield return value;
+                            if (label.Value == DBNull.Value) { }
+                            else if (label.Value.Equals(targetLabelValue)) { }
+                            else isMatched = false;
                         }
+                        else isMatched = false;
                     }
+
+                    if (isMatched) yield return value;
                 }
             }
 
@@ -101,6 +111,12 @@ namespace Moducom.Instrumentation.Test
             }
 
 
+            /// <summary>
+            /// Interim factory method, to be replaced by IoC/DI
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="key"></param>
+            /// <returns></returns>
             public T CreateMetric<T>(string key)
                 where T : IMetricBase
             {
@@ -110,10 +126,26 @@ namespace Moducom.Instrumentation.Test
 
                     return (T)(IMetricBase)retVal;
                 }
+                else if (typeof(T) == typeof(IGauge))
+                {
+                    var retVal = new Gauge();
+
+                    return (T)(IMetricBase)retVal;
+                }
+                else if (typeof(T) == typeof(IHistogram<double>))
+                {
+                    var retVal = new Histogram();
+
+                    return (T)(IMetricBase)retVal;
+                }
                 else
                 {
                     var t = typeof(T);
+#if NET40
+                    var underlyingValueType = t.GetGenericArguments().First();
+#else
                     var underlyingValueType = t.GenericTypeArguments.First();
+#endif
 
                     var genericType = t.GetGenericTypeDefinition();
 
@@ -149,7 +181,6 @@ namespace Moducom.Instrumentation.Test
         }
     }
 
-
     public class MetricBase : IMetricBase
     {
         SparseDictionary<string, object> labels;
@@ -165,9 +196,11 @@ namespace Moducom.Instrumentation.Test
             // which isn't exactly what we're after
             //this.labels.Concat(LabelHelper(labels));
 
-            foreach (var label in DummyRepository.Node.LabelHelper(labels))
+            foreach (var label in MemoryRepository.Node.LabelHelper(labels))
                 this.labels.Add(label);
         }
+
+        public IEnumerable<string> Labels => labels.Keys;
     }
 
 
@@ -192,7 +225,7 @@ namespace Moducom.Instrumentation.Test
 
     internal class Counter : MetricBase, ICounter
     {
-        double value = 0;
+        protected double value = 0;
 
         public double Value => value;
 
@@ -206,6 +239,96 @@ namespace Moducom.Instrumentation.Test
     }
 
 
+    internal class Gauge : Counter, IGauge
+    {
+        public event Action<IGauge> Decremented;
+
+        public void Decrement(double byAmount)
+        {
+            value -= byAmount;
+            Decremented?.Invoke(this);
+        }
+
+        public new double Value
+        {
+            get => this.value;
+            set { this.value = value; }
+        }
+    }
+
+
+    internal class UptimeGauge : MetricBase, IGauge
+    {
+        // initialized at first "mention" of UptimeGauge
+        static readonly DateTime Start = DateTime.Now;
+
+        public void Increment(double byAmount) => throw new InvalidOperationException();
+        public void Decrement(double byAmount) => throw new InvalidOperationException();
+
+        public double Value
+        {
+            get => DateTime.Now.Subtract(Start).TotalMinutes;
+            set => throw new InvalidOperationException();
+        }
+    }
+
+
+    /// <summary>
+    /// Needs more work binning/bucketing not worked out at all
+    /// </summary>
+    internal class Histogram : MetricBase, IHistogram<double>
+    {
+        // adapted from https://github.com/phnx47/Prometheus.Client/blob/master/src/Prometheus.Client/Histogram.cs
+        readonly double[] bins;
+        static readonly double[] defaultBins = { .005, .01, .025, .05, .075, .1, .25, .5, .75, 1, 2.5, 5, 7.5, 10 };
+        // NOTE: for binning across entire time spectrum only
+        readonly ulong[] binCounts;
+
+        internal class Item : IHistogramNode<double>
+        {
+            internal readonly DateTime timeStamp = DateTime.Now;
+            internal double value;
+
+            DateTime IHistogramNode<double>.TimeStamp => timeStamp;
+
+            double IHistogramNode<double>.Value => value;
+        }
+
+        internal Histogram(double[] bins = null)
+        {
+            this.bins = bins ?? defaultBins;
+            binCounts = new ulong[this.bins.Length];
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        LinkedList<Item> items = new LinkedList<Item>();
+
+        public double Value
+        {
+            set
+            {
+                var item = new Item
+                {
+                    value = value
+                };
+                items.AddLast(item);
+
+                // FIX: Cheap and nasty auto prune, only hold on to 30 minutes data
+                // We need to prune in more places and with more configurability
+                while(DateTime.Now.Subtract(items.First.Value.timeStamp).TotalMinutes > 30)
+                {
+                    items.RemoveFirst();
+                }
+            }
+        }
+
+        public IEnumerable<IHistogramNode<double>> Values => items;
+    }
+
+#endif
+
     public class NullMetric : IMetricBase
     {
         public bool GetLabelValue(string label, out object value)
@@ -217,6 +340,8 @@ namespace Moducom.Instrumentation.Test
         public void SetLabels(object labels)
         {
         }
+
+        public IEnumerable<string> Labels => Enumerable.Empty<string>();
     }
 
     public class NullCounter : NullMetric, ICounter
@@ -229,6 +354,7 @@ namespace Moducom.Instrumentation.Test
     }
 
 
+#if !NETSTANDARD1_6
     public static class INodeExtensions
     {
         public static ICounter AddCounter(this INode node)
@@ -237,6 +363,20 @@ namespace Moducom.Instrumentation.Test
             var counter = new Counter();
             node.AddMetric(counter);
             return counter;
+        }
+
+
+        /// <summary>
+        /// NOTE: Probably won't translate well to prometheus.io
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public static IGauge AddUptimeGauge(this INode node)
+        {
+            var gauge = new UptimeGauge();
+            node.AddMetric(gauge);
+            //if (labels != null) gauge.SetLabels(labels);
+            return gauge;
         }
 
 
@@ -249,4 +389,5 @@ namespace Moducom.Instrumentation.Test
             return counter;
         }
     }
+#endif
 }
