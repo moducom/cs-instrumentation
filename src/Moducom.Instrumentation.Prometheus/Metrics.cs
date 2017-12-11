@@ -16,7 +16,7 @@ namespace Moducom.Instrumentation.Prometheus
             this.nativeCounter = nativeCounter;
         }
 
-        public double Value => throw new NotImplementedException();
+        public double Value => nativeCounter.Value;
 
         public bool GetLabelValue(string label, out object value)
         {

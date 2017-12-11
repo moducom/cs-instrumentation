@@ -43,6 +43,12 @@ namespace Moducom.Instrumentation.Test
         {
             var c = Metrics.CreateCounter("test", "TEST");
             Metrics.CreateCounter("root_test", "TEST");
+            Counter c2 = Metrics.CreateCounter("test2", "TEST", "instance");
+
+            c2.Labels("1").Inc();
+            c2.Labels("2").Inc(5);
+
+            var collected = c2.Collect();
 
             var r = new PRO.Repository();
 
@@ -51,6 +57,8 @@ namespace Moducom.Instrumentation.Test
             c.Inc();
 
             var counter = MOD.INodeExtensions.AddCounterExperimental(metric);
+
+            c.Inc();
 
             var metric2 = r["test"].AddMetric<MOD.ICounter>();
         }

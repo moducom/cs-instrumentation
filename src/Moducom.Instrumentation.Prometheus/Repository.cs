@@ -21,6 +21,11 @@ namespace Moducom.Instrumentation.Prometheus
             {
                 var m = registry.CollectAll();
 
+                // FIX: Combine this with our memory repository to utilize our own tree-tracking code
+                // OR decompose the collector results to form ad-hoc tree awareness
+                var path_pieces = path.Split('/');
+                var name = path_pieces[path_pieces.Length - 1];
+
                 path = path.Replace('/', '_');
 
                 var metricFamily = m.SingleOrDefault(x => x.name == path);
@@ -29,7 +34,7 @@ namespace Moducom.Instrumentation.Prometheus
                 {
                     var counter = Metrics.CreateCounter("test", "test");
 
-                    var node = new Node();
+                    var node = new Node(name);
 
                     node.AddMetric(new CounterMetric(counter));
 
@@ -37,7 +42,9 @@ namespace Moducom.Instrumentation.Prometheus
                 }
                 else
                 {
-                    var node = new Node();
+                    var node = new Node(name);
+
+                    node.metricsFamily = metricFamily;
 
                     // FIX: Kludgey.  We might have to ad-hoc create nodes all the time, but we'd rather
                     // keep them persistent - even if it uses more memory, it's more deterministic for the
@@ -152,6 +159,16 @@ namespace Moducom.Instrumentation.Prometheus
             }
 
             public IEnumerable<string> Labels => throw new NotImplementedException();
+
+            public override bool Equals(object obj)
+            {
+                if(obj is CounterWrapper cw)
+                {
+                    return child.Equals(cw.child);
+                }
+
+                return false;
+            }
         }
 
         public MOD.INode this[string path]

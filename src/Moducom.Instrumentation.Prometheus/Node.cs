@@ -16,7 +16,7 @@ namespace Moducom.Instrumentation.Prometheus
 {
     internal class Node : INode
     {
-        PRO.Contracts.MetricFamily metricsFamily;
+        internal PRO.Contracts.MetricFamily metricsFamily;
         PRO.Client.Collectors.ICollector collector;
         Repository repository;
         PRO.Client.MetricFactory metricFactory = PRO.Client.Metrics.DefaultFactory;
@@ -26,9 +26,11 @@ namespace Moducom.Instrumentation.Prometheus
         // so that we can get fully-qualified name
         INode parent;
 
-        string name;
+        readonly string name;
 
         public string Name => name;
+
+        internal Node(string name) { this.name = name;  }
 
         protected string GetFullName()
         {
