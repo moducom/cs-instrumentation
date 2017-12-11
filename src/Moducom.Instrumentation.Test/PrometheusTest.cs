@@ -69,7 +69,17 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void PrometheusLabelBreakerTest()
         {
+            Metrics.CreateCounter("breaker_test", 
+                "Hopefully this doesn't break", 
+                new[] { "label1", "label2" });
 
+            Metrics.CreateCounter("breaker_test",
+                "Hopefully this doesn't break",
+                new[] { "label2" });
+
+            Metrics.CreateCounter("breaker_test",
+                "Hopefully this doesn't break",
+                new[] { "label3", "label2" });
         }
     }
 }
