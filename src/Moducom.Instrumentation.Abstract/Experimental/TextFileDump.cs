@@ -62,7 +62,7 @@ namespace Moducom.Instrumentation.Experimental
 
             writer.WriteLine(indent + "+ " + node.Name);
 
-            foreach (IMetricBase metric in node.GetMetrics())
+            foreach (IMetricBase metric in node.Metrics)
             {
                 writer.Write(indent + "  - ");
 

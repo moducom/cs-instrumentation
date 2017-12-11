@@ -32,27 +32,7 @@ namespace Moducom.Instrumentation.Abstract
             void SetLabels(object labels);
         }
 
-        /// <summary>
-        /// TODO: move this to a non-instrumentation-specific place (maybe fact.extensions.collections)
-        /// TODO: removed INamed requirement (AddChild will need to take name as part of parameter)
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        public interface IChildProvider<T>
-            where T: INamed
-        {
-            IEnumerable<T> Children { get; }
-
-            T GetChild(string name);
-        }
-
-
-        public interface IChildCollection<T> : IChildProvider<T>
-            where T: INamed
-        {
-            void AddChild(T child);
-        }
-
-        public interface IWithChildren : IChildCollection<INode> { }
+        public interface IWithChildren : Instrumentation.Experimental.IChildCollection<INode> { }
 
         /// <summary>
         /// TODO: Use Fact.Extensions version of this
@@ -101,6 +81,26 @@ namespace Moducom.Instrumentation.Abstract
         /// </summary>
         public interface IMetricsProvider
         {
+            /// <summary>
+            /// Retrieve all metrics associated with this node, filtered by labels
+            /// CURRENT behavior is that labels = null will return ALL metrics, but this is
+            /// to be changed (to use Metrics property for that)
+            /// </summary>
+            /// <param name="labels"></param>
+            /// <returns></returns>
+            IEnumerable<IMetricBase> GetMetrics(object labels = null);
+
+            /// <summary>
+            /// All metrics for this node, unfiltered
+            /// </summary>
+            IEnumerable<IMetricBase> Metrics { get; }
+        }
+
+        /// <summary>
+        /// TODO: Phase this out as an "always available" thing
+        /// </summary>
+        public interface IMetricsCollection : IMetricsProvider
+        {
             void AddMetric(IMetricBase metric);
 
             /// <summary>
@@ -109,13 +109,6 @@ namespace Moducom.Instrumentation.Abstract
             /// <typeparam name="T"></typeparam>
             /// <param name="key"></param>
             T AddMetric<T>(string key = null) where T : IMetricBase;
-
-            /// <summary>
-            /// Retrieve all metrics associated with this node, filtered by labels
-            /// </summary>
-            /// <param name="labels"></param>
-            /// <returns></returns>
-            IEnumerable<IMetricBase> GetMetrics(object labels = null);
         }
     }
 
@@ -126,7 +119,7 @@ namespace Moducom.Instrumentation.Abstract
     public interface INode :
         Experimental.IWithChildren,
         Experimental.IMetricProvider,
-        Experimental.IMetricsProvider,
+        Experimental.IMetricsCollection,
         Experimental.INamed
     {
     }
@@ -250,11 +243,11 @@ namespace Moducom.Instrumentation.Abstract
         /// <param name="nodeFactory"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T FindChildByPath<T>(this Experimental.IChildProvider<T> startNode, IEnumerable<string> splitPaths, 
+        public static T FindChildByPath<T>(this Instrumentation.Experimental.IChildProvider<T> startNode, IEnumerable<string> splitPaths, 
             Func<T, string, T> nodeFactory = null)
             where T: Experimental.INamed
         {
-            Experimental.IChildProvider<T> currentNode = startNode;
+            Instrumentation.Experimental.IChildProvider<T> currentNode = startNode;
 
             // The ChildProvider must also be a type of T for this to work
             T node = (T)currentNode;
@@ -271,7 +264,7 @@ namespace Moducom.Instrumentation.Abstract
                     // If no way to create a new node, then we basically abort (node not found)
                     if (nodeFactory == null) return default(T);
 
-                    if (currentNode is Experimental.IChildCollection<T> currentWritableNode)
+                    if (currentNode is Instrumentation.Experimental.IChildCollection<T> currentWritableNode)
                     {
                         // TODO: have a configuration flag to determine auto add
                         node = nodeFactory(node, name);
@@ -281,7 +274,7 @@ namespace Moducom.Instrumentation.Abstract
                         return default(T);
                 }
 
-                currentNode = node as Experimental.IChildProvider<T>;
+                currentNode = node as Instrumentation.Experimental.IChildProvider<T>;
             }
 
             return node;

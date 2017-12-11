@@ -109,6 +109,8 @@ namespace Moducom.Instrumentation.Experimental
                 }
             }
 
+            public IEnumerable<IMetricBase> Metrics => metrics;
+
 
             public void AddMetric(IMetricBase metric)
             {

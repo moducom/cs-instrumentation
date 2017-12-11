@@ -8,7 +8,7 @@ using Moducom.Instrumentation.Abstract;
 namespace Moducom.Instrumentation.Experimental
 {
     public interface ITaxonomy<TNode, TINode>
-        where TINode: Abstract.Experimental.INamed, Abstract.Experimental.IChildProvider<TINode>
+        where TINode: Abstract.Experimental.INamed, IChildProvider<TINode>
         where TNode: TINode
     {
         TINode RootNode { get; }
@@ -16,11 +16,30 @@ namespace Moducom.Instrumentation.Experimental
         TINode this[string path] { get; }
     }
 
+    /// <summary>
+    /// TODO: move this to a non-instrumentation-specific place (maybe fact.extensions.collections)
+    /// TODO: removed INamed requirement (AddChild will need to take name as part of parameter)
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public interface IChildProvider<T>
+    {
+        IEnumerable<T> Children { get; }
+
+        T GetChild(string name);
+    }
+
+
+    public interface IChildCollection<T> : IChildProvider<T>
+    {
+        void AddChild(T child);
+    }
+
+
     public class Taxonomy
     {
         public class NodeBase<TNode, TINode> : 
             Abstract.Experimental.INamed,
-            Abstract.Experimental.IChildCollection<TINode>
+            IChildCollection<TINode>
             where TINode: Abstract.Experimental.INamed
             where TNode: TINode
         {
@@ -52,7 +71,7 @@ namespace Moducom.Instrumentation.Experimental
     }
 
     public abstract class Taxonomy<TNode, TINode> : Taxonomy, ITaxonomy<TNode, TINode>
-        where TINode : Abstract.Experimental.INamed, Abstract.Experimental.IChildProvider<TINode>
+        where TINode : Abstract.Experimental.INamed, IChildProvider<TINode>
         where TNode : TINode
     {
         public abstract TINode RootNode { get; }

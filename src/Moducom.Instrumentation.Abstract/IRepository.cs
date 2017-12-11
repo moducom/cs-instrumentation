@@ -40,6 +40,8 @@ namespace Moducom.Instrumentation.Abstract
                 return node.GetMetrics(labels);
             }
 
+            public IEnumerable<IMetricBase> Metrics => node.Metrics;
+
             /// <summary>
             /// FIX: labels could very well result in multiple matches rather than single one.  Unsure how to
             /// handle this right now
