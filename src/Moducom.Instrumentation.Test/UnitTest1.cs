@@ -14,16 +14,16 @@ namespace Moducom.Instrumentation.Test
     {
         void setup(INode node)
         {
-            node.AddCounter(new { instance = 1 });
-            node.AddCounter(new { instance = 2 });
+            node.GetCounter(new { instance = 1 });
+            node.GetCounter(new { instance = 2 });
 
             var subNode = node.FindChildByPath(new[] { "subnode" }, (parent, key) => new MemoryRepository.Node(key));
 
-            subNode.AddCounter(new { instance = 3 });
+            subNode.GetCounter(new { instance = 3 });
 
             subNode = node.FindChildByPath(new[] { "subnode2" }, (parent, key) => new MemoryRepository.Node(key));
 
-            subNode.AddCounter(new { instance = 1 }).Increment();
+            subNode.GetCounter(new { instance = 1 }).Increment();
         }
 
         /// <summary>
@@ -67,9 +67,11 @@ namespace Moducom.Instrumentation.Test
 
             INode node = repo["counter/main"];
 
-            var value = node.AddCounter();
+            //var value = node.AddCounter();
 
-            value.SetLabels(new { instance = 1 });
+            //value.SetLabels(new { instance = 1 });
+
+            var value = node.GetCounter(new { instance = 1 });
             value.Increment(1);
         }
 
@@ -109,10 +111,15 @@ namespace Moducom.Instrumentation.Test
             counter.Increment(1);
 
             // NOTE: discouraged to add different types of metrics under one node
-            var describer = node.AddMetricExperimental<string>();
+            // right now the GetMetric code can't handle two different types with the same label
+            // so we push in test = 2 for now
+            var describer = node.AddMetricExperimental<string>(new { test = 2 });
 
-            describer.SetLabels(new { test = 1 });
+            //describer.SetLabels(new { test = 1 });
             describer.Value = "Test";
+
+            Assert.AreEqual("test", describer.Labels.First());
+            Assert.AreEqual(2, describer.GetLabelValue("test"));
         }
 
         [TestMethod]
@@ -180,9 +187,12 @@ namespace Moducom.Instrumentation.Test
         {
             var repo = new MemoryRepository();
 
-            var gauge = repo["gauge/main"].GetMetricExperimental<IGauge>();
+            //var gauge = repo["gauge/main"].GetMetricExperimental<IGauge>();
+            var gauge = repo["gauge/main"].GetGauge();
 
             gauge.Increment(5);
+
+            Assert.AreEqual(5, gauge.Value);
         }
 
 

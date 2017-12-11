@@ -129,6 +129,7 @@ namespace Moducom.Instrumentation.Abstract
     /// Mainly amounts to something that can interact directly with labels
     /// </summary>
     public interface IMetricBase :
+        IValueGetter,
         Experimental.ILabelsProvider,
         Experimental.ILabelsCollection
     {
@@ -177,9 +178,10 @@ namespace Moducom.Instrumentation.Abstract
         /// <returns></returns>
         public static IMetric<T> AddMetricExperimental<T>(this INode node, object labels = null)
         {
-            var metric = node.AddMetric<IMetric<T>>();
+            var metric = node.GetMetric<IMetric<T>>(labels);
+            //var metric = node.AddMetric<IMetric<T>>();
 
-            if (labels != null) metric.SetLabels(labels);
+            //if (labels != null) metric.SetLabels(labels);
 
             return metric;
         }

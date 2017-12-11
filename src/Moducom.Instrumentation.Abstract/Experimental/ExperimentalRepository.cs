@@ -33,6 +33,46 @@ namespace Moducom.Instrumentation.Experimental
 
                     return (T)(object)counter;
                 }
+                else if (typeof(T) == typeof(IGauge))
+                {
+                    var retVal = new Gauge();
+
+                    retVal.SetLabels(labels);
+
+                    return (T)(IMetricBase)retVal;
+                }
+                else if (typeof(T) == typeof(IHistogram<double>))
+                {
+                    var retVal = new Histogram();
+
+                    retVal.SetLabels(labels);
+
+                    return (T)(IMetricBase)retVal;
+                }
+                else
+                {
+                    var t = typeof(T);
+#if NET40
+                    var underlyingValueType = t.GetGenericArguments().First();
+#else
+                    var underlyingValueType = t.GenericTypeArguments.First();
+#endif
+
+                    var genericType = t.GetGenericTypeDefinition();
+
+                    if (genericType == typeof(IMetric<>))
+                    {
+                        var typeToCreate = typeof(Metric<>).MakeGenericType(underlyingValueType);
+
+                        var retVal = (IMetricBase) Activator.CreateInstance(typeToCreate);
+
+                        retVal.SetLabels(labels);
+
+                        return (T)retVal;
+                    }
+
+                    return default(T);
+                }
                 throw new NotImplementedException();
             }
         }
@@ -119,62 +159,15 @@ namespace Moducom.Instrumentation.Experimental
 
 
             /// <summary>
-            /// Interim factory method, to be replaced by IoC/DI
-            /// Since we aren't yet at IoC/DI, utilize IMetricFactory based one to replace this
+            /// FIX: Phase this out, misnamed factory method
             /// </summary>
             /// <typeparam name="T"></typeparam>
             /// <param name="key"></param>
             /// <returns></returns>
-            public T CreateMetric<T>(string key)
-                where T : IMetricBase
-            {
-                if (typeof(T) == typeof(ICounter))
-                {
-                    var retVal = new Counter();
-
-                    return (T)(IMetricBase)retVal;
-                }
-                else if (typeof(T) == typeof(IGauge))
-                {
-                    var retVal = new Gauge();
-
-                    return (T)(IMetricBase)retVal;
-                }
-                else if (typeof(T) == typeof(IHistogram<double>))
-                {
-                    var retVal = new Histogram();
-
-                    return (T)(IMetricBase)retVal;
-                }
-                else
-                {
-                    var t = typeof(T);
-#if NET40
-                    var underlyingValueType = t.GetGenericArguments().First();
-#else
-                    var underlyingValueType = t.GenericTypeArguments.First();
-#endif
-
-                    var genericType = t.GetGenericTypeDefinition();
-
-                    if (genericType == typeof(IMetric<>))
-                    {
-                        var typeToCreate = typeof(Metric<>).MakeGenericType(underlyingValueType);
-
-                        object retVal = Activator.CreateInstance(typeToCreate);
-
-                        return (T)retVal;
-                    }
-
-                    return default(T);
-                }
-            }
-
-
             public T AddMetric<T>(string key)
                 where T: IMetricBase
             {
-                T metric = CreateMetric<T>(key);
+                T metric = metricFactory.CreateMetric<T>(key);
 
                 metrics.AddLast(metric);
 
@@ -407,6 +400,7 @@ namespace Moducom.Instrumentation.Experimental
         }
 
 
+        /*
         public static ICounter AddCounter(this INode node, object labels)
         {
             ICounter counter = node.AddCounter();
@@ -414,7 +408,7 @@ namespace Moducom.Instrumentation.Experimental
             counter.SetLabels(labels);
 
             return counter;
-        }
+        } */
     }
 #endif
 }

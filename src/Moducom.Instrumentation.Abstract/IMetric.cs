@@ -71,6 +71,24 @@ namespace Moducom.Instrumentation.Abstract
 
     public static class IMetricExtensions
     {
+        /// <summary>
+        /// Get or create a counter metric qualified by the given labels
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="labels"></param>
+        /// <returns></returns>
+        public static ICounter GetCounter(this Experimental.IMetricProvider provider, object labels = null) =>
+            provider.GetMetric<ICounter>(labels);
+
+        /// <summary>
+        /// Get or create a gauge metric qualified by the given labels
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="labels"></param>
+        /// <returns></returns>
+        public static IGauge GetGauge(this Experimental.IMetricProvider provider, object labels = null) =>
+            provider.GetMetric<IGauge>(labels);
+
         public static object GetLabelValue(this Experimental.ILabelsProvider labelsProvider, string label)
         {
             if (!labelsProvider.GetLabelValue(label, out object value))
