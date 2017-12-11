@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using PRO = global::Prometheus;
+using Moducom.Instrumentation.Abstract.Experimental;
 
 #if DEBUG
 [assembly: InternalsVisibleTo("Moducom.Instrumentation.Test")]
@@ -14,23 +15,22 @@ using PRO = global::Prometheus;
 
 namespace Moducom.Instrumentation.Prometheus
 {
-    internal class Node : INode
+    internal class Node : 
+        Experimental.Taxonomy.NodeBase<Node, INode>, 
+        INode,
+        Abstract.Experimental.IMetricProvider
     {
         internal PRO.Contracts.MetricFamily metricsFamily;
         PRO.Client.Collectors.ICollector collector;
         Repository repository;
         PRO.Client.MetricFactory metricFactory = PRO.Client.Metrics.DefaultFactory;
 
-        public IEnumerable<INode> Children => throw new NotImplementedException();
-
         // so that we can get fully-qualified name
         INode parent;
 
         readonly string name;
 
-        public string Name => name;
-
-        internal Node(string name) { this.name = name;  }
+        internal Node(string name) : base(name) { }
 
         protected string GetFullName()
         {
@@ -43,12 +43,6 @@ namespace Moducom.Instrumentation.Prometheus
             }
 
             return fullname;
-        }
-
-        public void AddChild(INode child)
-        {
-            throw new NotImplementedException();
-
         }
 
         public void AddMetric(IMetricBase metric)
@@ -70,10 +64,29 @@ namespace Moducom.Instrumentation.Prometheus
 
         public T AddMetric<T>(string key = null) where T : IMetricBase
         {
-            if(typeof(T) == typeof(ICounter))
+            return GetMetric<T>(null);
+        }
+
+        public IEnumerable<IMetricBase> GetMetrics(object labels = null)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        /// <summary>
+        /// Look up or create the metric
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="labels"></param>
+        /// <returns></returns>
+        public T GetMetric<T>(object labels = null) where T : ILabelsProvider, IValueGetter
+        {
+            if (typeof(T) == typeof(ICounter))
             {
                 if (metricsFamily != null)
                 {
+                    //Experimental.MemoryRepository.Node.LabelHelper(labels);
+
                     PRO.Client.Counter counter = metricFactory.CreateCounter(GetFullName(), "TBD");
                     collector = counter;
                     metricsFamily = counter.Collect();
@@ -84,20 +97,10 @@ namespace Moducom.Instrumentation.Prometheus
                     return default(T);
                 }
             }
-            else if(typeof(T) == typeof(IGauge<double>))
+            else if (typeof(T) == typeof(IGauge<double>))
             {
                 PRO.Client.Gauge gauge = metricFactory.CreateGauge(GetFullName(), "TBD");
             }
-            throw new NotImplementedException();
-        }
-
-        public INode GetChild(string name)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<IMetricBase> GetMetrics(object labels = null)
-        {
             throw new NotImplementedException();
         }
     }

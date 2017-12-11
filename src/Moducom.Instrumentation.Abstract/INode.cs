@@ -135,6 +135,7 @@ namespace Moducom.Instrumentation.Abstract
     /// Mainly amounts to something that can interact directly with labels
     /// </summary>
     public interface IMetricBase :
+        IValueGetter,
         Experimental.ILabelsProvider,
         Experimental.ILabelsCollection
     {

@@ -11,10 +11,17 @@ using global::Prometheus.Client.Collectors;
 
 namespace Moducom.Instrumentation.Prometheus
 {
-    internal class Repository : MOD.IRepository
+    internal class Repository : 
+        Moducom.Instrumentation.Experimental.Taxonomy<Node, MOD.INode>, MOD.IRepository
     {
         static ICollectorRegistry registry = CollectorRegistry.Instance;
 
+        protected override Node CreateNode(string name)
+        {
+            return new Node(name);
+        }
+
+        new // temporarily tagging as new as we pull in base classes
         public MOD.INode this[string path]
         {
             get
@@ -60,7 +67,7 @@ namespace Moducom.Instrumentation.Prometheus
             }
         }
 
-        public MOD.INode RootNode => throw new NotImplementedException();
+        public override MOD.INode RootNode => throw new NotImplementedException();
     }
 
     internal class RepositoryExperimental : MOD.IRepository
