@@ -67,14 +67,31 @@ namespace Moducom.Instrumentation.Abstract
         {
             /// <summary>
             /// Create a metric conforming to interface specified by T
-            /// If said metric conforming to key and labels has already been created before, 
-            /// then pre-existing metric or an alias to it is returned
             /// </summary>
             /// <typeparam name="T"></typeparam>
             /// <param name="key"></param>
             /// <param name="labels"></param>
             /// <returns></returns>
             T CreateMetric<T>(string key, object labels = null) 
+                where T : ILabelsProvider, IValueGetter;
+        }
+
+
+        /// <summary>
+        /// NEW and unused, shall be a semi-wrapper around IMetricFactory so that metric factory can focus
+        /// purely on creating new metrics
+        /// </summary>
+        public interface IMetricProvider
+        {
+            /// <summary>
+            /// Create or acquire a metric conforming to interface specified by T
+            /// If said metric conforming to key and labels has already been created before, 
+            /// then pre-existing metric or an alias to it is returned
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="labels"></param>
+            /// <returns></returns>
+            T GetMetric<T>(object labels = null)
                 where T : ILabelsProvider, IValueGetter;
         }
 

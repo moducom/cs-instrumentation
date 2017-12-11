@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
+using Moducom.Instrumentation.Abstract.Experimental;
 
 namespace Moducom.Instrumentation.Experimental
 {
@@ -25,7 +26,7 @@ namespace Moducom.Instrumentation.Experimental
 
         public INode RootNode => rootNode;
 
-        public class Node : INode
+        public class Node : INode, Abstract.Experimental.IMetricFactory
         {
             LinkedList<IMetricBase> metrics = new LinkedList<IMetricBase>();
 
@@ -173,6 +174,25 @@ namespace Moducom.Instrumentation.Experimental
                 return metric;
             }
 
+            /// <summary>
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="key"></param>
+            /// <param name="labels"></param>
+            /// <returns></returns>
+            /// <remarks>IMetricFactory version</remarks>
+            public T CreateMetric<T>(string key, object labels = null) where T : ILabelsProvider, IValueGetter
+            {
+                if (typeof(T) == typeof(ICounter))
+                {
+                    var counter = new Counter();
+
+                    counter.SetLabels(labels);
+
+                    return (T)(object)counter;
+                }
+                throw new NotImplementedException();
+            }
 
             public Node(string name)
             {
