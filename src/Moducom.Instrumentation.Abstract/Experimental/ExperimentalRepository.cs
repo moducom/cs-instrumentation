@@ -39,7 +39,7 @@ namespace Moducom.Instrumentation.Experimental
 
         static readonly MetricFactory metricFactory = new MetricFactory();
 
-        protected override Node CreateNode(string name) => new Node(name);
+        protected override Node CreateNode(INode parent, string name) => new Node(name);
 
         public override INode RootNode => rootNode;
 

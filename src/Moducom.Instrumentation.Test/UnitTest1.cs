@@ -17,11 +17,11 @@ namespace Moducom.Instrumentation.Test
             node.AddCounter(new { instance = 1 });
             node.AddCounter(new { instance = 2 });
 
-            var subNode = node.FindChildByPath(new[] { "subnode" }, key => new MemoryRepository.Node(key));
+            var subNode = node.FindChildByPath(new[] { "subnode" }, (parent, key) => new MemoryRepository.Node(key));
 
             subNode.AddCounter(new { instance = 3 });
 
-            subNode = node.FindChildByPath(new[] { "subnode2" }, key => new MemoryRepository.Node(key));
+            subNode = node.FindChildByPath(new[] { "subnode2" }, (parent, key) => new MemoryRepository.Node(key));
 
             subNode.AddCounter(new { instance = 1 }).Increment();
         }

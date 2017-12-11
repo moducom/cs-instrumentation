@@ -250,7 +250,7 @@ namespace Moducom.Instrumentation.Abstract
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public static T FindChildByPath<T>(this Experimental.IChildProvider<T> startNode, IEnumerable<string> splitPaths, 
-            Func<string, T> nodeFactory = null)
+            Func<T, string, T> nodeFactory = null)
             where T: Experimental.INamed
         {
             Experimental.IChildProvider<T> currentNode = startNode;
@@ -273,7 +273,7 @@ namespace Moducom.Instrumentation.Abstract
                     if (currentNode is Experimental.IChildCollection<T> currentWritableNode)
                     {
                         // TODO: have a configuration flag to determine auto add
-                        node = nodeFactory(name);
+                        node = nodeFactory(node, name);
                         currentWritableNode.AddChild(node);
                     }
                     else

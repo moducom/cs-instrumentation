@@ -57,14 +57,14 @@ namespace Moducom.Instrumentation.Experimental
     {
         public abstract TINode RootNode { get; }
 
-        protected virtual TNode CreateNode(string name) { return default(TNode); }
+        protected virtual TNode CreateNode(TINode parent, string name) { return default(TNode); }
 
         /// <summary>
         /// Helper since cast didn't automatically happen via FindChildByPath
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        private TINode _CreateNode(string name) => CreateNode(name);
+        private TINode _CreateNode(TINode parent, string name) => CreateNode(parent, name);
 
         public TINode this[string path]
         {
