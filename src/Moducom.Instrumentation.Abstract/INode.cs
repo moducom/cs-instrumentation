@@ -19,13 +19,17 @@ namespace Moducom.Instrumentation.Abstract
             /// <returns></returns>
             bool GetLabelValue(string label, out object value);
 
+            IEnumerable<string> Labels { get; }
+        }
+
+
+        public interface ILabelsCollection : ILabelsProvider
+        {
             /// <summary>
             /// 
             /// </summary>
             /// <param name="labels">Can be either an anonymous object or an IDictionary of string and object</param>
             void SetLabels(object labels);
-
-            IEnumerable<string> Labels { get; }
         }
 
         /// <summary>
@@ -56,7 +60,7 @@ namespace Moducom.Instrumentation.Abstract
 
         public interface IMetricsFactory
         {
-            T CreateMetric<T>(string key = null) where T : IMetricBase;
+            T CreateMetric<T>(string key, object labels = null) where T : IMetricBase;
         }
 
 
@@ -99,7 +103,8 @@ namespace Moducom.Instrumentation.Abstract
     /// Mainly amounts to something that can interact directly with labels
     /// </summary>
     public interface IMetricBase :
-        Experimental.ILabelsProvider
+        Experimental.ILabelsProvider,
+        Experimental.ILabelsCollection
     {
 
     }
