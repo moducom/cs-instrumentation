@@ -7,27 +7,29 @@ using Moducom.Instrumentation.Abstract;
 
 namespace Moducom.Instrumentation.Experimental
 {
-    public interface ITaxonomy<TNode>
-        where TNode: Abstract.Experimental.INamed, Abstract.Experimental.IChildProvider<TNode>
+    public interface ITaxonomy<TNode, TINode>
+        where TINode: Abstract.Experimental.INamed, Abstract.Experimental.IChildProvider<TINode>
+        where TNode: TINode
     {
-        TNode RootNode { get; }
+        TINode RootNode { get; }
 
-        TNode this[string path] { get; }
+        TINode this[string path] { get; }
     }
 
     public class Taxonomy
     {
-        public class NodeBase<TNode> : 
+        public class NodeBase<TNode, TINode> : 
             Abstract.Experimental.INamed,
-            Abstract.Experimental.IChildCollection<TNode>
-            where TNode: Abstract.Experimental.INamed
+            Abstract.Experimental.IChildCollection<TINode>
+            where TINode: Abstract.Experimental.INamed
+            where TNode: TINode
         {
-            SparseDictionary<string, TNode> children;
+            SparseDictionary<string, TINode> children;
             readonly string name;
 
             public string Name => name;
 
-            public IEnumerable<TNode> Children => children.Values;
+            public IEnumerable<TINode> Children => children.Values;
 
             public NodeBase(string name)
             {
@@ -39,30 +41,38 @@ namespace Moducom.Instrumentation.Experimental
             /// </summary>
             /// <param name="name"></param>
             /// <returns></returns>
-            public TNode GetChild(string name)
+            public TINode GetChild(string name)
             {
-                children.TryGetValue(name, out TNode value);
+                children.TryGetValue(name, out TINode value);
                 return value;
             }
 
-            public void AddChild(TNode node) => children.Add(node.Name, node);
+            public void AddChild(TINode node) => children.Add(node.Name, node);
         }
     }
 
-    public abstract class Taxonomy<TNode> : Taxonomy
-        where TNode : Abstract.Experimental.INamed, Abstract.Experimental.IChildProvider<TNode>
+    public abstract class Taxonomy<TNode, TINode> : Taxonomy, ITaxonomy<TNode, TINode>
+        where TINode : Abstract.Experimental.INamed, Abstract.Experimental.IChildProvider<TINode>
+        where TNode : TINode
     {
-        public abstract TNode RootNode { get; }
+        public abstract TINode RootNode { get; }
 
-        public virtual TNode CreateNode(string name) { return default(TNode); }
+        protected virtual TNode CreateNode(string name) { return default(TNode); }
 
-        TNode this[string path]
+        /// <summary>
+        /// Helper since cast didn't automatically happen via FindChildByPath
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        private TINode _CreateNode(string name) => CreateNode(name);
+
+        public TINode this[string path]
         {
             get
             {
                 string[] splitPaths = path.Split('/');
 
-                return RootNode.FindChildByPath(splitPaths, CreateNode);
+                return RootNode.FindChildByPath(splitPaths, _CreateNode);
             }
         }
     }

@@ -5,11 +5,12 @@ using System.Text;
 
 namespace Moducom.Instrumentation.Abstract
 {
-    public interface IRepository
+    public interface IRepository : Instrumentation.Experimental.ITaxonomy<INode, INode>
     {
+        /*
         INode RootNode { get; }
 
-        INode this[string path] { get; }
+        INode this[string path] { get; } */
     }
 
     namespace Experimental

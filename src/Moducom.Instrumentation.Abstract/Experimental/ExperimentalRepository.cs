@@ -10,7 +10,7 @@ namespace Moducom.Instrumentation.Experimental
 {
     // TODO: Probably getting NETSTANDARD1_6 will be easy, but not important right now
 #if NET40 || NET46 || NETSTANDARD2_0
-    public class MemoryRepository : IRepository
+    public class MemoryRepository : Taxonomy<MemoryRepository.Node, INode>, IRepository
     {
         readonly Node rootNode = new Node("[root]");
 
@@ -39,41 +39,18 @@ namespace Moducom.Instrumentation.Experimental
 
         static readonly MetricFactory metricFactory = new MetricFactory();
 
-        public INode this[string path]
-        {
-            get
-            {
-                string[] splitPaths = path.Split('/');
+        protected override Node CreateNode(string name) => new Node(name);
 
-                return RootNode.FindChildByPath(splitPaths, name => new Node(name));
-            }
-        }
+        public override INode RootNode => rootNode;
 
-        public INode RootNode => rootNode;
-
-        public class Node : INode, Abstract.Experimental.IMetricProvider
+        public class Node : 
+            NodeBase<Node, INode>, 
+            INode,
+            IMetricProvider
         {
             LinkedList<IMetricBase> metrics = new LinkedList<IMetricBase>();
 
-            SparseDictionary<string, INode> children;
-            readonly string name;
-
-            public IEnumerable<INode> Children => children.Values;
-
-            public string Name => name;
-
-            /// <summary>
-            /// TODO: Very likely would prefer a null back if no child, not an exception
-            /// </summary>
-            /// <param name="name"></param>
-            /// <returns></returns>
-            public INode GetChild(string name)
-            {
-                children.TryGetValue(name, out INode value);
-                return value;
-            }
-
-            public void AddChild(INode node) => children.Add(node.Name, node);
+            public Node(string name) : base(name) { }
 
             /// <summary>
             /// Turn from either anonymous object or dictionary into a key/value label list
@@ -139,6 +116,7 @@ namespace Moducom.Instrumentation.Experimental
 
             /// <summary>
             /// Interim factory method, to be replaced by IoC/DI
+            /// Since we aren't yet at IoC/DI, utilize IMetricFactory based one to replace this
             /// </summary>
             /// <typeparam name="T"></typeparam>
             /// <param name="key"></param>
@@ -198,12 +176,6 @@ namespace Moducom.Instrumentation.Experimental
 
                 return metric;
             }
-
-            public Node(string name)
-            {
-                this.name = name;
-            }
-
 
             public T GetMetric<T>(object labels = null)
                 where T: ILabelsProvider, IValueGetter
