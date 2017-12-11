@@ -19,13 +19,17 @@ namespace Moducom.Instrumentation.Abstract
             /// <returns></returns>
             bool GetLabelValue(string label, out object value);
 
+            IEnumerable<string> Labels { get; }
+        }
+
+
+        public interface ILabelsCollection : ILabelsProvider
+        {
             /// <summary>
             /// 
             /// </summary>
             /// <param name="labels">Can be either an anonymous object or an IDictionary of string and object</param>
             void SetLabels(object labels);
-
-            IEnumerable<string> Labels { get; }
         }
 
         /// <summary>
@@ -39,11 +43,16 @@ namespace Moducom.Instrumentation.Abstract
             IEnumerable<T> Children { get; }
 
             T GetChild(string name);
+        }
 
+
+        public interface IChildCollection<T> : IChildProvider<T>
+            where T: INamed
+        {
             void AddChild(T child);
         }
 
-        public interface IWithChildren : IChildProvider<INode> { }
+        public interface IWithChildren : IChildCollection<INode> { }
 
         /// <summary>
         /// TODO: Use Fact.Extensions version of this
@@ -54,9 +63,36 @@ namespace Moducom.Instrumentation.Abstract
         }
 
 
-        public interface IMetricsFactory
+        public interface IMetricFactory
         {
-            T CreateMetric<T>(string key = null) where T : IMetricBase;
+            /// <summary>
+            /// Create a metric conforming to interface specified by T
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="key"></param>
+            /// <param name="labels"></param>
+            /// <returns></returns>
+            T CreateMetric<T>(string key, object labels = null) 
+                where T : ILabelsProvider, IValueGetter;
+        }
+
+
+        /// <summary>
+        /// NEW and unused, shall be a semi-wrapper around IMetricFactory so that metric factory can focus
+        /// purely on creating new metrics
+        /// </summary>
+        public interface IMetricProvider
+        {
+            /// <summary>
+            /// Create or acquire a metric conforming to interface specified by T
+            /// If said metric conforming to key and labels has already been created before, 
+            /// then pre-existing metric or an alias to it is returned
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="labels"></param>
+            /// <returns></returns>
+            T GetMetric<T>(object labels = null)
+                where T : ILabelsProvider, IValueGetter;
         }
 
 
@@ -99,7 +135,8 @@ namespace Moducom.Instrumentation.Abstract
     /// Mainly amounts to something that can interact directly with labels
     /// </summary>
     public interface IMetricBase :
-        Experimental.ILabelsProvider
+        Experimental.ILabelsProvider,
+        Experimental.ILabelsCollection
     {
 
     }
@@ -188,6 +225,12 @@ namespace Moducom.Instrumentation.Abstract
 
             return metric;
         }
+
+
+        public static ICounter CreateCounterExperimental(this Experimental.IMetricFactory factory)
+        {
+            return factory.CreateMetric<ICounter>(null);
+        }
     }
 
 
@@ -207,8 +250,8 @@ namespace Moducom.Instrumentation.Abstract
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
         public static T FindChildByPath<T>(this Experimental.IChildProvider<T> startNode, IEnumerable<string> splitPaths, 
-            Func<string, T> nodeFactory)
-            where T: class, Experimental.INamed
+            Func<string, T> nodeFactory = null)
+            where T: Experimental.INamed
         {
             Experimental.IChildProvider<T> currentNode = startNode;
 
@@ -225,11 +268,16 @@ namespace Moducom.Instrumentation.Abstract
                 if (node == null)
                 {
                     // If no way to create a new node, then we basically abort (node not found)
-                    if (nodeFactory == null) return null;
+                    if (nodeFactory == null) return default(T);
 
-                    // TODO: have a configuration flag to determine auto add
-                    node = nodeFactory(name);
-                    currentNode.AddChild(node);
+                    if (currentNode is Experimental.IChildCollection<T> currentWritableNode)
+                    {
+                        // TODO: have a configuration flag to determine auto add
+                        node = nodeFactory(name);
+                        currentWritableNode.AddChild(node);
+                    }
+                    else
+                        return default(T);
                 }
 
                 currentNode = node as Experimental.IChildProvider<T>;

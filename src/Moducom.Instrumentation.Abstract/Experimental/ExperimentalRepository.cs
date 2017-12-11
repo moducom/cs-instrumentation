@@ -4,50 +4,53 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
+using Moducom.Instrumentation.Abstract.Experimental;
 
 namespace Moducom.Instrumentation.Experimental
 {
     // TODO: Probably getting NETSTANDARD1_6 will be easy, but not important right now
 #if NET40 || NET46 || NETSTANDARD2_0
-    public class MemoryRepository : IRepository
+    public class MemoryRepository : Taxonomy<MemoryRepository.Node, INode>, IRepository
     {
         readonly Node rootNode = new Node("[root]");
 
-        public INode this[string path]
+        class MetricFactory : IMetricFactory
         {
-            get
+            /// <summary>
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="key"></param>
+            /// <param name="labels"></param>
+            /// <returns></returns>
+            /// <remarks>IMetricFactory version</remarks>
+            public T CreateMetric<T>(string key, object labels = null) where T : ILabelsProvider, IValueGetter
             {
-                string[] splitPaths = path.Split('/');
+                if (typeof(T) == typeof(ICounter))
+                {
+                    var counter = new Counter();
 
-                return RootNode.FindChildByPath(splitPaths, name => new Node(name));
+                    counter.SetLabels(labels);
+
+                    return (T)(object)counter;
+                }
+                throw new NotImplementedException();
             }
         }
 
-        public INode RootNode => rootNode;
+        static readonly MetricFactory metricFactory = new MetricFactory();
 
-        public class Node : INode
+        protected override Node CreateNode(string name) => new Node(name);
+
+        public override INode RootNode => rootNode;
+
+        public class Node : 
+            NodeBase<Node, INode>, 
+            INode,
+            IMetricProvider
         {
             LinkedList<IMetricBase> metrics = new LinkedList<IMetricBase>();
 
-            SparseDictionary<string, INode> children;
-            readonly string name;
-
-            public IEnumerable<INode> Children => children.Values;
-
-            public string Name => name;
-
-            /// <summary>
-            /// TODO: Very likely would prefer a null back if no child, not an exception
-            /// </summary>
-            /// <param name="name"></param>
-            /// <returns></returns>
-            public INode GetChild(string name)
-            {
-                children.TryGetValue(name, out INode value);
-                return value;
-            }
-
-            public void AddChild(INode node) => children.Add(node.Name, node);
+            public Node(string name) : base(name) { }
 
             /// <summary>
             /// Turn from either anonymous object or dictionary into a key/value label list
@@ -113,6 +116,7 @@ namespace Moducom.Instrumentation.Experimental
 
             /// <summary>
             /// Interim factory method, to be replaced by IoC/DI
+            /// Since we aren't yet at IoC/DI, utilize IMetricFactory based one to replace this
             /// </summary>
             /// <typeparam name="T"></typeparam>
             /// <param name="key"></param>
@@ -173,10 +177,22 @@ namespace Moducom.Instrumentation.Experimental
                 return metric;
             }
 
-
-            public Node(string name)
+            public T GetMetric<T>(object labels = null)
+                where T: ILabelsProvider, IValueGetter
             {
-                this.name = name;
+                // FIX: One and only design decision one not fully fleshed out
+                var foundMetric = GetMetrics(labels).SingleOrDefault();
+
+                // FIX: Chances of a typecast exception seems high
+                if (foundMetric != null) return (T)foundMetric;
+
+                var metric = metricFactory.CreateMetric<T>(null, labels);
+
+                // FIX: Eventually IMetricBase will only have providers not collections,
+                // making this type cast safer
+                AddMetric((IMetricBase)metric);
+
+                return metric;
             }
         }
     }
