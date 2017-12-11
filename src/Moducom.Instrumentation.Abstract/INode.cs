@@ -43,11 +43,16 @@ namespace Moducom.Instrumentation.Abstract
             IEnumerable<T> Children { get; }
 
             T GetChild(string name);
+        }
 
+
+        public interface IChildCollection<T> : IChildProvider<T>
+            where T: INamed
+        {
             void AddChild(T child);
         }
 
-        public interface IWithChildren : IChildProvider<INode> { }
+        public interface IWithChildren : IChildCollection<INode> { }
 
         /// <summary>
         /// TODO: Use Fact.Extensions version of this
@@ -58,9 +63,19 @@ namespace Moducom.Instrumentation.Abstract
         }
 
 
-        public interface IMetricsFactory
+        public interface IMetricFactory
         {
-            T CreateMetric<T>(string key, object labels = null) where T : IMetricBase;
+            /// <summary>
+            /// Create a metric conforming to interface specified by T
+            /// If said metric conforming to key and labels has already been created before, 
+            /// then pre-existing metric or an alias to it is returned
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="key"></param>
+            /// <param name="labels"></param>
+            /// <returns></returns>
+            T CreateMetric<T>(string key, object labels = null) 
+                where T : ILabelsProvider, IValueGetter;
         }
 
 
@@ -193,6 +208,12 @@ namespace Moducom.Instrumentation.Abstract
 
             return metric;
         }
+
+
+        public static ICounter CreateCounterExperimental(this Experimental.IMetricFactory factory)
+        {
+            return factory.CreateMetric<ICounter>(null);
+        }
     }
 
 
@@ -211,11 +232,11 @@ namespace Moducom.Instrumentation.Abstract
         /// <param name="nodeFactory"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T FindChildByPath<T>(this Experimental.IChildProvider<T> startNode, IEnumerable<string> splitPaths, 
+        public static T FindChildByPath<T>(this Experimental.IChildCollection<T> startNode, IEnumerable<string> splitPaths, 
             Func<string, T> nodeFactory)
             where T: class, Experimental.INamed
         {
-            Experimental.IChildProvider<T> currentNode = startNode;
+            Experimental.IChildCollection<T> currentNode = startNode;
 
             // The ChildProvider must also be a type of T for this to work
             T node = (T)currentNode;
@@ -237,7 +258,7 @@ namespace Moducom.Instrumentation.Abstract
                     currentNode.AddChild(node);
                 }
 
-                currentNode = node as Experimental.IChildProvider<T>;
+                currentNode = node as Experimental.IChildCollection<T>;
             }
 
             return node;

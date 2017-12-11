@@ -5,9 +5,17 @@ using System.Text;
 
 namespace Moducom.Instrumentation.Abstract
 {
-    public interface IMetricBase<T> : IMetricBase
+    public interface IValueGetter { }
+
+    public interface IValueGetter<T> : IValueGetter
     {
         T Value { get; }
+    }
+
+    public interface IMetricBase<T> :
+        IValueGetter<T>,
+        IMetricBase
+    {
     }
 
     public interface IMetricSetter<T> : IMetricBase
