@@ -207,26 +207,6 @@ namespace Moducom.Instrumentation.Abstract
 
             return metric;
         }
-
-        /// <summary>
-        /// Factory version
-        /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
-        public static ICounter AddCounterExperimental(this INode node, object labels = null)
-        {
-            var metric = node.AddMetric<ICounter>();
-
-            if (labels != null) metric.SetLabels(labels);
-
-            return metric;
-        }
-
-
-        public static ICounter CreateCounterExperimental(this Experimental.IMetricFactory factory)
-        {
-            return factory.CreateMetric<ICounter>(null);
-        }
     }
 
 

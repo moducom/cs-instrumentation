@@ -121,7 +121,7 @@ namespace Moducom.Instrumentation.Experimental
             {
                 Heartbeat?.Invoke();
 
-                repository.GetCounterExperimental("internal/timer_callback").Increment();
+                repository.GetCounter("internal/timer_callback").Increment();
 
                 using (var writer = new StreamWriter(filepath, false))
                 {

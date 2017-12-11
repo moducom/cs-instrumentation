@@ -97,26 +97,13 @@ namespace Moducom.Instrumentation.Abstract
         /// <remarks>
         /// FIX: Undefined behavior if labels match multiple, but shouldn't be undefined
         /// </remarks>
-        public static ICounter GetCounterExperimental(this IRepository repository, string path, object labels = null)
+        public static ICounter GetCounter(this IRepository repository, string path, object labels = null)
         {
             try
             {
                 INode node = repository[path];
-                /*
-                // get all counters which match the specified label
-                var _counters = node.GetMetrics(labels).ToArray();
-                var counters = _counters.OfType<ICounter>();
 
-                // should only ever be one
-                if (counters.Any()) return counters.Single();
-
-                var counter = node.AddMetric<ICounter>();
-
-                counter.SetLabels(labels);
-
-                return counter; */
-
-                return node.GetMetricExperimental<ICounter>(labels);
+                return node.GetCounter(labels);
             }
             catch(Exception)
             {

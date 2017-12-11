@@ -106,7 +106,7 @@ namespace Moducom.Instrumentation.Test
 
             setup(node);
 
-            var counter = node.AddCounterExperimental(new { test = 1 });
+            var counter = node.GetCounter(new { test = 1 });
 
             counter.Increment(1);
 
@@ -127,7 +127,7 @@ namespace Moducom.Instrumentation.Test
         {
             var repo = new MemoryRepository();
 
-            ICounter node = repo.GetCounterExperimental("counter/main");
+            ICounter node = repo.GetCounter("counter/main");
 
             node.Increment();
         }
@@ -175,7 +175,7 @@ namespace Moducom.Instrumentation.Test
         {
             var repo = new MemoryRepository();
 
-            ICounter node = repo.GetCounterExperimental("counter/main", new { fail = true });
+            ICounter node = repo.GetCounter("counter/main", new { fail = true });
 
             node.Increment();
 
