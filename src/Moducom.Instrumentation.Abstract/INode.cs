@@ -89,7 +89,7 @@ namespace Moducom.Instrumentation.Abstract
             /// then pre-existing metric or an alias to it is returned
             /// </summary>
             /// <typeparam name="T"></typeparam>
-            /// <param name="labels"></param>
+            /// <param name="labels">Labels to match on, or null is looking for a metric with no labels</param>
             /// <returns></returns>
             T GetMetric<T>(object labels = null)
                 where T : ILabelsProvider, IValueGetter;
@@ -125,6 +125,7 @@ namespace Moducom.Instrumentation.Abstract
     /// </summary>
     public interface INode :
         Experimental.IWithChildren,
+        Experimental.IMetricProvider,
         Experimental.IMetricsProvider,
         Experimental.INamed
     {

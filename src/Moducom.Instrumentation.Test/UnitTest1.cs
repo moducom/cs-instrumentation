@@ -213,5 +213,16 @@ namespace Moducom.Instrumentation.Test
             Assert.AreEqual(15, histogram.GetSum(DateTime.MinValue));
             Assert.AreEqual(7.5, histogram.GetAverage(DateTime.MinValue));
         }
+
+
+        [TestMethod]
+        public void GetMetricTest()
+        {
+            var repo = new MemoryRepository();
+
+            setup(repo.RootNode);
+
+            var counter = repo.RootNode.GetMetric<ICounter>();
+        }
     }
 }

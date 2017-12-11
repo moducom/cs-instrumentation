@@ -43,6 +43,26 @@ namespace Moducom.Instrumentation.Experimental
 
         public override INode RootNode => rootNode;
 
+        /// <summary>
+        /// Turn from either anonymous object or dictionary into a key/value label list
+        /// </summary>
+        /// <param name="labels"></param>
+        /// <returns></returns>
+        /// <remarks>TODO:Move this to a better location</remarks>
+        public static IEnumerable<KeyValuePair<string, object>> LabelHelper(object labels)
+        {
+            if (labels == null) return Enumerable.Empty<KeyValuePair<string, object>>();
+
+            if (labels is IDictionary<string, object> dictionaryLabels)
+                return dictionaryLabels;
+            else
+                return from n in labels.GetType().GetProperties()
+                       select new KeyValuePair<string, object>(n.Name, n.GetValue(labels, null));
+            // NOTE: This was working, but doesnt now.  Not sure what circumstances this is OK for
+            //select KeyValuePair.Create(n.Name, n.GetValue(labels, null));
+        }
+
+
         public class Node : 
             NodeBase<Node, INode>, 
             INode,
@@ -53,27 +73,9 @@ namespace Moducom.Instrumentation.Experimental
             public Node(string name) : base(name) { }
 
             /// <summary>
-            /// Turn from either anonymous object or dictionary into a key/value label list
-            /// </summary>
-            /// <param name="labels"></param>
-            /// <returns></returns>
-            internal static IEnumerable<KeyValuePair<string, object>> LabelHelper(object labels)
-            {
-                if (labels == null) return Enumerable.Empty<KeyValuePair<string, object>>();
-
-                if (labels is IDictionary<string, object> dictionaryLabels)
-                    return dictionaryLabels;
-                else
-                    return from n in labels.GetType().GetProperties()
-                           select new KeyValuePair<string, object>(n.Name, n.GetValue(labels, null));
-                            // NOTE: This was working, but doesnt now.  Not sure what circumstances this is OK for
-                           //select KeyValuePair.Create(n.Name, n.GetValue(labels, null));
-            }
-
-            /// <summary>
             /// Search for all values with the matching provided labels
             /// </summary>
-            /// <param name="labels">Either an IDictionary or an anonymous object</param>
+            /// <param name="labels">Either an IDictionary or an anonymous object.  If null, returns *all* metrics</param>
             /// <returns></returns>
             public IEnumerable<IMetricBase> GetMetrics(object labels)
             {
@@ -180,8 +182,15 @@ namespace Moducom.Instrumentation.Experimental
             public T GetMetric<T>(object labels = null)
                 where T: ILabelsProvider, IValueGetter
             {
-                // FIX: One and only design decision one not fully fleshed out
-                var foundMetric = GetMetrics(labels).SingleOrDefault();
+                IMetricBase foundMetric;
+
+                if (labels == null)
+                    // Since null labels into GetMetrics retrieves *ALL* labels, filter further
+                    // for a none label
+                    foundMetric = GetMetrics(null).SingleOrDefault(x => !x.Labels.Any());
+                else
+                    // FIX: One and only design decision one not fully fleshed out
+                    foundMetric = GetMetrics(labels).SingleOrDefault();
 
                 // FIX: Chances of a typecast exception seems high
                 if (foundMetric != null) return (T)foundMetric;
@@ -212,7 +221,7 @@ namespace Moducom.Instrumentation.Experimental
             // which isn't exactly what we're after
             //this.labels.Concat(LabelHelper(labels));
 
-            foreach (var label in MemoryRepository.Node.LabelHelper(labels))
+            foreach (var label in MemoryRepository.LabelHelper(labels))
                 this.labels.Add(label);
         }
 
