@@ -234,5 +234,27 @@ namespace Moducom.Instrumentation.Test
 
             var counter = repo.RootNode.GetMetric<ICounter>();
         }
+
+        [TestMethod]
+        public void GetMetricsTest()
+        {
+            var repo = new MemoryRepository();
+
+            setup(repo.RootNode);
+
+            try
+            {
+                var counter2 = repo.RootNode.GetMetrics(null).ToArray();
+                Assert.Fail("Should have thrown exception");
+            }
+            catch (ArgumentNullException)
+            {
+
+            }
+
+            var counter = repo.RootNode.GetMetrics(new { instance = 1 }).ToArray();
+
+            var metric = counter[0];
+        }
     }
 }

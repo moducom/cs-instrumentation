@@ -1,6 +1,5 @@
-﻿#if !NETSTANDARD1_6
-#define ENABLE_CONTRACTS
-#endif
+﻿// Contracts, as usual, are confusing and seem flaky
+//#define ENABLE_CONTRACTS
 
 using Moducom.Instrumentation.Abstract;
 using System;
@@ -123,12 +122,14 @@ namespace Moducom.Instrumentation.Experimental
             /// <summary>
             /// Search for all values with the matching provided labels
             /// </summary>
-            /// <param name="labels">Either an IDictionary or an anonymous object.  If null, returns *all* metrics</param>
+            /// <param name="labels">Either an IDictionary or an anonymous object.  null value not permitted v</param>
             /// <returns></returns>
             public IEnumerable<IMetricBase> GetMetrics(object labels)
             {
 #if ENABLE_CONTRACTS
-                Contract.Requires(labels != null);
+                Contract.Requires<ArgumentNullException>(labels != null, "labels");
+#else
+                if (labels == null) throw new ArgumentNullException("labels cannot be null");
 #endif
 
                 foreach(var value in metrics)

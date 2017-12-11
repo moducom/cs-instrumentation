@@ -83,12 +83,10 @@ namespace Moducom.Instrumentation.Abstract
         {
             /// <summary>
             /// Retrieve all metrics associated with this node, filtered by labels
-            /// CURRENT behavior is that labels = null will return ALL metrics, but this is
-            /// to be changed (to use Metrics property for that)
             /// </summary>
-            /// <param name="labels"></param>
+            /// <param name="labels">Labels to filter by.  Must not be null</param>
             /// <returns></returns>
-            IEnumerable<IMetricBase> GetMetrics(object labels = null);
+            IEnumerable<IMetricBase> GetMetrics(object labels);
 
             /// <summary>
             /// All metrics for this node, unfiltered
