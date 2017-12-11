@@ -32,5 +32,7 @@ namespace Moducom.Instrumentation.Prometheus
         {
             throw new NotImplementedException();
         }
+
+        public IEnumerable<string> Labels => throw new NotImplementedException();
     }
 }
