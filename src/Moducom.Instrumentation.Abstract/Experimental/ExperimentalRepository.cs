@@ -14,6 +14,31 @@ namespace Moducom.Instrumentation.Experimental
     {
         readonly Node rootNode = new Node("[root]");
 
+        class MetricFactory : IMetricFactory
+        {
+            /// <summary>
+            /// </summary>
+            /// <typeparam name="T"></typeparam>
+            /// <param name="key"></param>
+            /// <param name="labels"></param>
+            /// <returns></returns>
+            /// <remarks>IMetricFactory version</remarks>
+            public T CreateMetric<T>(string key, object labels = null) where T : ILabelsProvider, IValueGetter
+            {
+                if (typeof(T) == typeof(ICounter))
+                {
+                    var counter = new Counter();
+
+                    counter.SetLabels(labels);
+
+                    return (T)(object)counter;
+                }
+                throw new NotImplementedException();
+            }
+        }
+
+        static readonly MetricFactory metricFactory = new MetricFactory();
+
         public INode this[string path]
         {
             get
@@ -26,7 +51,7 @@ namespace Moducom.Instrumentation.Experimental
 
         public INode RootNode => rootNode;
 
-        public class Node : INode, Abstract.Experimental.IMetricFactory
+        public class Node : INode, Abstract.Experimental.IMetricProvider
         {
             LinkedList<IMetricBase> metrics = new LinkedList<IMetricBase>();
 
@@ -174,29 +199,28 @@ namespace Moducom.Instrumentation.Experimental
                 return metric;
             }
 
-            /// <summary>
-            /// </summary>
-            /// <typeparam name="T"></typeparam>
-            /// <param name="key"></param>
-            /// <param name="labels"></param>
-            /// <returns></returns>
-            /// <remarks>IMetricFactory version</remarks>
-            public T CreateMetric<T>(string key, object labels = null) where T : ILabelsProvider, IValueGetter
-            {
-                if (typeof(T) == typeof(ICounter))
-                {
-                    var counter = new Counter();
-
-                    counter.SetLabels(labels);
-
-                    return (T)(object)counter;
-                }
-                throw new NotImplementedException();
-            }
-
             public Node(string name)
             {
                 this.name = name;
+            }
+
+
+            public T GetMetric<T>(object labels = null)
+                where T: ILabelsProvider, IValueGetter
+            {
+                // FIX: One and only design decision one not fully fleshed out
+                var foundMetric = GetMetrics(labels).SingleOrDefault();
+
+                // FIX: Chances of a typecast exception seems high
+                if (foundMetric != null) return (T)foundMetric;
+
+                var metric = metricFactory.CreateMetric<T>(null, labels);
+
+                // FIX: Eventually IMetricBase will only have providers not collections,
+                // making this type cast safer
+                AddMetric((IMetricBase)metric);
+
+                return metric;
             }
         }
     }

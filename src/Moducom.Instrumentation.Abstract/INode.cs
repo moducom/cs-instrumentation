@@ -249,11 +249,11 @@ namespace Moducom.Instrumentation.Abstract
         /// <param name="nodeFactory"></param>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        public static T FindChildByPath<T>(this Experimental.IChildCollection<T> startNode, IEnumerable<string> splitPaths, 
-            Func<string, T> nodeFactory)
-            where T: class, Experimental.INamed
+        public static T FindChildByPath<T>(this Experimental.IChildProvider<T> startNode, IEnumerable<string> splitPaths, 
+            Func<string, T> nodeFactory = null)
+            where T: Experimental.INamed
         {
-            Experimental.IChildCollection<T> currentNode = startNode;
+            Experimental.IChildProvider<T> currentNode = startNode;
 
             // The ChildProvider must also be a type of T for this to work
             T node = (T)currentNode;
@@ -268,14 +268,19 @@ namespace Moducom.Instrumentation.Abstract
                 if (node == null)
                 {
                     // If no way to create a new node, then we basically abort (node not found)
-                    if (nodeFactory == null) return null;
+                    if (nodeFactory == null) return default(T);
 
-                    // TODO: have a configuration flag to determine auto add
-                    node = nodeFactory(name);
-                    currentNode.AddChild(node);
+                    if (currentNode is Experimental.IChildCollection<T> currentWritableNode)
+                    {
+                        // TODO: have a configuration flag to determine auto add
+                        node = nodeFactory(name);
+                        currentWritableNode.AddChild(node);
+                    }
+                    else
+                        return default(T);
                 }
 
-                currentNode = node as Experimental.IChildCollection<T>;
+                currentNode = node as Experimental.IChildProvider<T>;
             }
 
             return node;
