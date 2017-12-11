@@ -51,7 +51,7 @@ namespace Moducom.Instrumentation.Abstract
 
         public int Count => value.IsAllocated ? value.value.Count : 0;
 
-        public bool IsReadOnly => throw new NotImplementedException();
+        public bool IsReadOnly => false;
 
         public void Add(TKey key, TValue value)
         {
@@ -70,6 +70,8 @@ namespace Moducom.Instrumentation.Abstract
 
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
+            if (value.IsAllocated) return value.value.Contains(item);
+
             throw new NotImplementedException();
         }
 
@@ -94,7 +96,9 @@ namespace Moducom.Instrumentation.Abstract
 
         public bool Remove(TKey key)
         {
-            throw new NotImplementedException();
+            if (value.IsAllocated) return value.Value.Remove(key);
+
+            return false;
         }
 
         public bool Remove(KeyValuePair<TKey, TValue> item)

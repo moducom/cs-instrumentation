@@ -1,10 +1,17 @@
-﻿using Moducom.Instrumentation.Abstract;
+﻿// Contracts, as usual, are confusing and seem flaky
+//#define ENABLE_CONTRACTS
+
+using Moducom.Instrumentation.Abstract;
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
 using Moducom.Instrumentation.Abstract.Experimental;
+
+#if ENABLE_CONTRACTS
+using System.Diagnostics.Contracts;
+#endif
 
 namespace Moducom.Instrumentation.Experimental
 {
@@ -33,15 +40,75 @@ namespace Moducom.Instrumentation.Experimental
 
                     return (T)(object)counter;
                 }
+                else if (typeof(T) == typeof(IGauge))
+                {
+                    var retVal = new Gauge();
+
+                    retVal.SetLabels(labels);
+
+                    return (T)(IMetricBase)retVal;
+                }
+                else if (typeof(T) == typeof(IHistogram<double>))
+                {
+                    var retVal = new Histogram();
+
+                    retVal.SetLabels(labels);
+
+                    return (T)(IMetricBase)retVal;
+                }
+                else
+                {
+                    var t = typeof(T);
+#if NET40
+                    var underlyingValueType = t.GetGenericArguments().First();
+#else
+                    var underlyingValueType = t.GenericTypeArguments.First();
+#endif
+
+                    var genericType = t.GetGenericTypeDefinition();
+
+                    if (genericType == typeof(IMetric<>))
+                    {
+                        var typeToCreate = typeof(Metric<>).MakeGenericType(underlyingValueType);
+
+                        var retVal = (IMetricBase) Activator.CreateInstance(typeToCreate);
+
+                        retVal.SetLabels(labels);
+
+                        return (T)retVal;
+                    }
+
+                    return default(T);
+                }
                 throw new NotImplementedException();
             }
         }
 
         static readonly MetricFactory metricFactory = new MetricFactory();
 
-        protected override Node CreateNode(string name) => new Node(name);
+        protected override Node CreateNode(INode parent, string name) => new Node(name);
 
         public override INode RootNode => rootNode;
+
+        /// <summary>
+        /// Turn from either anonymous object or dictionary into a key/value label list
+        /// </summary>
+        /// <param name="labels"></param>
+        /// <returns></returns>
+        /// <remarks>TODO:Move this to a better location</remarks>
+        public static IEnumerable<KeyValuePair<string, object>> LabelHelper(object labels)
+        {
+            if (labels == null) return Enumerable.Empty<KeyValuePair<string, object>>();
+
+            if (labels is IDictionary<string, object> dictionaryLabels)
+                return dictionaryLabels;
+            else
+                return from n in labels.GetType().GetProperties()
+                       select new KeyValuePair<string, object>(n.Name, n.GetValue(labels, null));
+            // NOTE: This was working, but doesnt now.  Not sure what circumstances this is OK for
+            //select KeyValuePair.Create(n.Name, n.GetValue(labels, null));
+        }
+
 
         public class Node : 
             NodeBase<Node, INode>, 
@@ -53,38 +120,17 @@ namespace Moducom.Instrumentation.Experimental
             public Node(string name) : base(name) { }
 
             /// <summary>
-            /// Turn from either anonymous object or dictionary into a key/value label list
-            /// </summary>
-            /// <param name="labels"></param>
-            /// <returns></returns>
-            internal static IEnumerable<KeyValuePair<string, object>> LabelHelper(object labels)
-            {
-                if (labels == null) return Enumerable.Empty<KeyValuePair<string, object>>();
-
-                if (labels is IDictionary<string, object> dictionaryLabels)
-                    return dictionaryLabels;
-                else
-                    return from n in labels.GetType().GetProperties()
-                           select new KeyValuePair<string, object>(n.Name, n.GetValue(labels, null));
-                            // NOTE: This was working, but doesnt now.  Not sure what circumstances this is OK for
-                           //select KeyValuePair.Create(n.Name, n.GetValue(labels, null));
-            }
-
-            /// <summary>
             /// Search for all values with the matching provided labels
             /// </summary>
-            /// <param name="labels">Either an IDictionary or an anonymous object</param>
+            /// <param name="labels">Either an IDictionary or an anonymous object.  null value not permitted v</param>
             /// <returns></returns>
             public IEnumerable<IMetricBase> GetMetrics(object labels)
             {
-                //var _labels = LabelHelper(labels);
-
-                if (labels == null)
-                {
-                    foreach (var value in metrics) yield return value;
-
-                    yield break;
-                }
+#if ENABLE_CONTRACTS
+                Contract.Requires<ArgumentNullException>(labels != null, "labels");
+#else
+                if (labels == null) throw new ArgumentNullException("labels cannot be null");
+#endif
 
                 foreach(var value in metrics)
                 {
@@ -107,6 +153,8 @@ namespace Moducom.Instrumentation.Experimental
                 }
             }
 
+            public IEnumerable<IMetricBase> Metrics => metrics;
+
 
             public void AddMetric(IMetricBase metric)
             {
@@ -114,74 +162,18 @@ namespace Moducom.Instrumentation.Experimental
             }
 
 
-            /// <summary>
-            /// Interim factory method, to be replaced by IoC/DI
-            /// Since we aren't yet at IoC/DI, utilize IMetricFactory based one to replace this
-            /// </summary>
-            /// <typeparam name="T"></typeparam>
-            /// <param name="key"></param>
-            /// <returns></returns>
-            public T CreateMetric<T>(string key)
-                where T : IMetricBase
-            {
-                if (typeof(T) == typeof(ICounter))
-                {
-                    var retVal = new Counter();
-
-                    return (T)(IMetricBase)retVal;
-                }
-                else if (typeof(T) == typeof(IGauge))
-                {
-                    var retVal = new Gauge();
-
-                    return (T)(IMetricBase)retVal;
-                }
-                else if (typeof(T) == typeof(IHistogram<double>))
-                {
-                    var retVal = new Histogram();
-
-                    return (T)(IMetricBase)retVal;
-                }
-                else
-                {
-                    var t = typeof(T);
-#if NET40
-                    var underlyingValueType = t.GetGenericArguments().First();
-#else
-                    var underlyingValueType = t.GenericTypeArguments.First();
-#endif
-
-                    var genericType = t.GetGenericTypeDefinition();
-
-                    if (genericType == typeof(IMetric<>))
-                    {
-                        var typeToCreate = typeof(Metric<>).MakeGenericType(underlyingValueType);
-
-                        object retVal = Activator.CreateInstance(typeToCreate);
-
-                        return (T)retVal;
-                    }
-
-                    return default(T);
-                }
-            }
-
-
-            public T AddMetric<T>(string key)
-                where T: IMetricBase
-            {
-                T metric = CreateMetric<T>(key);
-
-                metrics.AddLast(metric);
-
-                return metric;
-            }
-
             public T GetMetric<T>(object labels = null)
                 where T: ILabelsProvider, IValueGetter
             {
-                // FIX: One and only design decision one not fully fleshed out
-                var foundMetric = GetMetrics(labels).SingleOrDefault();
+                IMetricBase foundMetric;
+
+                if (labels == null)
+                    // Since null labels into GetMetrics retrieves *ALL* labels, filter further
+                    // for a none label
+                    foundMetric = metrics.SingleOrDefault(x => !x.Labels.Any());
+                else
+                    // FIX: One and only design decision one not fully fleshed out
+                    foundMetric = GetMetrics(labels).SingleOrDefault();
 
                 // FIX: Chances of a typecast exception seems high
                 if (foundMetric != null) return (T)foundMetric;
@@ -212,7 +204,7 @@ namespace Moducom.Instrumentation.Experimental
             // which isn't exactly what we're after
             //this.labels.Concat(LabelHelper(labels));
 
-            foreach (var label in MemoryRepository.Node.LabelHelper(labels))
+            foreach (var label in MemoryRepository.LabelHelper(labels))
                 this.labels.Add(label);
         }
 
@@ -368,42 +360,4 @@ namespace Moducom.Instrumentation.Experimental
 
         public double Value => 0;
     }
-
-
-#if !NETSTANDARD1_6
-    public static class INodeExtensions
-    {
-        public static ICounter AddCounter(this INode node)
-        {
-            // TODO: We need to create these counters from a factory
-            var counter = new Counter();
-            node.AddMetric(counter);
-            return counter;
-        }
-
-
-        /// <summary>
-        /// NOTE: Probably won't translate well to prometheus.io
-        /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
-        public static IGauge AddUptimeGauge(this INode node)
-        {
-            var gauge = new UptimeGauge();
-            node.AddMetric(gauge);
-            //if (labels != null) gauge.SetLabels(labels);
-            return gauge;
-        }
-
-
-        public static ICounter AddCounter(this INode node, object labels)
-        {
-            ICounter counter = node.AddCounter();
-
-            counter.SetLabels(labels);
-
-            return counter;
-        }
-    }
-#endif
 }

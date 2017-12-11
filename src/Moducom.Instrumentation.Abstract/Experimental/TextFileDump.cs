@@ -62,7 +62,7 @@ namespace Moducom.Instrumentation.Experimental
 
             writer.WriteLine(indent + "+ " + node.Name);
 
-            foreach (IMetricBase metric in node.GetMetrics())
+            foreach (IMetricBase metric in node.Metrics)
             {
                 writer.Write(indent + "  - ");
 
@@ -121,7 +121,7 @@ namespace Moducom.Instrumentation.Experimental
             {
                 Heartbeat?.Invoke();
 
-                repository.GetCounterExperimental("internal/timer_callback").Increment();
+                repository.GetCounter("internal/timer_callback").Increment();
 
                 using (var writer = new StreamWriter(filepath, false))
                 {

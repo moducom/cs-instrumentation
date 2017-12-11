@@ -14,16 +14,16 @@ namespace Moducom.Instrumentation.Test
     {
         void setup(INode node)
         {
-            node.AddCounter(new { instance = 1 });
-            node.AddCounter(new { instance = 2 });
+            node.GetCounter(new { instance = 1 });
+            node.GetCounter(new { instance = 2 });
 
-            var subNode = node.FindChildByPath(new[] { "subnode" }, key => new MemoryRepository.Node(key));
+            var subNode = node.FindChildByPath(new[] { "subnode" }, (parent, key) => new MemoryRepository.Node(key));
 
-            subNode.AddCounter(new { instance = 3 });
+            subNode.GetCounter(new { instance = 3 });
 
-            subNode = node.FindChildByPath(new[] { "subnode2" }, key => new MemoryRepository.Node(key));
+            subNode = node.FindChildByPath(new[] { "subnode2" }, (parent, key) => new MemoryRepository.Node(key));
 
-            subNode.AddCounter(new { instance = 1 }).Increment();
+            subNode.GetCounter(new { instance = 1 }).Increment();
         }
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace Moducom.Instrumentation.Test
         /// <param name="node"></param>
         static void setup2(INode node)
         {
-            var gauge = node.GetMetricExperimental<IGauge>(new { instance = 3 });
+            var gauge = node.GetMetric<IGauge>(new { instance = 3 });
 
             gauge.Value = 5;
         }
@@ -67,9 +67,11 @@ namespace Moducom.Instrumentation.Test
 
             INode node = repo["counter/main"];
 
-            var value = node.AddCounter();
+            //var value = node.AddCounter();
 
-            value.SetLabels(new { instance = 1 });
+            //value.SetLabels(new { instance = 1 });
+
+            var value = node.GetCounter(new { instance = 1 });
             value.Increment(1);
         }
 
@@ -88,7 +90,7 @@ namespace Moducom.Instrumentation.Test
             Assert.AreEqual(1, metrics[0].GetLabelValue("instance"));
             Assert.AreEqual(2, metrics[1].GetLabelValue("instance"));
 
-            var metrics2 = node.GetMetrics().ToArray();
+            var metrics2 = node.Metrics.ToArray();
 
             Assert.AreEqual(1, metrics2[0].GetLabelValue("instance"));
             Assert.AreEqual(2, metrics2[1].GetLabelValue("instance"));
@@ -104,15 +106,20 @@ namespace Moducom.Instrumentation.Test
 
             setup(node);
 
-            var counter = node.AddCounterExperimental(new { test = 1 });
+            var counter = node.GetCounter(new { test = 1 });
 
             counter.Increment(1);
 
             // NOTE: discouraged to add different types of metrics under one node
-            var describer = node.AddMetricExperimental<string>();
+            // right now the GetMetric code can't handle two different types with the same label
+            // so we push in test = 2 for now
+            var describer = node.GetGenericMetric<string>(new { test = 2 });
 
-            describer.SetLabels(new { test = 1 });
+            //describer.SetLabels(new { test = 1 });
             describer.Value = "Test";
+
+            Assert.AreEqual("test", describer.Labels.First());
+            Assert.AreEqual(2, describer.GetLabelValue("test"));
         }
 
         [TestMethod]
@@ -120,7 +127,7 @@ namespace Moducom.Instrumentation.Test
         {
             var repo = new MemoryRepository();
 
-            ICounter node = repo.GetCounterExperimental("counter/main");
+            ICounter node = repo.GetCounter("counter/main");
 
             node.Increment();
         }
@@ -150,7 +157,7 @@ namespace Moducom.Instrumentation.Test
             setup(repo["counter/main"]);
             setup2(repo["gauge/main"]);
 
-            repo["uptime"].AddUptimeGauge();
+            repo["uptime"].GetGauge();
 
             var d = new TextFileDump(repo);
 
@@ -168,7 +175,7 @@ namespace Moducom.Instrumentation.Test
         {
             var repo = new MemoryRepository();
 
-            ICounter node = repo.GetCounterExperimental("counter/main", new { fail = true });
+            ICounter node = repo.GetCounter("counter/main", new { fail = true });
 
             node.Increment();
 
@@ -180,9 +187,12 @@ namespace Moducom.Instrumentation.Test
         {
             var repo = new MemoryRepository();
 
-            var gauge = repo["gauge/main"].GetMetricExperimental<IGauge>();
+            //var gauge = repo["gauge/main"].GetMetricExperimental<IGauge>();
+            var gauge = repo["gauge/main"].GetGauge();
 
             gauge.Increment(5);
+
+            Assert.AreEqual(5, gauge.Value);
         }
 
 
@@ -191,7 +201,7 @@ namespace Moducom.Instrumentation.Test
         {
             var repo = new MemoryRepository();
 
-            var histogram = repo["gauge/main"].GetMetricExperimental<IHistogram<double>>();
+            var histogram = repo["gauge/main"].GetMetric<IHistogram<double>>();
 
             var testStart = DateTime.Now;
 
@@ -212,6 +222,39 @@ namespace Moducom.Instrumentation.Test
             Assert.AreEqual(2, histogram.GetCount(DateTime.MinValue));
             Assert.AreEqual(15, histogram.GetSum(DateTime.MinValue));
             Assert.AreEqual(7.5, histogram.GetAverage(DateTime.MinValue));
+        }
+
+
+        [TestMethod]
+        public void GetMetricTest()
+        {
+            var repo = new MemoryRepository();
+
+            setup(repo.RootNode);
+
+            var counter = repo.RootNode.GetMetric<ICounter>();
+        }
+
+        [TestMethod]
+        public void GetMetricsTest()
+        {
+            var repo = new MemoryRepository();
+
+            setup(repo.RootNode);
+
+            try
+            {
+                var counter2 = repo.RootNode.GetMetrics(null).ToArray();
+                Assert.Fail("Should have thrown exception");
+            }
+            catch (ArgumentNullException)
+            {
+
+            }
+
+            var counter = repo.RootNode.GetMetrics(new { instance = 1 }).ToArray();
+
+            var metric = counter[0];
         }
     }
 }
