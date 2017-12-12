@@ -79,6 +79,8 @@ namespace Moducom.Instrumentation.Test
                 "Hopefully this doesn't break", 
                 new[] { "label1", "label2" });
 
+            return;
+
             // all 3 of these break
             Metrics.CreateCounter("breaker_test",
                 "Hopefully this doesn't break");
@@ -137,12 +139,21 @@ namespace Moducom.Instrumentation.Test
         {
             var r = new PRO.Repository();
 
-            var metric = (PRO.Node) r["test"];
+            var metric = (PRO.Node) r["label_validator_test"];
 
             metric.Initialize("instance", "test_a", "disposition");
 
             var counter_i5 = metric.GetMetric<MOD.IGauge>(new { instance = 5 });
             var counter_i3 = metric.GetMetric<MOD.IGauge>(new { disposition = "good", instance = 3 });
+            try
+            {
+                var counter_invalid = metric.GetMetric<MOD.IGauge>(new { attitude = "bad", instance = 3 });
+                Assert.Fail("Exception should have been thrown");
+            }
+            catch(IndexOutOfRangeException)
+            {
+
+            }
 
         }
     }

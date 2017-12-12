@@ -54,13 +54,13 @@ namespace Moducom.Instrumentation.Prometheus
         /// Use this to pre-initialize labelnames so that subsequent partial-label lookups
         /// don't incorrectly initialize Prometheus
         /// </summary>
-        class LabelNameOnlyCollection : PRO.Client.Collectors.ICollector
+        class LabelNameOnlyCollector : PRO.Client.Collectors.ICollector
         {
             public string Name => "label_name_only";
 
             readonly string[] labelNames;
 
-            internal LabelNameOnlyCollection(string[] labelNames)
+            internal LabelNameOnlyCollector(string[] labelNames)
             {
                 // FIX: watch this, we want to copy the array not just the
                 // array reference
@@ -96,8 +96,10 @@ namespace Moducom.Instrumentation.Prometheus
         PRO.Client.Collectors.Collector<TNativeMetric> GetOrAdd<TNativeMetric>(string[] labelNames)
             where TNativeMetric : PRO.Client.Child, new()
         {
-            if (collector is LabelNameOnlyCollection labelCollector)
+            if (collector is LabelNameOnlyCollector labelCollector)
             {
+                // FIX: this isn't quite in the right spot.  By the time we get here labelNames
+                // have been homogonized by our LabelHelper, so we need to do it out there
                 //var foreignLabels = labelCollector.LabelNames.Except(labelNames);
 
                 // if any labels are leftover from labelNames REMOVING valid labelCollector.LabelNames
@@ -110,6 +112,7 @@ namespace Moducom.Instrumentation.Prometheus
 
                 labelNames = labelCollector.LabelNames;
 
+                // LabelNameOnlyCollector did its job and cached LabelNames, so remove it
                 collector = null;
             }
 
@@ -118,7 +121,9 @@ namespace Moducom.Instrumentation.Prometheus
                 var fullName = GetFullName('_');
                 var c = new Collector<TNativeMetric>(fullName, Description, labelNames);
                 PRO.Client.Collectors.ICollector retrieved_collector;
-                // FIX: Under non-debug scenarios, we are still getting a crash here
+
+                // try/catch no longer specifically needed, just keeping around for debug 
+                // convenience
                 try
                 {
                     retrieved_collector = registry.GetOrAdd(c);
@@ -168,7 +173,7 @@ namespace Moducom.Instrumentation.Prometheus
 
         public void Initialize(params string[] labelNames)
         {
-            collector = new LabelNameOnlyCollection(labelNames);
+            collector = new LabelNameOnlyCollector(labelNames);
         }
 
         public IEnumerable<string> Labels
@@ -236,8 +241,17 @@ namespace Moducom.Instrumentation.Prometheus
         IEnumerable<KeyValuePair<string, object>> LabelHelper(object labels)
         {
             var labelEnum = Experimental.MemoryRepository.LabelHelper(labels).ToArray();
+            var labelNames = labelEnum.Select(x => x.Key);
 
-            //if (collector == null) return labelEnum;
+            if (collector != null)
+            {
+                // any labelNames which DON'T appear in canonical collector are foreign labels
+                var foreignLabels = labelNames.Except(collector.LabelNames);
+
+                if (foreignLabels.Any())
+                    throw new IndexOutOfRangeException(
+                        $"Invalid label specified: {Experimental.EnumerableExtensions.ToString(foreignLabels, ",")}");
+            }
 
             foreach (var labelName in collector.LabelNames)
             {
