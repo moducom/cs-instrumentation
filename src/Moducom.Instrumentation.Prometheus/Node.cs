@@ -63,25 +63,31 @@ namespace Moducom.Instrumentation.Prometheus
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        PRO.Client.Collectors.ICollector GetOrAdd<T>(string[] labelNames)
+        PRO.Client.Collectors.Collector<TNativeMetric> GetOrAdd<TNativeMetric>(string[] labelNames)
+            where TNativeMetric : PRO.Client.Child, new()
         {
             if (collector == null)
             {
-                var c = new Collector<PRO.Client.Counter.ThisChild>(GetFullName('_'), "TBD", labelNames);
+                var fullName = GetFullName('_');
+                var c = new Collector<TNativeMetric>(fullName, "TBD", labelNames);
                 var retrieved_collector = registry.GetOrAdd(c);
 
-                if (c == retrieved_collector) { } // indicates we really did add a new one.  
+                if (c == retrieved_collector)
+                {
+                    // indicates we really did add a new one.  
+                }
                 else
                 {
                     // indicates one already existed
-                    // TOOD: Issue a warning here
+                    // TODO: issue warning that we weren't the ones who registered the metric
+                    //throw new IndexOutOfRangeException($"Key already added with a different type: {fullName}");
                 }
 
                 // in either case, we must map to the one already present in prometheus
                 collector = retrieved_collector;
             }
 
-            return collector;
+            return (PRO.Client.Collectors.Collector<TNativeMetric>) collector;
         }
 
 
@@ -104,6 +110,11 @@ namespace Moducom.Instrumentation.Prometheus
             return default(T);
         }
 
+        IMetricBase CounterHelper(PRO.Contracts.Metric metric)
+        {
+            return null;
+        }
+
 
         /// <summary>
         /// Metrics property won't work until some kind of metric recording has happened
@@ -120,13 +131,47 @@ namespace Moducom.Instrumentation.Prometheus
                 switch(collected.type)
                 {
                     case MetricType.COUNTER:
+                    {
+                        var counterCollector = (PRO.Client.Collectors.Collector<PRO.Client.Counter.ThisChild>)collector;
+
                         return collected.metric.Select(Helper<IMetricBase>);
+                    }
                 }
 
                 return null;
             }
         }
 
+
+        /// <summary>
+        /// </summary>
+        /// <typeparam name="TNativeMetricChild"></typeparam>
+        /// <param name="labelNames"></param>
+        /// <returns></returns>
+        TNativeMetricChild GetMetricHelper<TNativeMetricChild>(
+            IEnumerable<string> labelNames,
+            IEnumerable<string> labelValues)
+            where TNativeMetricChild: PRO.Client.Child, new()
+        {
+            var c = GetOrAdd<TNativeMetricChild>(labelNames.ToArray());
+
+            // FIX: Moducom layer allows omission of labels, but Prometheus
+            // layer does not, so this is going to break without additional
+            // support logic
+            var nativeMetricChild = c.Labels(labelValues.ToArray());
+
+            return nativeMetricChild;
+        }
+
+        TNativeMetricChild GetMetricHelper<TNativeMetricChild>(object labels)
+            where TNativeMetricChild : PRO.Client.Child, new()
+        {
+            var labelEnum = Experimental.MemoryRepository.LabelHelper(labels);
+            var labelNames = labelEnum.Select(x => x.Key);
+            var labelValues = labelEnum.Select(x => x.Value.ToString());
+
+            return GetMetricHelper<TNativeMetricChild>(labelNames, labelValues);
+        }
 
         /// <summary>
         /// Look up or create the metric
@@ -142,28 +187,15 @@ namespace Moducom.Instrumentation.Prometheus
 
             if (typeof(T) == typeof(ICounter))
             {
-                //if (metricsFamily != null)
-                {
-                    //var nativeCounter = new PRO.Contracts.Counter();
-                    //var nativeCounter2 = new PRO.Client.Counter.ThisChild();
+                var nativeCounter = GetMetricHelper<PRO.Client.Counter.ThisChild>(labelNames, labelValues);
 
-                    PRO.Client.Counter counter = metricFactory.CreateCounter(
-                        GetFullName(), "TBD", labelNames.ToArray());
+                var moducomCounter = new CounterMetric(nativeCounter);
 
-                    PRO.Client.Counter.ThisChild nativeCounterChild = counter.Labels(labelValues.ToArray());
-
-                    collector = counter;
-                    metricsFamily = counter.Collect();
-                    return (T)(ICounter)new CounterMetric(counter);
-                }
-                //else
-                //{
-                 //   return default(T);
-                //}
+                return (T)(object)moducomCounter;
             }
             else if (typeof(T) == typeof(IGauge<double>))
             {
-                PRO.Client.Gauge gauge = metricFactory.CreateGauge(GetFullName(), "TBD");
+                var nativeGauge = GetMetricHelper<PRO.Client.Gauge.ThisChild>(labels);
             }
             throw new NotImplementedException();
         }
