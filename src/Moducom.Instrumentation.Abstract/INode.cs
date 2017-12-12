@@ -9,16 +9,23 @@ namespace Moducom.Instrumentation.Abstract
     // perhaps call them "repos"?  That implies more data storage than we're doing though
     namespace Experimental
     {
-        public interface ILabelsProvider
+        public interface ILabelValueProvider
         {
             /// <summary>
-            /// 
+            /// Acquire, if we can, the value of a label
             /// </summary>
             /// <param name="label"></param>
             /// <param name="value"></param>
             /// <returns></returns>
             bool GetLabelValue(string label, out object value);
+        }
 
+        /// <summary>
+        /// TODO: Phase out ILabelValueProvider as a necessary part of the hierarchy, as it is largely an internal API
+        /// used by MemoryRepository, Unit tests and TextFileDump
+        /// </summary>
+        public interface ILabelsProvider : ILabelValueProvider
+        {
             IEnumerable<string> Labels { get; }
         }
 
