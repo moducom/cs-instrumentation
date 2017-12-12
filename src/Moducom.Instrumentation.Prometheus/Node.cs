@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using PRO = global::Prometheus;
 using Moducom.Instrumentation.Abstract.Experimental;
+using Prometheus.Contracts;
 
 #if DEBUG
 [assembly: InternalsVisibleTo("Moducom.Instrumentation.Test")]
@@ -24,23 +25,47 @@ namespace Moducom.Instrumentation.Prometheus
         PRO.Client.Collectors.ICollector collector;
         Repository repository;
         PRO.Client.MetricFactory metricFactory = PRO.Client.Metrics.DefaultFactory;
+        static PRO.Client.Collectors.ICollectorRegistry registry = PRO.Client.Collectors.CollectorRegistry.Instance;
 
         // so that we can get fully-qualified name
         INode parent;
 
         internal Node(INode parent, string name) : base(name) { this.parent = parent; }
 
-        protected string GetFullName()
+
+        class Collector<T> : PRO.Client.Collectors.Collector<T>
+            where T: PRO.Client.Child, new()
+        {
+            public Collector(string name, string help, params string[] labelNames) : 
+                base(name, help, labelNames)
+            {
+            }
+
+            protected override MetricType Type => MetricType.COUNTER;
+        }
+
+        protected string GetFullName(char delimiter = '/')
         {
             INode node = this.parent;
             string fullname = Name;
 
             while(node != null)
             {
-                fullname = node.Name + "/" + fullname;
+                fullname = node.Name + delimiter + fullname;
             }
 
             return fullname;
+        }
+
+        PRO.Client.Collectors.ICollector GetOrAdd<T>()
+        {
+            if (collector == null)
+            {
+                collector = new Collector<PRO.Client.Counter.ThisChild>(GetFullName('_'), "TBD");
+                registry.GetOrAdd(collector);
+            }
+
+            return collector;
         }
 
         public void AddMetric(IMetricBase metric)
