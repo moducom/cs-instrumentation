@@ -22,6 +22,14 @@ namespace Moducom.Instrumentation.Prometheus
             return new Node(parent, name);
         }
 
+        MOD.INode rootNode;
+
+        internal Repository()
+        {
+            rootNode = CreateNode(null, "root");
+        }
+
+        /*
         new // temporarily tagging as new as we pull in base classes
         public MOD.INode this[string path]
         {
@@ -67,8 +75,9 @@ namespace Moducom.Instrumentation.Prometheus
                 }
             }
         }
+        */
 
-        public override MOD.INode RootNode => throw new NotImplementedException();
+        public override MOD.INode RootNode => rootNode;
     }
 
 
