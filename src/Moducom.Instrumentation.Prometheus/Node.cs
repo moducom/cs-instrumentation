@@ -58,41 +58,74 @@ namespace Moducom.Instrumentation.Prometheus
             return fullname;
         }
 
-        PRO.Client.Collectors.ICollector GetOrAdd<T>()
+        /// <summary>
+        /// Gets or Adds a metric with label template (as prometheus C# interfaces require)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        PRO.Client.Collectors.ICollector GetOrAdd<T>(string[] labelNames)
         {
             if (collector == null)
             {
-                collector = new Collector<PRO.Client.Counter.ThisChild>(GetFullName('_'), "TBD");
-                registry.GetOrAdd(collector);
+                var c = new Collector<PRO.Client.Counter.ThisChild>(GetFullName('_'), "TBD", labelNames);
+                var retrieved_collector = registry.GetOrAdd(c);
+
+                if (c == retrieved_collector) { } // indicates we really did add a new one.  
+                else
+                {
+                    // indicates one already existed
+                    // TOOD: Issue a warning here
+                }
+
+                // in either case, we must map to the one already present in prometheus
+                collector = retrieved_collector;
             }
 
             return collector;
         }
 
-        public void AddMetric(IMetricBase metric)
-        {
-            throw new NotImplementedException();
 
-            var _metric = new PRO.Contracts.Metric();
-
-            if (metric is ICounter)
-            {
-                var _c = new PRO.Contracts.Counter();
-                //new CounterMetric(_c);
-                // FIX: experimental and untested code
-                _metric.counter = _c;
-            }
-
-            metricsFamily.metric.Add(_metric);
-        }
-
+        /// <summary>
+        /// GetMetrics won't work until some kind of metric recording has happened
+        /// *through* our Node interface
+        /// </summary>
+        /// <param name="labels"></param>
+        /// <returns></returns>
         public IEnumerable<IMetricBase> GetMetrics(object labels)
         {
+            if (collector == null) return Enumerable.Empty<IMetricBase>();
+
             throw new NotImplementedException();
         }
 
+        T Helper<T>(PRO.Contracts.Metric metric)
+        {
+            //new CounterMetric2(metric.counter, metric.label.Select(x => x.value).ToArray());
+            return default(T);
+        }
 
-        public IEnumerable<IMetricBase> Metrics => throw new NotImplementedException();
+
+        /// <summary>
+        /// Metrics property won't work until some kind of metric recording has happened
+        /// *through* our Node interface
+        /// </summary>
+        public IEnumerable<IMetricBase> Metrics
+        {
+            get
+            {
+                if (collector == null) return Enumerable.Empty<IMetricBase>();
+
+                var collected = collector.Collect();
+
+                switch(collected.type)
+                {
+                    case MetricType.COUNTER:
+                        return collected.metric.Select(Helper<IMetricBase>);
+                }
+
+                return null;
+            }
+        }
 
 
         /// <summary>
