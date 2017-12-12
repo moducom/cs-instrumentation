@@ -9,6 +9,10 @@ using PRO = Moducom.Instrumentation.Prometheus;
 using MOD = Moducom.Instrumentation.Abstract;
 using Prometheus.Client;
 using Prometheus.Client.Collectors;
+//using Prometheus.Contracts;
+
+using PROC = Prometheus.Client;
+using PROCR = Prometheus.Contracts;
 
 namespace Moducom.Instrumentation.Test
 {
@@ -43,7 +47,7 @@ namespace Moducom.Instrumentation.Test
         {
             var c = Metrics.CreateCounter("test", "TEST");
             Metrics.CreateCounter("root_test", "TEST");
-            Counter c2 = Metrics.CreateCounter("test2", "TEST", "instance");
+            PROC.Counter c2 = Metrics.CreateCounter("test2", "TEST", "instance");
 
             c2.Labels("1").Inc();
             c2.Labels("2").Inc(5);
@@ -73,6 +77,10 @@ namespace Moducom.Instrumentation.Test
                 "Hopefully this doesn't break", 
                 new[] { "label1", "label2" });
 
+            // all 3 of these break
+            Metrics.CreateCounter("breaker_test",
+                "Hopefully this doesn't break");
+
             Metrics.CreateCounter("breaker_test",
                 "Hopefully this doesn't break",
                 new[] { "label2" });
@@ -80,6 +88,36 @@ namespace Moducom.Instrumentation.Test
             Metrics.CreateCounter("breaker_test",
                 "Hopefully this doesn't break",
                 new[] { "label3", "label2" });
+        }
+
+
+        class FakeCounter : Collector<PROC.Counter.ThisChild>
+        {
+            public FakeCounter(string name, string help, params string[] labelNames) : 
+                base(name, help, labelNames)
+            {
+            }
+
+            protected override PROCR.MetricType Type => PROCR.MetricType.COUNTER;
+        }
+
+        [TestMethod]
+        public void PrometheusLowLevelTest()
+        {
+            ICollectorRegistry registry = CollectorRegistry.Instance;
+
+            var fakeCounter = new FakeCounter("fake_counter", "Fake Counter", "label1");
+
+            registry.GetOrAdd(fakeCounter);
+
+            fakeCounter.Labels("1").Inc(7);
+            fakeCounter.Labels("2").Inc(14);
+
+            var fakeCounters = fakeCounter.Collect();
+
+            //new Collector<Counter.ThisChild>();
+            //new Counter();
+
         }
     }
 }

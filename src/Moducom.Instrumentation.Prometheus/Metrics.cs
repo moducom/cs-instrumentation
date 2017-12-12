@@ -36,6 +36,38 @@ namespace Moducom.Instrumentation.Prometheus
         public IEnumerable<string> Labels => throw new NotImplementedException();
     }
 
+    public class CounterMetric2 : IMetricBase, ICounter
+    {
+        readonly global::Prometheus.Client.Counter parent;
+        readonly global::Prometheus.Client.ICounter child;
+
+        public double Value => child.Value;
+
+        public CounterMetric2(global::Prometheus.Client.Counter nativeCounter, string[] labelValues)
+        {
+            this.parent = nativeCounter;
+            this.child = nativeCounter.Labels(labelValues);
+        }
+
+
+        public bool GetLabelValue(string label, out object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Increment(double byAmount)
+        {
+            child.Inc(byAmount);
+        }
+
+        public void SetLabels(object labels)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IEnumerable<string> Labels => parent.LabelNames;
+    }
+
     public class CounterChildMetric : IMetricBase, ICounter
     {
         readonly global::Prometheus.Client.Counter.ThisChild nativeCounterChild;
