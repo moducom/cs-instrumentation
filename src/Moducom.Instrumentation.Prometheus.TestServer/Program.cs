@@ -1,4 +1,5 @@
-﻿using Prometheus.Client.MetricServer;
+﻿using Moducom.Instrumentation.Abstract;
+using Prometheus.Client.MetricServer;
 using System;
 
 namespace Moducom.Instrumentation.Prometheus.TestServer
@@ -14,6 +15,11 @@ namespace Moducom.Instrumentation.Prometheus.TestServer
         static void WrappedExporter()
         {
             // TODO: Utilize what minimal IoC tricks we have here
+            var repo = new Moducom.Instrumentation.Prometheus.Repository();
+
+            var counter = repo["test"].GetMetric<ICounter>(new { instance = 1 });
+
+            counter.Increment();
         }
 
         static void Main(string[] args)

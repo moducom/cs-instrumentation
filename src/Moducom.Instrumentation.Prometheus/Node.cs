@@ -12,6 +12,7 @@ using Prometheus.Contracts;
 
 #if DEBUG
 [assembly: InternalsVisibleTo("Moducom.Instrumentation.Test")]
+[assembly: InternalsVisibleTo("Moducom.Instrumentation.Prometheus.TestExporter")]
 #endif
 
 namespace Moducom.Instrumentation.Prometheus
