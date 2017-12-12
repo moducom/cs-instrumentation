@@ -20,13 +20,19 @@ namespace Moducom.Instrumentation.Abstract
             bool GetLabelValue(string label, out object value);
         }
 
+        public interface ILabelNamesProvider
+        {
+            IEnumerable<string> Labels { get; }
+        }
+
         /// <summary>
         /// TODO: Phase out ILabelValueProvider as a necessary part of the hierarchy, as it is largely an internal API
         /// used by MemoryRepository, Unit tests and TextFileDump
         /// </summary>
-        public interface ILabelsProvider : ILabelValueProvider
+        public interface ILabelsProvider : 
+            ILabelValueProvider,
+            ILabelNamesProvider
         {
-            IEnumerable<string> Labels { get; }
         }
 
 
