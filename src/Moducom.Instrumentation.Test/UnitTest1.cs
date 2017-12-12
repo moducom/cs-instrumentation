@@ -252,5 +252,29 @@ namespace Moducom.Instrumentation.Test
 
             var metric = counter[0];
         }
+
+
+        class FullNameNode : INamed, IChild<FullNameNode>
+        {
+            internal string name;
+            internal FullNameNode parent;
+
+            public string Name => name;
+
+            public FullNameNode Parent => parent;
+        }
+
+
+        [TestMethod]
+        public void GetFullNameTest()
+        {
+            var root = new FullNameNode { name = "root" };
+            var child = new FullNameNode { name = "child", parent = root };
+            var grandchild = new FullNameNode { name = "child-again", parent = child };
+
+            var fullname = grandchild.GetFullName();
+
+            Assert.AreEqual("root/child/child-again", fullname);
+        }
     }
 }

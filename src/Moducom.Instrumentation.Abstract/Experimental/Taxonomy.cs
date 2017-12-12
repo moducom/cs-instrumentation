@@ -47,6 +47,12 @@ namespace Moducom.Instrumentation.Experimental
     }
 
 
+    public interface IChild<T>
+    {
+        T Parent { get; }
+    }
+
+
     public class Taxonomy
     {
         public class NodeBase<TNode, TINode> : 
@@ -120,6 +126,25 @@ namespace Moducom.Instrumentation.Experimental
 
                 return RootNode.FindChildByPath(splitPaths, _CreateNode);
             }
+        }
+    }
+
+
+    public static class IChildExtensions
+    {
+        public static string GetFullName<T>(this T node, char delimiter = '/')
+            where T: Abstract.Experimental.INamed, IChild<T>
+        {
+            var fullName = node.Name;
+
+            while(node.Parent != null)
+            {
+                node = node.Parent;
+
+                fullName = node.Name + delimiter + fullName;
+            }
+
+            return fullName;
         }
     }
 }
