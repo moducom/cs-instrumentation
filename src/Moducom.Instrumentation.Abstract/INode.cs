@@ -121,8 +121,7 @@ namespace Moducom.Instrumentation.Abstract
     /// </summary>
     public interface IMetricBase :
         IValueGetter,
-        Experimental.ILabelsProvider,
-        Experimental.ILabelsCollection
+        Experimental.ILabelsProvider
     {
 
     }

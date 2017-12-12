@@ -67,10 +67,6 @@ namespace Moducom.Instrumentation.Test
 
             INode node = repo["counter/main"];
 
-            //var value = node.AddCounter();
-
-            //value.SetLabels(new { instance = 1 });
-
             var value = node.GetCounter(new { instance = 1 });
             value.Increment(1);
         }
