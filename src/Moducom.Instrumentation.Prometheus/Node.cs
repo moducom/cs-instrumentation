@@ -49,6 +49,32 @@ namespace Moducom.Instrumentation.Prometheus
             protected override MetricType Type => MetricType.COUNTER;
         }
 
+
+        /// <summary>
+        /// Use this to pre-initialize labelnames so that subsequent partial-label lookups
+        /// don't incorrectly initialize Prometheus
+        /// </summary>
+        class LabelNameOnlyCollection : PRO.Client.Collectors.ICollector
+        {
+            public string Name => "label_name_only";
+
+            readonly string[] labelNames;
+
+            internal LabelNameOnlyCollection(string[] labelNames)
+            {
+                // FIX: watch this, we want to copy the array not just the
+                // array reference
+                this.labelNames = labelNames;
+            }
+
+            public string[] LabelNames => labelNames;
+
+            public MetricFamily Collect()
+            {
+                throw new NotImplementedException();
+            }
+        }
+
         protected string GetFullName(char delimiter = '/')
         {
             INode node = this.parent;
@@ -70,11 +96,37 @@ namespace Moducom.Instrumentation.Prometheus
         PRO.Client.Collectors.Collector<TNativeMetric> GetOrAdd<TNativeMetric>(string[] labelNames)
             where TNativeMetric : PRO.Client.Child, new()
         {
+            if (collector is LabelNameOnlyCollection labelCollector)
+            {
+                //var foreignLabels = labelCollector.LabelNames.Except(labelNames);
+
+                // if any labels are leftover from labelNames REMOVING valid labelCollector.LabelNames
+                // then we know invalid labels are present
+                var foreignLabels = labelNames.Except(labelCollector.LabelNames);
+
+                if (foreignLabels.Any())
+                    throw new IndexOutOfRangeException(
+                        $"Invalid label specified: {Experimental.EnumerableExtensions.ToString(foreignLabels, ",")}");
+
+                labelNames = labelCollector.LabelNames;
+
+                collector = null;
+            }
+
             if (collector == null)
             {
                 var fullName = GetFullName('_');
                 var c = new Collector<TNativeMetric>(fullName, Description, labelNames);
-                var retrieved_collector = registry.GetOrAdd(c);
+                PRO.Client.Collectors.ICollector retrieved_collector;
+                // FIX: Under non-debug scenarios, we are still getting a crash here
+                try
+                {
+                    retrieved_collector = registry.GetOrAdd(c);
+                }
+                catch(Exception e)
+                {
+                    throw;
+                }
 
                 if (c == retrieved_collector)
                 {
@@ -114,6 +166,10 @@ namespace Moducom.Instrumentation.Prometheus
             return default(T);
         }
 
+        public void Initialize(params string[] labelNames)
+        {
+            collector = new LabelNameOnlyCollection(labelNames);
+        }
 
         public IEnumerable<string> Labels
         {
@@ -172,12 +228,41 @@ namespace Moducom.Instrumentation.Prometheus
             return nativeMetricChild;
         }
 
+        /// <summary>
+        /// Pads incoming anon/dictionary label with spaces if prometheus labelling is a superset
+        /// </summary>
+        /// <param name="labels"></param>
+        /// <returns></returns>
+        IEnumerable<KeyValuePair<string, object>> LabelHelper(object labels)
+        {
+            var labelEnum = Experimental.MemoryRepository.LabelHelper(labels).ToArray();
+
+            //if (collector == null) return labelEnum;
+
+            foreach (var labelName in collector.LabelNames)
+            {
+                var hasLabel = labelEnum.SingleOrDefault(x => x.Key == labelName);
+
+                if (hasLabel.Key != null) // since KeyValuePair can't be compared to null
+                    yield return hasLabel;
+                else
+                    yield return new KeyValuePair<string, object>(labelName, null);
+
+            }
+        }
+
         TNativeMetricChild GetMetricHelper<TNativeMetricChild>(object labels)
             where TNativeMetricChild : PRO.Client.Child, new()
         {
-            var labelEnum = Experimental.MemoryRepository.LabelHelper(labels);
+            IEnumerable<KeyValuePair<string, object>> labelEnum;
+
+            if (collector == null)
+                labelEnum = Experimental.MemoryRepository.LabelHelper(labels);
+            else
+                labelEnum = LabelHelper(labels).ToArray();
+
             var labelNames = labelEnum.Select(x => x.Key);
-            var labelValues = labelEnum.Select(x => x.Value.ToString());
+            var labelValues = labelEnum.Select(x => x.Value?.ToString());
 
             return GetMetricHelper<TNativeMetricChild>(labelNames, labelValues);
         }
@@ -202,9 +287,14 @@ namespace Moducom.Instrumentation.Prometheus
 
                 return (T)(object)moducomCounter;
             }
-            else if (typeof(T) == typeof(IGauge<double>))
+            //else if (typeof(T).IsAssignableFrom(typeof(IGauge<double>)))
+            else if (typeof(IGauge<double>).IsAssignableFrom(typeof(T)))
             {
                 var nativeGauge = GetMetricHelper<PRO.Client.Gauge.ThisChild>(labels);
+
+                var moducomGauge = new GauageMetric(nativeGauge);
+
+                return (T)(object)moducomGauge;
             }
             throw new NotImplementedException();
         }

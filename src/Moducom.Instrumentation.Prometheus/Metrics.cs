@@ -7,6 +7,45 @@ using System.Threading.Tasks;
 
 namespace Moducom.Instrumentation.Prometheus
 {
+    public class GauageMetric : IMetricBase, IGauge
+    {
+        readonly global::Prometheus.Client.IGauge nativeGauge;
+
+        public GauageMetric(global::Prometheus.Client.IGauge nativeGauge)
+        {
+            this.nativeGauge = nativeGauge;
+        }
+
+        public double Value
+        {
+            get => nativeGauge.Value;
+            set => nativeGauge.Set(value);
+        }
+
+        public IEnumerable<string> Labels => throw new NotImplementedException();
+
+        public void Decrement(double byAmount)
+        {
+            nativeGauge.Dec(byAmount);
+        }
+
+        public bool GetLabelValue(string label, out object value)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Increment(double byAmount)
+        {
+            nativeGauge.Inc(byAmount);
+        }
+
+        public void SetLabels(object labels)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+
     public class CounterMetric : IMetricBase, ICounter
     {
         readonly global::Prometheus.Client.ICounter nativeCounter;

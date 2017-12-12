@@ -117,8 +117,32 @@ namespace Moducom.Instrumentation.Test
 
             var fakeCounters = fakeCounter.Collect();
 
+            var fakeCounter2 = new FakeCounter("fake_counter", "Fake Counter", "label2", "label3");
+
+            return;
+
+            // label mismatch induces an exception here
+            var fakeCounter2_retrieved = registry.GetOrAdd(fakeCounter2);
+
+            Assert.AreSame(fakeCounter, fakeCounter2_retrieved);
+            Assert.AreNotSame(fakeCounter2, fakeCounter2_retrieved);
             //new Collector<Counter.ThisChild>();
             //new Counter();
+
+        }
+
+
+        [TestMethod]
+        public void PrometheusLabelValidatorTest()
+        {
+            var r = new PRO.Repository();
+
+            var metric = (PRO.Node) r["test"];
+
+            metric.Initialize("instance", "test_a", "disposition");
+
+            var counter_i5 = metric.GetMetric<MOD.IGauge>(new { instance = 5 });
+            var counter_i3 = metric.GetMetric<MOD.IGauge>(new { disposition = "good", instance = 3 });
 
         }
     }
