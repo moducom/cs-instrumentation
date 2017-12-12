@@ -33,6 +33,10 @@ namespace Moducom.Instrumentation.Prometheus
 
         internal Node(INode parent, string name) : base(name) { this.parent = parent; }
 
+        /// <summary>
+        /// Description to feed directly into prometheus collector desc
+        /// </summary>
+        public string Description { get; set; }
 
         class Collector<T> : PRO.Client.Collectors.Collector<T>
             where T: PRO.Client.Child, new()
@@ -69,7 +73,7 @@ namespace Moducom.Instrumentation.Prometheus
             if (collector == null)
             {
                 var fullName = GetFullName('_');
-                var c = new Collector<TNativeMetric>(fullName, "TBD", labelNames);
+                var c = new Collector<TNativeMetric>(fullName, Description, labelNames);
                 var retrieved_collector = registry.GetOrAdd(c);
 
                 if (c == retrieved_collector)
@@ -110,11 +114,16 @@ namespace Moducom.Instrumentation.Prometheus
             return default(T);
         }
 
-        IMetricBase CounterHelper(PRO.Contracts.Metric metric)
-        {
-            return null;
-        }
 
+        public IEnumerable<string> Labels
+        {
+            get
+            {
+                if (collector == null) return Enumerable.Empty<string>();
+
+                return collector.LabelNames;
+            }
+        }
 
         /// <summary>
         /// Metrics property won't work until some kind of metric recording has happened

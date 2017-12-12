@@ -16,8 +16,13 @@ namespace Moducom.Instrumentation.Prometheus.TestServer
         {
             // TODO: Utilize what minimal IoC tricks we have here
             var repo = new Moducom.Instrumentation.Prometheus.Repository();
+            var metricName = "test/metric1";
 
-            var counter = repo["test"].GetMetric<ICounter>(new { instance = 1 });
+            var testNode = repo[metricName];
+
+            ((Node)testNode).Description = "Service Provider+Facade test";
+
+            var counter = testNode.GetMetric<ICounter>(new { instance = 1 });
 
             counter.Increment();
         }
