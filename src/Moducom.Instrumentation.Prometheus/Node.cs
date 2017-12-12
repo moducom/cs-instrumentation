@@ -77,21 +77,30 @@ namespace Moducom.Instrumentation.Prometheus
         /// <returns></returns>
         public T GetMetric<T>(object labels) where T : ILabelsProvider, IValueGetter
         {
+            var labelEnum = Experimental.MemoryRepository.LabelHelper(labels);
+            var labelNames = labelEnum.Select(x => x.Key);
+            var labelValues = labelEnum.Select(x => x.Value.ToString());
+
             if (typeof(T) == typeof(ICounter))
             {
-                if (metricsFamily != null)
+                //if (metricsFamily != null)
                 {
-                    //Experimental.MemoryRepository.Node.LabelHelper(labels);
+                    //var nativeCounter = new PRO.Contracts.Counter();
+                    //var nativeCounter2 = new PRO.Client.Counter.ThisChild();
 
-                    PRO.Client.Counter counter = metricFactory.CreateCounter(GetFullName(), "TBD");
+                    PRO.Client.Counter counter = metricFactory.CreateCounter(
+                        GetFullName(), "TBD", labelNames.ToArray());
+
+                    PRO.Client.Counter.ThisChild nativeCounterChild = counter.Labels(labelValues.ToArray());
+
                     collector = counter;
                     metricsFamily = counter.Collect();
                     return (T)(ICounter)new CounterMetric(counter);
                 }
-                else
-                {
-                    return default(T);
-                }
+                //else
+                //{
+                 //   return default(T);
+                //}
             }
             else if (typeof(T) == typeof(IGauge<double>))
             {
