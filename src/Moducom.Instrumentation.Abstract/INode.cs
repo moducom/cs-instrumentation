@@ -219,10 +219,12 @@ namespace Moducom.Instrumentation.Abstract
                     // If no way to create a new node, then we basically abort (node not found)
                     if (nodeFactory == null) return default(T);
 
+                    // If we do have a node factory, attempt to auto add *IF* currentNode is writable
                     if (currentNode is Instrumentation.Experimental.IChildCollection<T> currentWritableNode)
                     {
                         // TODO: have a configuration flag to determine auto add
-                        node = nodeFactory(node, name);
+                        // FIX: typecast to (T) fragile
+                        node = nodeFactory((T)currentNode, name);
                         currentWritableNode.AddChild(node);
                     }
                     else
