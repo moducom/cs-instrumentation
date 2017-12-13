@@ -45,9 +45,9 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void PrometheusProviderTest()
         {
-            var c = Metrics.CreateCounter("test", "TEST");
-            Metrics.CreateCounter("root_test", "TEST");
-            PROC.Counter c2 = Metrics.CreateCounter("test2", "TEST", "instance");
+            //var c = Metrics.CreateCounter("test", "TEST");
+            var c = Metrics.CreateCounter("root_test", "TEST");
+            PROC.Counter c2 = Metrics.CreateCounter("test", "TEST", "instance");
 
             c2.Labels("1").Inc();
             c2.Labels("2").Inc(5);
@@ -62,6 +62,8 @@ namespace Moducom.Instrumentation.Test
 
             var counter = metric.GetCounter();
             //var counter = MOD.INodeExtensions.AddCounterExperimental(metric);
+
+            Assert.AreEqual(1, counter.Value);
 
             c.Inc();
 
