@@ -71,7 +71,9 @@ namespace Moducom.Instrumentation.Experimental
                     {
                         var typeToCreate = typeof(Metric<>).MakeGenericType(underlyingValueType);
 
-                        var retVal = (IMetricBase) Activator.CreateInstance(typeToCreate);
+                        // FIX: This is a little bit fragile.  Metric<> itself does implement ILabelsCollection
+                        // via MetricBase
+                        var retVal = (ILabelsCollection) Activator.CreateInstance(typeToCreate);
 
                         retVal.SetLabels(labels);
 
@@ -189,7 +191,9 @@ namespace Moducom.Instrumentation.Experimental
         }
     }
 
-    public class MetricBase : IMetricBase
+    public class MetricBase : 
+        IMetricBase,
+        ILabelsCollection
     {
         SparseDictionary<string, object> labels;
 
@@ -343,10 +347,6 @@ namespace Moducom.Instrumentation.Experimental
         {
             value = null;
             return false;
-        }
-
-        public void SetLabels(object labels)
-        {
         }
 
         public IEnumerable<string> Labels => Enumerable.Empty<string>();

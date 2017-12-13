@@ -9,17 +9,30 @@ namespace Moducom.Instrumentation.Abstract
     // perhaps call them "repos"?  That implies more data storage than we're doing though
     namespace Experimental
     {
-        public interface ILabelsProvider
+        public interface ILabelValueProvider
         {
             /// <summary>
-            /// 
+            /// Acquire, if we can, the value of a label
             /// </summary>
             /// <param name="label"></param>
             /// <param name="value"></param>
             /// <returns></returns>
             bool GetLabelValue(string label, out object value);
+        }
 
+        public interface ILabelNamesProvider
+        {
             IEnumerable<string> Labels { get; }
+        }
+
+        /// <summary>
+        /// TODO: Phase out ILabelValueProvider as a necessary part of the hierarchy, as it is largely an internal API
+        /// used by MemoryRepository, Unit tests and TextFileDump
+        /// </summary>
+        public interface ILabelsProvider : 
+            ILabelValueProvider,
+            ILabelNamesProvider
+        {
         }
 
 
@@ -121,8 +134,7 @@ namespace Moducom.Instrumentation.Abstract
     /// </summary>
     public interface IMetricBase :
         IValueGetter,
-        Experimental.ILabelsProvider,
-        Experimental.ILabelsCollection
+        Experimental.ILabelsProvider
     {
 
     }
@@ -207,10 +219,12 @@ namespace Moducom.Instrumentation.Abstract
                     // If no way to create a new node, then we basically abort (node not found)
                     if (nodeFactory == null) return default(T);
 
+                    // If we do have a node factory, attempt to auto add *IF* currentNode is writable
                     if (currentNode is Instrumentation.Experimental.IChildCollection<T> currentWritableNode)
                     {
                         // TODO: have a configuration flag to determine auto add
-                        node = nodeFactory(node, name);
+                        // FIX: typecast to (T) fragile
+                        node = nodeFactory((T)currentNode, name);
                         currentWritableNode.AddChild(node);
                     }
                     else
