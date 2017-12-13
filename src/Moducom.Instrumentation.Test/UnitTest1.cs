@@ -272,9 +272,16 @@ namespace Moducom.Instrumentation.Test
             var child = new FullNameNode { name = "child", parent = root };
             var grandchild = new FullNameNode { name = "child-again", parent = child };
 
-            var fullname = grandchild.GetFullName();
+            var fullname = grandchild.GetFullName(':');
 
-            Assert.AreEqual("root/child/child-again", fullname);
+            Assert.AreEqual("root:child:child-again", fullname);
+
+            var root2 = new FullNameNode { name = null };
+            var child2 = new FullNameNode { name = "child", parent = root2 };
+
+            fullname = child2.GetFullName();
+
+            Assert.AreEqual("child", fullname);
         }
     }
 }
