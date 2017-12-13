@@ -280,13 +280,9 @@ namespace Moducom.Instrumentation.Prometheus
         /// <returns></returns>
         public T GetMetric<T>(object labels) where T : ILabelsProvider, IValueGetter
         {
-            var labelEnum = Experimental.MemoryRepository.LabelHelper(labels);
-            var labelNames = labelEnum.Select(x => x.Key);
-            var labelValues = labelEnum.Select(x => x.Value.ToString());
-
             if (typeof(T) == typeof(ICounter))
             {
-                var nativeCounter = GetMetricHelper<PRO.Client.Counter.ThisChild>(labelNames, labelValues);
+                var nativeCounter = GetMetricHelper<PRO.Client.Counter.ThisChild>(labels);
 
                 var moducomCounter = new CounterMetric(nativeCounter);
 
