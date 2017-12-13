@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 using PRO = global::Prometheus;
 using Moducom.Instrumentation.Abstract.Experimental;
+using Moducom.Instrumentation.Experimental;
 using Prometheus.Contracts;
 
 #if DEBUG
@@ -20,6 +21,7 @@ namespace Moducom.Instrumentation.Prometheus
     internal class Node : 
         Experimental.Taxonomy.NodeBase<Node, INode>, 
         INode,
+        IChild<Node>,
         Abstract.Experimental.IMetricProvider
     {
         internal PRO.Contracts.MetricFamily metricsFamily;
@@ -30,6 +32,8 @@ namespace Moducom.Instrumentation.Prometheus
 
         // so that we can get fully-qualified name
         INode parent;
+
+        public Node Parent => (Node)parent;
 
         internal Node(INode parent, string name) : base(name) { this.parent = parent; }
 
@@ -75,19 +79,6 @@ namespace Moducom.Instrumentation.Prometheus
             }
         }
 
-        protected string GetFullName(char delimiter = '/')
-        {
-            INode node = this.parent;
-            string fullname = Name;
-
-            while(node != null)
-            {
-                fullname = node.Name + delimiter + fullname;
-            }
-
-            return fullname;
-        }
-
         /// <summary>
         /// Gets or Adds a metric with label template (as prometheus C# interfaces require)
         /// </summary>
@@ -118,7 +109,7 @@ namespace Moducom.Instrumentation.Prometheus
 
             if (collector == null)
             {
-                var fullName = GetFullName('_');
+                var fullName = this.GetFullName('_');
                 var c = new Collector<TNativeMetric>(fullName, Description, labelNames);
                 PRO.Client.Collectors.ICollector retrieved_collector;
 
