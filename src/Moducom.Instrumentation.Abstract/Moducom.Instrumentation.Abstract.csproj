@@ -27,4 +27,8 @@
       <Version>1.0.0-alpha023</Version>
     </PackageReference>
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Fact.Extensions.Collection" Version="1.0.0-alpha024" />
+  </ItemGroup>
 </Project>
