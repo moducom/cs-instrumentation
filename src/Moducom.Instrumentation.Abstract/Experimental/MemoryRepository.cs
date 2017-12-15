@@ -17,6 +17,9 @@ namespace Moducom.Instrumentation.Experimental
 {
     // TODO: Probably getting NETSTANDARD1_6 will be easy, but not important right now
 #if NET40 || NET46 || NETSTANDARD2_0
+    /// <summary>
+    /// 
+    /// </summary>
     public class MemoryRepository : Taxonomy<MemoryRepository.Node, INode>, IRepository
     {
         readonly Node rootNode = new Node("[root]");
