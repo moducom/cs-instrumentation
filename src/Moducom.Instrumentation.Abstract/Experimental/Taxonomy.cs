@@ -8,6 +8,18 @@ using Fact.Extensions.Collection;
 
 namespace Moducom.Instrumentation.Experimental
 {
+#if !NET40
+    using Fact.Extensions.Experimental;
+
+    public abstract class TaxonomyBase<TNode, TINode> : TaxonomyBase<TNode>, ITaxonomy<TINode>
+        where TNode: IChildCollection<TNode>, TINode
+        where TINode: IChildCollection<TINode>, INamed
+    {
+        TINode IAccessor<string, TINode>.this[string key] => base[key];
+
+        TINode ITaxonomy<TINode>.RootNode => RootNode;
+    }
+#endif
 
     public static class IChildExtensions
     {

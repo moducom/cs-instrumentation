@@ -23,7 +23,7 @@ namespace Moducom.Instrumentation.Experimental
     /// <summary>
     /// 
     /// </summary>
-    public class MemoryRepository : TaxonomyBase<MemoryRepository.Node>, IRepository
+    public class MemoryRepository : TaxonomyBase<MemoryRepository.Node, INode>, IRepository
     {
         readonly Node rootNode = new Node("[root]");
 
@@ -98,10 +98,6 @@ namespace Moducom.Instrumentation.Experimental
 
         public override Node RootNode => rootNode;
 
-        INode ITaxonomy<INode>.RootNode => rootNode;
-
-        INode IAccessor<string, INode>.this[string key] => base[key];
-
         /// <summary>
         /// Turn from either anonymous object or dictionary into a key/value label list
         /// </summary>
@@ -125,8 +121,7 @@ namespace Moducom.Instrumentation.Experimental
         public class Node : 
             NodeBase<INode>, 
             IChildCollection<Node>,
-            INode,
-            IMetricProvider
+            INode
         {
             LinkedList<IMetricBase> metrics = new LinkedList<IMetricBase>();
 
