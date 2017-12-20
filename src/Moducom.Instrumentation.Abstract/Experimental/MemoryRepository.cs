@@ -120,7 +120,7 @@ namespace Moducom.Instrumentation.Experimental
 
         public class Node : 
             NodeBase<INode>, 
-            IChildCollection<Node>,
+            INamedChildCollection<Node>,
             INode
         {
             LinkedList<IMetricBase> metrics = new LinkedList<IMetricBase>();
@@ -176,11 +176,6 @@ namespace Moducom.Instrumentation.Experimental
 
             public IEnumerable<IMetricBase> Metrics => metrics;
 
-            /// <summary>
-            /// FIX: This is fragile, resolve the Node vs INode debacle
-            /// </summary>
-            IEnumerable<Node> IChildProvider<Node>.Children => base.Children.Cast<Node>();
-
             public void AddMetric(IMetricBase metric)
             {
                 metrics.AddLast(metric);
@@ -214,7 +209,12 @@ namespace Moducom.Instrumentation.Experimental
 
             void IChildCollection<Node>.AddChild(Node child) => base.AddChild(child);
 
-            Node IChildCollection<Node>.GetChild(string name) => (Node)base.GetChild(name);
+            /// <summary>
+            /// FIX: This is fragile, resolve the Node vs INode debacle
+            /// </summary>
+            IEnumerable<Node> IChildProvider<Node>.Children => base.Children.Cast<Node>();
+
+            Node IChildProvider<string, Node>.GetChild(string name) => (Node)base.GetChild(name);
         }
     }
 

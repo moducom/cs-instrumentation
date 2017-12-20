@@ -46,14 +46,6 @@ namespace Moducom.Instrumentation.Abstract
             void SetLabels(object labels);
         }
 
-        public interface IWithChildren
-#if NET40
-            : IChildProvider<INode>
-#else
-            : Fact.Extensions.Experimental.IChildCollection<INode> 
-#endif
-        { }
-
         public interface IMetricFactory
         {
             /// <summary>
@@ -119,7 +111,7 @@ namespace Moducom.Instrumentation.Abstract
     /// and is named
     /// </summary>
     public interface INode :
-        Experimental.IWithChildren,
+        INamedChildProvider<INode>,
         Experimental.IMetricProvider,
         Experimental.IMetricsProvider,
         INamed

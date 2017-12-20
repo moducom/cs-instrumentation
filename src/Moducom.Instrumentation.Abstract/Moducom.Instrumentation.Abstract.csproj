@@ -22,18 +22,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Fact.Extensions.Collection" Version="1.0.0-alpha025" />
+    <PackageReference Include="Fact.Extensions.Collection" Version="1.0.0-alpha026" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net46'">
+  <ItemGroup Condition="'$(TargetFramework)' != 'net40'">
     <PackageReference Include="Fact.Extensions.Experimental">
-      <Version>1.0.0-alpha025</Version>
+      <Version>1.0.0-alpha026</Version>
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="Fact.Extensions.Experimental">
-      <Version>1.0.0-alpha025</Version>
-    </PackageReference>
-  </ItemGroup>
 </Project>

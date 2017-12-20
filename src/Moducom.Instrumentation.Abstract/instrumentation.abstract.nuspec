@@ -10,7 +10,7 @@
     <!-- Optional elements -->
     <releaseNotes>Won't bump to 1.0.0 until TC is auto versioning the builds for us</releaseNotes>
     <dependencies>
-      <dependency id="Fact.Extensions.Collection" version="1.0.0-alpha024" />
+      <dependency id="Fact.Extensions.Collection" version="1.0.0-alpha026" />
     </dependencies>
     <!-- ... -->
   </metadata>
