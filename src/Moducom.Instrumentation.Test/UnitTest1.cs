@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace Moducom.Instrumentation.Test
 {
@@ -200,12 +201,12 @@ namespace Moducom.Instrumentation.Test
 
             var histogram = repo["gauge/main"].GetMetric<IHistogram<double>>();
 
-            var testStart = DateTime.Now;
+            var testStart = DateTime.Now.AddMilliseconds(-5); // do a little time traveling, since we might finish so fast...
 
             histogram.Value = 5;
             histogram.Value = 10;
 
-            var testEnd = DateTime.Now;
+            var testEnd = DateTime.Now.AddMilliseconds(5); // do a little time traveling, since we might finish so fast...
 
             var values = histogram.Values.ToArray();
 
