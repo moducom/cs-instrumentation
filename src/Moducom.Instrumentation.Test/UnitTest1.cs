@@ -165,6 +165,20 @@ namespace Moducom.Instrumentation.Test
             var result = writer.ToString();
         }
 
+        [TestMethod]
+        public void VisitorTest()
+        {
+            IRepository repo = new MemoryRepository();
+
+            setup(repo["counter/main"]);
+            setup2(repo["gauge/main"]);
+
+            repo.Visit(n => 
+            {
+                Console.WriteLine($"Visiting: {n.Name}");
+            });
+        }
+
 
         [TestMethod]
         public void LabelBreakerTest()

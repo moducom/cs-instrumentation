@@ -64,6 +64,7 @@ namespace Moducom.Instrumentation.Experimental
         }
     }
 
+
 #if !NETSTANDARD1_6
     public class TextFileDumpDaemon : IDisposable
     {
