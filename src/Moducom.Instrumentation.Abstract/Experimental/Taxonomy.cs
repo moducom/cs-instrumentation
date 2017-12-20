@@ -169,48 +169,4 @@ namespace Moducom.Instrumentation.Experimental
             return fullName;
         }
     }
-
-
-    public static class ITaxonomyExtensions
-    {
-        public static void Visit<TNode, TContext>(this TNode node, Action<TNode, TContext> visitor, TContext context, int level = 0)
-            where TNode : IChildProvider<TNode>
-            where TContext: new()
-        {
-            visitor(node, context);
-
-            foreach (TNode childNode in node.Children)
-            {
-                context = new TContext();
-
-                Visit(childNode, visitor, context, level + 1);
-            }
-        }
-
-
-        public static void Visit<TNode>(this TNode node, Action<TNode> visitor, int level = 0)
-            where TNode : IChildProvider<TNode>
-        {
-            visitor(node);
-
-            foreach (TNode childNode in node.Children)
-            {
-                Visit(childNode, visitor, level + 1);
-            }
-        }
-
-
-        public static void Visit<TNode, TINode>(this ITaxonomy<TNode, TINode> taxonomy, Action<TINode> visitor)
-            where TINode : IChildProvider<TINode>, Abstract.Experimental.INamed
-            where TNode : TINode
-        {
-            Visit(taxonomy.RootNode, visitor);
-        }
-
-        public static void Visit(this IRepository repository, Action<INode> visitor)
-        {
-            Visit(repository.RootNode, visitor);
-        }
-    }
-
 }
