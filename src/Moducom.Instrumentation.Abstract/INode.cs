@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using Fact.Extensions.Collection;
 using System.Linq;
 using System.Text;
 
@@ -45,16 +46,13 @@ namespace Moducom.Instrumentation.Abstract
             void SetLabels(object labels);
         }
 
-        public interface IWithChildren : Instrumentation.Experimental.IChildCollection<INode> { }
-
-        /// <summary>
-        /// TODO: Use Fact.Extensions version of this
-        /// </summary>
-        public interface INamed
-        {
-            string Name { get; }
-        }
-
+        public interface IWithChildren
+#if NET40
+            : IChildProvider<INode>
+#else
+            : Fact.Extensions.Experimental.IChildCollection<INode> 
+#endif
+        { }
 
         public interface IMetricFactory
         {
@@ -124,7 +122,7 @@ namespace Moducom.Instrumentation.Abstract
         Experimental.IWithChildren,
         Experimental.IMetricProvider,
         Experimental.IMetricsProvider,
-        Experimental.INamed
+        INamed
     {
     }
 
@@ -184,57 +182,6 @@ namespace Moducom.Instrumentation.Abstract
             var metric = node.GetMetric<IMetric<T>>(labels);
 
             return metric;
-        }
-    }
-
-
-    public static class IChildProviderExtensions
-    {
-        /// <summary>
-        /// Stock standard tree traversal
-        /// </summary>
-        /// <param name="startNode">top of tree to search from.  MUST be convertible to type T directly</param>
-        /// <param name="splitPaths">broken out path components</param>
-        /// <param name="nodeFactory"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        public static T FindChildByPath<T>(this Instrumentation.Experimental.IChildProvider<T> startNode, IEnumerable<string> splitPaths, 
-            Func<T, string, T> nodeFactory = null)
-            where T: Experimental.INamed
-        {
-            Instrumentation.Experimental.IChildProvider<T> currentNode = startNode;
-
-            // The ChildProvider must also be a type of T for this to work
-            T node = (T)currentNode;
-
-            foreach (var name in splitPaths)
-            {
-                // We may encounter some nodes which are not child provider nodes
-                if (currentNode == null) continue;
-
-                node = currentNode.GetChild(name);
-
-                if (node == null)
-                {
-                    // If no way to create a new node, then we basically abort (node not found)
-                    if (nodeFactory == null) return default(T);
-
-                    // If we do have a node factory, attempt to auto add *IF* currentNode is writable
-                    if (currentNode is Instrumentation.Experimental.IChildCollection<T> currentWritableNode)
-                    {
-                        // TODO: have a configuration flag to determine auto add
-                        // FIX: typecast to (T) fragile
-                        node = nodeFactory((T)currentNode, name);
-                        currentWritableNode.AddChild(node);
-                    }
-                    else
-                        return default(T);
-                }
-
-                currentNode = node as Instrumentation.Experimental.IChildProvider<T>;
-            }
-
-            return node;
         }
     }
 }
