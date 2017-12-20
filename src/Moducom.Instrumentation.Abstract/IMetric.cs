@@ -112,6 +112,7 @@ namespace Moducom.Instrumentation.Abstract
         /// TODO: *might* want a binning version, or might just wait until we plug into proper metrics codebase
         /// </summary>
         /// <param name="histogram"></param>
+        /// <param name="startFrom"></param>
         /// <returns></returns>
         /// <remarks>
         /// NOTE: Beware, this code probably won't work with a plugin provider like prometheus - pretty sure it won't

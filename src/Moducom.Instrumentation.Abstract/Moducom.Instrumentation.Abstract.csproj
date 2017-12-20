@@ -10,12 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.6'">
-    <PackageReference Include="Fact.Extensions.Collection">
-      <Version>1.0.0-alpha023</Version>
-    </PackageReference>
-    <PackageReference Include="Fact.Extensions.Experimental">
-      <Version>1.0.0-alpha025</Version>
-    </PackageReference>
     <PackageReference Include="System.Diagnostics.Contracts">
       <Version>4.3.0</Version>
     </PackageReference>

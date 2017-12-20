@@ -168,6 +168,7 @@ namespace Moducom.Instrumentation.Abstract
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="node"></param>
+        /// <param name="labels"></param>
         /// <returns></returns>
         public static IMetric<T> GetGenericMetric<T>(this INode node, object labels = null)
         {
