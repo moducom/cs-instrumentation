@@ -1,3 +1,5 @@
+using Fact.Extensions.Collection;
+using Fact.Extensions.Experimental;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moducom.Instrumentation.Abstract;
 using Moducom.Instrumentation.Abstract.Experimental;
@@ -6,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace Moducom.Instrumentation.Test
 {
@@ -165,7 +168,6 @@ namespace Moducom.Instrumentation.Test
             var result = writer.ToString();
         }
 
-
         [TestMethod]
         public void LabelBreakerTest()
         {
@@ -199,12 +201,12 @@ namespace Moducom.Instrumentation.Test
 
             var histogram = repo["gauge/main"].GetMetric<IHistogram<double>>();
 
-            var testStart = DateTime.Now;
+            var testStart = DateTime.Now.AddMilliseconds(-5); // do a little time traveling, since we might finish so fast...
 
             histogram.Value = 5;
             histogram.Value = 10;
 
-            var testEnd = DateTime.Now;
+            var testEnd = DateTime.Now.AddMilliseconds(5); // do a little time traveling, since we might finish so fast...
 
             var values = histogram.Values.ToArray();
 
@@ -272,9 +274,16 @@ namespace Moducom.Instrumentation.Test
             var child = new FullNameNode { name = "child", parent = root };
             var grandchild = new FullNameNode { name = "child-again", parent = child };
 
-            var fullname = grandchild.GetFullName();
+            var fullname = grandchild.GetFullName(':');
 
-            Assert.AreEqual("root/child/child-again", fullname);
+            Assert.AreEqual("root:child:child-again", fullname);
+
+            var root2 = new FullNameNode { name = null };
+            var child2 = new FullNameNode { name = "child", parent = root2 };
+
+            fullname = child2.GetFullName();
+
+            Assert.AreEqual("child", fullname);
         }
     }
 }

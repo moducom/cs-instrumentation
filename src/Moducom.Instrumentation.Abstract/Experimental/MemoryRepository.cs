@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
 using Moducom.Instrumentation.Abstract.Experimental;
+using Fact.Extensions.Collection;
 
 #if ENABLE_CONTRACTS
 using System.Diagnostics.Contracts;
@@ -16,8 +17,13 @@ using System.Diagnostics.Contracts;
 namespace Moducom.Instrumentation.Experimental
 {
     // TODO: Probably getting NETSTANDARD1_6 will be easy, but not important right now
-#if NET40 || NET46 || NETSTANDARD2_0
-    public class MemoryRepository : Taxonomy<MemoryRepository.Node, INode>, IRepository
+    // TODO: NET40 gets excluded because TaxonomyBase is currently locked up in "Fact.Extensions.Experimental" which has no NET40 target
+#if NET46 || NETSTANDARD2_0
+    using Fact.Extensions.Experimental;
+    /// <summary>
+    /// 
+    /// </summary>
+    public class MemoryRepository : TaxonomyBase<MemoryRepository.Node, INode>, IRepository
     {
         readonly Node rootNode = new Node("[root]");
 
@@ -88,9 +94,9 @@ namespace Moducom.Instrumentation.Experimental
 
         static readonly MetricFactory metricFactory = new MetricFactory();
 
-        protected override Node CreateNode(INode parent, string name) => new Node(name);
+        protected override Node CreateNode(Node parent, string name) => new Node(name);
 
-        public override INode RootNode => rootNode;
+        public override Node RootNode => rootNode;
 
         /// <summary>
         /// Turn from either anonymous object or dictionary into a key/value label list
@@ -113,13 +119,26 @@ namespace Moducom.Instrumentation.Experimental
 
 
         public class Node : 
-            NodeBase<Node, INode>, 
-            INode,
-            IMetricProvider
+            NodeBase<INode>, 
+            INamedChildCollection<Node>,
+            INode
         {
             LinkedList<IMetricBase> metrics = new LinkedList<IMetricBase>();
 
             public Node(string name) : base(name) { }
+
+            event Action<object, Node> IChildCollection<Node>.ChildAdded
+            {
+                add
+                {
+                    throw new NotImplementedException();
+                }
+
+                remove
+                {
+                    throw new NotImplementedException();
+                }
+            }
 
             /// <summary>
             /// Search for all values with the matching provided labels
@@ -157,7 +176,6 @@ namespace Moducom.Instrumentation.Experimental
 
             public IEnumerable<IMetricBase> Metrics => metrics;
 
-
             public void AddMetric(IMetricBase metric)
             {
                 metrics.AddLast(metric);
@@ -188,6 +206,15 @@ namespace Moducom.Instrumentation.Experimental
 
                 return metric;
             }
+
+            void IChildCollection<Node>.AddChild(Node child) => base.AddChild(child);
+
+            /// <summary>
+            /// FIX: This is fragile, resolve the Node vs INode debacle
+            /// </summary>
+            IEnumerable<Node> IChildProvider<Node>.Children => base.Children.Cast<Node>();
+
+            Node IChildProvider<string, Node>.GetChild(string name) => (Node)base.GetChild(name);
         }
     }
 

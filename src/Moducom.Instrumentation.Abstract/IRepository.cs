@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Fact.Extensions.Collection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
 namespace Moducom.Instrumentation.Abstract
 {
-    public interface IRepository : Instrumentation.Experimental.ITaxonomy<INode, INode>
+    public interface IRepository : ITaxonomy<INode>
     {
         /*
         INode RootNode { get; }

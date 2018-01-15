@@ -6,27 +6,10 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
+using Fact.Extensions.Collection;
+
 namespace Moducom.Instrumentation.Experimental
 {
-    // TODO: Replace this with Fact.Extensions.Collection version
-    public static class EnumerableExtensions
-    {
-        public static string ToString(this IEnumerable<string> strings, string delimiter)
-        {
-            string returnValue = null;
-
-            foreach(var s in strings)
-            {
-                if (returnValue == null)
-                    returnValue = s;
-                else
-                    returnValue += delimiter + s;
-            }
-
-            return returnValue;
-        }
-    }
-
     // TODO: Rename this to WriterDump or similar since it isnt text file specific
     public class TextFileDump
     {
@@ -80,6 +63,7 @@ namespace Moducom.Instrumentation.Experimental
             Dump(writer, repository.RootNode, 0);
         }
     }
+
 
 #if !NETSTANDARD1_6
     public class TextFileDumpDaemon : IDisposable

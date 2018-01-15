@@ -9,6 +9,9 @@
 
     <!-- Optional elements -->
     <releaseNotes>Won't bump to 1.0.0 until TC is auto versioning the builds for us</releaseNotes>
+    <dependencies>
+      <dependency id="Fact.Extensions.Collection" version="1.0.0-alpha026" />
+    </dependencies>
     <!-- ... -->
   </metadata>
   <!-- Optional 'files' node -->
@@ -21,5 +24,7 @@
     <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.pdb" target="lib\netstandard1.6" />
     <!-- experimentally adding cs files also, due to TeamCity TW-32067 -->
     <file src="*.cs" />
+    <file src="bin/Debug/net46/*.xml" />
+    <file src="bin/Debug/**/*.xml" />
   </files>
 </package>
