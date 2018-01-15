@@ -44,6 +44,13 @@ namespace Moducom.Instrumentation.Prometheus
         /// </summary>
         public string Description { get; set; }
 
+        /// <summary>
+        /// Our custom collector which for now is hardcoded to Counter type
+        /// but eventually should be a shim around any type.  Pretty much 1:1
+        /// with native collector, but we control creation of it
+        /// Mostly useful to replace LabelNameOnlyCollector when we encounter it
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
         class Collector<T> : PRO.Client.Collectors.Collector<T>
             where T: PRO.Client.Child, new()
         {
@@ -89,6 +96,7 @@ namespace Moducom.Instrumentation.Prometheus
         PRO.Client.Collectors.Collector<TNativeMetric> GetOrAdd<TNativeMetric>(string[] labelNames)
             where TNativeMetric : PRO.Client.Child, new()
         {
+            // check to see if we've templated label collector names
             if (collector is LabelNameOnlyCollector labelCollector)
             {
                 // FIX: this isn't quite in the right spot.  By the time we get here labelNames
@@ -109,6 +117,7 @@ namespace Moducom.Instrumentation.Prometheus
                 collector = null;
             }
 
+            // If no real data collector for this Node has been instantiated, instantiate one now
             if (collector == null)
             {
                 var fullName = this.GetFullName('_');
@@ -211,6 +220,7 @@ namespace Moducom.Instrumentation.Prometheus
 
 
         /// <summary>
+        /// Get or Add a metric with the provided label template & values
         /// </summary>
         /// <typeparam name="TNativeMetricChild"></typeparam>
         /// <param name="labelNames"></param>
@@ -262,6 +272,13 @@ namespace Moducom.Instrumentation.Prometheus
             }
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TNativeMetricChild"></typeparam>
+        /// <param name="labels"></param>
+        /// <returns></returns>
         TNativeMetricChild GetMetricHelper<TNativeMetricChild>(object labels)
             where TNativeMetricChild : PRO.Client.Child, new()
         {
