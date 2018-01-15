@@ -21,23 +21,25 @@ namespace Moducom.Instrumentation.Prometheus
 {
     internal class Node : 
         Fact.Extensions.Experimental.TaxonomyBase.NodeBase<Node>,
-        //Experimental.Taxonomy.NodeBase<Node, INode>, 
         INode,
         IChild<Node>,
-        Abstract.Experimental.IMetricProvider
+        ILabelNamesProvider
     {
-        internal PRO.Client.Contracts.MetricFamily metricsFamily;
+        //internal PRO.Client.Contracts.MetricFamily metricsFamily;
         PRO.Client.Collectors.ICollector collector;
-        Repository repository;
-        PRO.Client.MetricFactory metricFactory = PRO.Client.Metrics.DefaultFactory;
-        static PRO.Client.Collectors.ICollectorRegistry registry = PRO.Client.Collectors.CollectorRegistry.Instance;
+        //PRO.Client.MetricFactory metricFactory = PRO.Client.Metrics.DefaultFactory;
+        readonly PRO.Client.Collectors.ICollectorRegistry registry;
 
         // so that we can get fully-qualified name
-        INode parent;
+        readonly INode parent;
 
         public Node Parent => (Node)parent;
 
-        internal Node(INode parent, string name) : base(name) { this.parent = parent; }
+        internal Node(PRO.Client.Collectors.ICollectorRegistry registry, INode parent, string name) : base(name)
+        {
+            this.registry = registry;
+            this.parent = parent;
+        }
 
         /// <summary>
         /// Description to feed directly into prometheus collector desc
@@ -84,6 +86,8 @@ namespace Moducom.Instrumentation.Prometheus
 
             public MetricFamily Collect()
             {
+                // Since this is a shim collector only to hold on to label names,
+                // retrieving actual metrics is an undefined/unsupported operation
                 throw new NotImplementedException();
             }
         }
@@ -120,8 +124,14 @@ namespace Moducom.Instrumentation.Prometheus
             // If no real data collector for this Node has been instantiated, instantiate one now
             if (collector == null)
             {
+                // ascertain name in context of taxonomy
                 var fullName = this.GetFullName('_');
+                
+                // create Prometheus-native-compatible collector
+                // Will be used DEFINITELY for name lookup in native registry, and POSSIBLY as actual
+                // collector itself if one does not already exist
                 var c = new Collector<TNativeMetric>(fullName, Description, labelNames);
+
                 PRO.Client.Collectors.ICollector retrieved_collector;
 
                 // try/catch no longer specifically needed, just keeping around for debug 
@@ -182,6 +192,7 @@ namespace Moducom.Instrumentation.Prometheus
 
         /// <summary>
         /// Retrieve labels associated with this node and ALL metrics in this node
+        /// NOTE: Some kind of setup of label names must have happened prior to this call
         /// </summary>
         public IEnumerable<string> Labels
         {
@@ -222,8 +233,6 @@ namespace Moducom.Instrumentation.Prometheus
                 return null;
             }
         }
-
-        IEnumerable<INode> IChildProvider<INode>.Children => base.Children;
 
         /// <summary>
         /// Get or Add a metric with the provided label template & values,
@@ -331,30 +340,7 @@ namespace Moducom.Instrumentation.Prometheus
         }
 
         INode IChildProvider<string, INode>.GetChild(string key) => base.GetChild(key);
+
+        IEnumerable<INode> IChildProvider<INode>.Children => base.Children;
     }
-
-    /*
-    public class MetricNode<T> : Abstract.Experimental.IMetricNode<T>
-        where T: IMetricBase
-    {
-        public void AddMetric(IMetricBase metric)
-        {
-            throw new NotImplementedException();
-        }
-
-        public T1 AddMetric<T1>(string key = null) where T1 : IMetricBase
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<IMetricBase> GetMetrics(object labels = null)
-        {
-            throw new NotImplementedException();
-        }
-
-        public T Labels(object labels)
-        {
-            throw new NotImplementedException();
-        }
-    } */
 }

@@ -89,7 +89,7 @@ namespace Moducom.Instrumentation.Abstract
         public static IGauge GetGauge(this Experimental.IMetricProvider provider, object labels = null) =>
             provider.GetMetric<IGauge>(labels);
 
-        public static object GetLabelValue(this Experimental.ILabelsProvider labelsProvider, string label)
+        public static object GetLabelValue(this Experimental.ILabelValueProvider labelsProvider, string label)
         {
             if (!labelsProvider.GetLabelValue(label, out object value))
                 throw new KeyNotFoundException(label);

@@ -15,19 +15,23 @@ namespace Moducom.Instrumentation.Prometheus
     internal class Repository : 
         Moducom.Instrumentation.Experimental.TaxonomyBase<Node, MOD.INode>, MOD.IRepository
     {
-        static ICollectorRegistry registry = CollectorRegistry.Instance;
+        readonly ICollectorRegistry registry;
 
         protected override Node CreateNode(Node parent, string name)
         {
-            return new Node(parent, name);
+            return new Node(registry, parent, name);
         }
 
         Node rootNode;
 
-        internal Repository()
+        internal Repository(ICollectorRegistry registry)
         {
+            this.registry = registry;
             rootNode = CreateNode(null, "root");
         }
+
+
+        internal Repository() : this(CollectorRegistry.Instance) { }
 
         /*
         new // temporarily tagging as new as we pull in base classes

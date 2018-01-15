@@ -21,7 +21,8 @@ namespace Moducom.Instrumentation.Experimental
 #if NET46 || NETSTANDARD2_0
     using Fact.Extensions.Experimental;
     /// <summary>
-    /// 
+    /// Represents our own custom instrumentation repository, complete with our own Node structure
+    /// Utilize this only for native in-memory instrumentation - does NOT specifically support SNMP, Prometheus, etc.
     /// </summary>
     public class MemoryRepository : TaxonomyBase<MemoryRepository.Node, INode>, IRepository
     {
@@ -121,11 +122,31 @@ namespace Moducom.Instrumentation.Experimental
         public class Node : 
             NodeBase<INode>, 
             INamedChildCollection<Node>,
-            INode
+            INode,
+            ILabelNamesProvider
         {
             LinkedList<IMetricBase> metrics = new LinkedList<IMetricBase>();
 
             public Node(string name) : base(name) { }
+
+            /// <summary>
+            /// Aggregate all labels together.  In our memory repo, labels are pretty flexible so this can morph and change
+            /// at runtime and order is not important
+            /// </summary>
+            public IEnumerable<string> Labels
+            {
+                get
+                {
+                    HashSet<string> labels = new HashSet<string>();
+
+                    foreach(var metric in metrics)
+                    {
+                        labels.UnionWith(metric.Labels);
+                    }
+
+                    return labels;
+                }
+            }
 
             event Action<object, Node> IChildCollection<Node>.ChildAdded
             {

@@ -93,6 +93,8 @@ namespace Moducom.Instrumentation.Test
 
             Assert.AreEqual(1, metrics2[0].GetLabelValue("instance"));
             Assert.AreEqual(2, metrics2[1].GetLabelValue("instance"));
+
+            var labels = ((Abstract.Experimental.ILabelNamesProvider)node).Labels;
         }
 
 
