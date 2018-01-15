@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using PRO = global::Prometheus;
 using Moducom.Instrumentation.Abstract.Experimental;
 using Moducom.Instrumentation.Experimental;
-using Prometheus.Contracts;
+using Prometheus.Client.Contracts;
 
 #if DEBUG
 [assembly: InternalsVisibleTo("Moducom.Instrumentation.Test")]
@@ -24,7 +24,7 @@ namespace Moducom.Instrumentation.Prometheus
         IChild<Node>,
         Abstract.Experimental.IMetricProvider
     {
-        internal PRO.Contracts.MetricFamily metricsFamily;
+        internal PRO.Client.Contracts.MetricFamily metricsFamily;
         PRO.Client.Collectors.ICollector collector;
         Repository repository;
         PRO.Client.MetricFactory metricFactory = PRO.Client.Metrics.DefaultFactory;
@@ -50,7 +50,7 @@ namespace Moducom.Instrumentation.Prometheus
             {
             }
 
-            protected override MetricType Type => MetricType.COUNTER;
+            protected override MetricType Type => MetricType.Counter;
         }
 
 
@@ -156,7 +156,7 @@ namespace Moducom.Instrumentation.Prometheus
             throw new NotImplementedException();
         }
 
-        T Helper<T>(PRO.Contracts.Metric metric)
+        T Helper<T>(PRO.Client.Contracts.Metric metric)
         {
             //new CounterMetric2(metric.counter, metric.label.Select(x => x.value).ToArray());
             return default(T);
@@ -189,13 +189,13 @@ namespace Moducom.Instrumentation.Prometheus
 
                 var collected = collector.Collect();
 
-                switch(collected.type)
+                switch(collected.Type)
                 {
-                    case MetricType.COUNTER:
+                    case MetricType.Counter:
                     {
                         var counterCollector = (PRO.Client.Collectors.Collector<PRO.Client.Counter.ThisChild>)collector;
 
-                        return collected.metric.Select(Helper<IMetricBase>);
+                        return collected.Metrics.Select(Helper<IMetricBase>);
                     }
                 }
 

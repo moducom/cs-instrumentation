@@ -12,7 +12,7 @@ using Prometheus.Client.Collectors;
 //using Prometheus.Contracts;
 
 using PROC = Prometheus.Client;
-using PROCR = Prometheus.Contracts;
+using PROCR = Prometheus.Client.Contracts;
 
 namespace Moducom.Instrumentation.Test
 {
@@ -104,7 +104,7 @@ namespace Moducom.Instrumentation.Test
             {
             }
 
-            protected override PROCR.MetricType Type => PROCR.MetricType.COUNTER;
+            protected override PROCR.MetricType Type => PROCR.MetricType.Counter;
         }
 
         [TestMethod]

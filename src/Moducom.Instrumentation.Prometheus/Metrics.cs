@@ -109,9 +109,9 @@ namespace Moducom.Instrumentation.Prometheus
 
     public class CounterMetric3 : IMetricBase, ICounter
     {
-        global::Prometheus.Contracts.Counter counter;
+        global::Prometheus.Client.Contracts.Counter counter;
 
-        public CounterMetric3(global::Prometheus.Contracts.Counter counter)
+        public CounterMetric3(global::Prometheus.Client.Contracts.Counter counter)
         {
             this.counter = counter;
         }
