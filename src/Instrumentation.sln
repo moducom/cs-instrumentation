@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2010
+VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moducom.Instrumentation.Abstract", "Moducom.Instrumentation.Abstract\Moducom.Instrumentation.Abstract.csproj", "{5D8292F5-3DAA-4C61-A690-21DBEF141876}"
 EndProject
@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moducom.Instrumentation.Pro
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moducom.Instrumentation.Prometheus.TestExporter", "Moducom.Instrumentation.Prometheus.TestServer\Moducom.Instrumentation.Prometheus.TestExporter.csproj", "{39DB2E6B-C1F9-472F-94D5-0D1297E2851C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Moducom.Instrumentation.Experimental", "Moducom.Instrumentation.Experimental\Moducom.Instrumentation.Experimental.csproj", "{4A991BB2-0766-4331-8C00-158E18C371B4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Moducom.Instrumentation.Experimental", "Moducom.Instrumentation.Experimental\Moducom.Instrumentation.Experimental.csproj", "{4A991BB2-0766-4331-8C00-158E18C371B4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,7 +32,6 @@ Global
 		{6A8D0135-EC5C-4727-BA00-A66C887F8968}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A8D0135-EC5C-4727-BA00-A66C887F8968}.Release|Any CPU.Build.0 = Release|Any CPU
 		{39DB2E6B-C1F9-472F-94D5-0D1297E2851C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{39DB2E6B-C1F9-472F-94D5-0D1297E2851C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39DB2E6B-C1F9-472F-94D5-0D1297E2851C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39DB2E6B-C1F9-472F-94D5-0D1297E2851C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4A991BB2-0766-4331-8C00-158E18C371B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
