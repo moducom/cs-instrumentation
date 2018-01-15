@@ -68,7 +68,8 @@ namespace Moducom.Instrumentation.Test
             c.Inc();
 
             //var metric2 = r["test"].AddMetric<MOD.ICounter>();
-            var metric2 = r["test"].GetMetric<MOD.ICounter>();
+            var metric2 = r["test"].GetCounter();
+            //var metric2 = r["test"].GetMetric<MOD.ICounter>();
 
             Assert.AreEqual(2, metric2.Value);
         }

@@ -10,6 +10,7 @@ using PRO = global::Prometheus;
 using Moducom.Instrumentation.Abstract.Experimental;
 using Moducom.Instrumentation.Experimental;
 using Prometheus.Client.Contracts;
+using Fact.Extensions.Collection;
 
 #if DEBUG
 [assembly: InternalsVisibleTo("Moducom.Instrumentation.Test")]
@@ -19,7 +20,8 @@ using Prometheus.Client.Contracts;
 namespace Moducom.Instrumentation.Prometheus
 {
     internal class Node : 
-        Experimental.Taxonomy.NodeBase<Node, INode>, 
+        Fact.Extensions.Experimental.TaxonomyBase.NodeBase<Node>,
+        //Experimental.Taxonomy.NodeBase<Node, INode>, 
         INode,
         IChild<Node>,
         Abstract.Experimental.IMetricProvider
@@ -99,7 +101,7 @@ namespace Moducom.Instrumentation.Prometheus
 
                 if (foreignLabels.Any())
                     throw new IndexOutOfRangeException(
-                        $"Invalid label specified: {Experimental.EnumerableExtensions.ToString(foreignLabels, ",")}");
+                        $"Invalid label specified: {Fact.Extensions.Collection.StringEnumerationExtensions.ToString(foreignLabels, ",")}");
 
                 labelNames = labelCollector.LabelNames;
 
@@ -203,6 +205,10 @@ namespace Moducom.Instrumentation.Prometheus
             }
         }
 
+        IEnumerable<INode> IChildProvider<INode>.Children => throw new NotImplementedException();
+
+        IEnumerable<IMetricBase> IMetricsProvider.Metrics => throw new NotImplementedException();
+
 
         /// <summary>
         /// </summary>
@@ -241,7 +247,7 @@ namespace Moducom.Instrumentation.Prometheus
 
                 if (foreignLabels.Any())
                     throw new IndexOutOfRangeException(
-                        $"Invalid label specified: {Experimental.EnumerableExtensions.ToString(foreignLabels, ",")}");
+                        $"Invalid label specified: {foreignLabels.ToString(",")}");
             }
 
             foreach (var labelName in collector.LabelNames)
@@ -297,6 +303,13 @@ namespace Moducom.Instrumentation.Prometheus
 
                 return (T)(object)moducomGauge;
             }
+            throw new NotImplementedException();
+        }
+
+        INode IChildProvider<string, INode>.GetChild(string key) => base.GetChild(key);
+
+        IEnumerable<IMetricBase> IMetricsProvider.GetMetrics(object labels)
+        {
             throw new NotImplementedException();
         }
     }

@@ -13,16 +13,16 @@ using Moducom.Instrumentation.Abstract.Experimental;
 namespace Moducom.Instrumentation.Prometheus
 {
     internal class Repository : 
-        Moducom.Instrumentation.Experimental.Taxonomy<Node, MOD.INode>, MOD.IRepository
+        Moducom.Instrumentation.Experimental.TaxonomyBase<Node, MOD.INode>, MOD.IRepository
     {
         static ICollectorRegistry registry = CollectorRegistry.Instance;
 
-        protected override Node CreateNode(MOD.INode parent, string name)
+        protected override Node CreateNode(Node parent, string name)
         {
             return new Node(parent, name);
         }
 
-        MOD.INode rootNode;
+        Node rootNode;
 
         internal Repository()
         {
@@ -77,7 +77,7 @@ namespace Moducom.Instrumentation.Prometheus
         }
         */
 
-        public override MOD.INode RootNode => rootNode;
+        public override Node RootNode => rootNode;
     }
 
 
