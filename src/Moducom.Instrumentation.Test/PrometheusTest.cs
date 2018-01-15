@@ -138,6 +138,25 @@ namespace Moducom.Instrumentation.Test
 
 
         [TestMethod]
+        public void PrometheusInteractionTest()
+        {
+            // This test specifically tries to INITIALIZE in native prometheus client,
+            // then RETRIEVE via our client
+            var c = Metrics.CreateCounter("root_counter1", "No help", "label1");
+            var _c = c.Labels("5");
+            _c.Inc(10);
+
+            var repo = new PRO.Repository();
+
+            var test = repo["counter1"];
+
+            var moducomCounter = test.GetCounter(new { label1 = 5 });
+
+            Assert.AreEqual(moducomCounter.Value, _c.Value);
+        }
+
+
+        [TestMethod]
         public void PrometheusLabelValidatorTest()
         {
             var r = new PRO.Repository();

@@ -153,18 +153,19 @@ namespace Moducom.Instrumentation.Prometheus
             return (PRO.Client.Collectors.Collector<TNativeMetric>) collector;
         }
 
-
         /// <summary>
-        /// GetMetrics won't work until some kind of metric recording has happened
+        /// Retrieve all metrics associated with this node, filtered by label
+        /// 
+        /// Won't work until some kind of metric recording has happened
         /// *through* our Node interface
         /// </summary>
         /// <param name="labels"></param>
         /// <returns></returns>
         public IEnumerable<IMetricBase> GetMetrics(object labels)
         {
-            if (collector == null) return Enumerable.Empty<IMetricBase>();
-
-            throw new NotImplementedException();
+            // FIX: For now, just returning *ALL* metrics
+            // We will want to filter this for real quite soon
+            return Metrics;
         }
 
         T Helper<T>(PRO.Client.Contracts.Metric metric)
@@ -178,6 +179,10 @@ namespace Moducom.Instrumentation.Prometheus
             collector = new LabelNameOnlyCollector(labelNames);
         }
 
+
+        /// <summary>
+        /// Retrieve labels associated with this node and ALL metrics in this node
+        /// </summary>
         public IEnumerable<string> Labels
         {
             get
@@ -189,8 +194,10 @@ namespace Moducom.Instrumentation.Prometheus
         }
 
         /// <summary>
+        /// FIX: Does not return usable results at this time
         /// Metrics property won't work until some kind of metric recording has happened
         /// *through* our Node interface
+        /// Reason for this is that labels need to be initialized before we can start querying these metrics
         /// </summary>
         public IEnumerable<IMetricBase> Metrics
         {
@@ -205,7 +212,9 @@ namespace Moducom.Instrumentation.Prometheus
                     case MetricType.Counter:
                     {
                         var counterCollector = (PRO.Client.Collectors.Collector<PRO.Client.Counter.ThisChild>)collector;
-
+                        
+                        // FIX: This compiles but yields basically a sparse enumeration,
+                        // since Helper doesn't do anything
                         return collected.Metrics.Select(Helper<IMetricBase>);
                     }
                 }
@@ -214,18 +223,16 @@ namespace Moducom.Instrumentation.Prometheus
             }
         }
 
-        IEnumerable<INode> IChildProvider<INode>.Children => throw new NotImplementedException();
-
-        IEnumerable<IMetricBase> IMetricsProvider.Metrics => throw new NotImplementedException();
-
+        IEnumerable<INode> IChildProvider<INode>.Children => base.Children;
 
         /// <summary>
-        /// Get or Add a metric with the provided label template & values
+        /// Get or Add a metric with the provided label template & values,
+        /// in native Prometheus.Client format
         /// </summary>
         /// <typeparam name="TNativeMetricChild"></typeparam>
         /// <param name="labelNames"></param>
         /// <returns></returns>
-        TNativeMetricChild GetMetricHelper<TNativeMetricChild>(
+        TNativeMetricChild GetMetricNative<TNativeMetricChild>(
             IEnumerable<string> labelNames,
             IEnumerable<string> labelValues)
             where TNativeMetricChild: PRO.Client.Child, new()
@@ -274,12 +281,12 @@ namespace Moducom.Instrumentation.Prometheus
 
 
         /// <summary>
-        /// 
+        /// Retrieves metric in native Prometheus.Client format
         /// </summary>
         /// <typeparam name="TNativeMetricChild"></typeparam>
         /// <param name="labels"></param>
         /// <returns></returns>
-        TNativeMetricChild GetMetricHelper<TNativeMetricChild>(object labels)
+        TNativeMetricChild GetMetricNative<TNativeMetricChild>(object labels)
             where TNativeMetricChild : PRO.Client.Child, new()
         {
             IEnumerable<KeyValuePair<string, object>> labelEnum;
@@ -292,11 +299,11 @@ namespace Moducom.Instrumentation.Prometheus
             var labelNames = labelEnum.Select(x => x.Key);
             var labelValues = labelEnum.Select(x => x.Value?.ToString());
 
-            return GetMetricHelper<TNativeMetricChild>(labelNames, labelValues);
+            return GetMetricNative<TNativeMetricChild>(labelNames, labelValues);
         }
 
         /// <summary>
-        /// Look up or create the metric
+        /// Look up or create the metric in Moducom format
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="labels"></param>
@@ -305,7 +312,7 @@ namespace Moducom.Instrumentation.Prometheus
         {
             if (typeof(T) == typeof(ICounter))
             {
-                var nativeCounter = GetMetricHelper<PRO.Client.Counter.ThisChild>(labels);
+                var nativeCounter = GetMetricNative<PRO.Client.Counter.ThisChild>(labels);
 
                 var moducomCounter = new CounterMetric(nativeCounter);
 
@@ -314,7 +321,7 @@ namespace Moducom.Instrumentation.Prometheus
             //else if (typeof(T).IsAssignableFrom(typeof(IGauge<double>)))
             else if (typeof(IGauge<double>).IsAssignableFrom(typeof(T)))
             {
-                var nativeGauge = GetMetricHelper<PRO.Client.Gauge.ThisChild>(labels);
+                var nativeGauge = GetMetricNative<PRO.Client.Gauge.ThisChild>(labels);
 
                 var moducomGauge = new GauageMetric(nativeGauge);
 
@@ -324,11 +331,6 @@ namespace Moducom.Instrumentation.Prometheus
         }
 
         INode IChildProvider<string, INode>.GetChild(string key) => base.GetChild(key);
-
-        IEnumerable<IMetricBase> IMetricsProvider.GetMetrics(object labels)
-        {
-            throw new NotImplementedException();
-        }
     }
 
     /*
