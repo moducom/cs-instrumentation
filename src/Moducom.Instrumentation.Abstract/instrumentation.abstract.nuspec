@@ -10,7 +10,7 @@
     <!-- Optional elements -->
     <releaseNotes>Won't bump to 1.0.0 until TC is auto versioning the builds for us</releaseNotes>
     <dependencies>
-      <dependency id="Fact.Extensions.Collection" version="1.0.0-alpha026" />
+      <dependency id="Fact.Extensions.Collection" version="1.0.0-beta002" />
     </dependencies>
     <!-- ... -->
   </metadata>
@@ -18,8 +18,10 @@
   <files>
     <file src="bin/Debug/net46/Moducom.Instrumentation.Abstract.dll" target="lib\net46" />
     <file src="bin/Debug/net46/Moducom.Instrumentation.Abstract.pdb" target="lib\net46" />
-    <file src="bin/Debug/net40/Moducom.Instrumentation.Abstract.dll" target="lib\net40" />
-    <file src="bin/Debug/net40/Moducom.Instrumentation.Abstract.pdb" target="lib\net40" />
+    <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.dll" target="lib\netstandard1.1" />
+    <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.pdb" target="lib\netstandard1.1" />
+    <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.dll" target="lib\netstandard1.3" />
+    <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.pdb" target="lib\netstandard1.3" />
     <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.dll" target="lib\netstandard1.6" />
     <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.pdb" target="lib\netstandard1.6" />
     <!-- experimentally adding cs files also, due to TeamCity TW-32067 -->

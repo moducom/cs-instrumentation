@@ -5,7 +5,11 @@
     <Company>Modular Communication Systems</Company>
     <FileVersion>1.0.0.0</FileVersion>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile>
+    <Description>Core instrumentation abstractions for sprinkling throughout your code</Description>
+    <Authors>Malachi Burke</Authors>
+    <!--
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).xml</DocumentationFile> -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>1591;1701;1702;1705</NoWarn>
   </PropertyGroup>
 
