@@ -7,7 +7,7 @@ using Fact.Extensions.Collection;
 
 namespace Moducom.Instrumentation.Experimental
 {
-#if !NET40
+    // Experimental ONLY in naming now
     using Fact.Extensions.Experimental;
 
     public abstract class TaxonomyBase<TNode, TINode> : TaxonomyBase<TNode>, ITaxonomy<TINode>
@@ -18,5 +18,4 @@ namespace Moducom.Instrumentation.Experimental
 
         TINode ITaxonomy<TINode>.RootNode => RootNode;
     }
-#endif
 }

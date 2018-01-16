@@ -16,10 +16,7 @@ using System.Diagnostics.Contracts;
 
 namespace Moducom.Instrumentation.Experimental
 {
-    // TODO: Probably getting NETSTANDARD1_6 will be easy, but not important right now
-    // TODO: NET40 gets excluded because TaxonomyBase is currently locked up in "Fact.Extensions.Experimental" which has no NET40 target
-#if NET46 || NETSTANDARD2_0
-    using Fact.Extensions.Experimental;
+#if !NETSTANDARD1_1
     /// <summary>
     /// Represents our own custom instrumentation repository, complete with our own Node structure
     /// Utilize this only for native in-memory instrumentation - does NOT specifically support SNMP, Prometheus, etc.
@@ -112,7 +109,8 @@ namespace Moducom.Instrumentation.Experimental
             if (labels is IDictionary<string, object> dictionaryLabels)
                 return dictionaryLabels;
             else
-                return from n in labels.GetType().GetProperties()
+                return from n in labels.GetType().
+                       GetProperties()
                        select new KeyValuePair<string, object>(n.Name, n.GetValue(labels, null));
             // NOTE: This was working, but doesnt now.  Not sure what circumstances this is OK for
             //select KeyValuePair.Create(n.Name, n.GetValue(labels, null));
@@ -239,6 +237,8 @@ namespace Moducom.Instrumentation.Experimental
         }
     }
 
+#endif
+
     public class MetricBase : 
         IMetricBase,
         ILabelsCollection
@@ -262,7 +262,6 @@ namespace Moducom.Instrumentation.Experimental
 
         public IEnumerable<string> Labels => labels.Keys;
     }
-
 
     public class Metric<T> : MetricBase, IMetric<T>
     {
@@ -386,8 +385,6 @@ namespace Moducom.Instrumentation.Experimental
 
         public IEnumerable<IHistogramNode<double>> Values => items;
     }
-
-#endif
 
     public class NullMetric : IMetricBase
     {
