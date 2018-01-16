@@ -22,8 +22,8 @@
     <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.pdb" target="lib\netstandard1.1" />
     <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.dll" target="lib\netstandard1.3" />
     <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.pdb" target="lib\netstandard1.3" />
-    <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.dll" target="lib\netstandard1.6" />
-    <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.pdb" target="lib\netstandard1.6" />
+    <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.dll" target="lib\netstandard2.0" />
+    <file src="bin/Debug/netstandard1.6/Moducom.Instrumentation.Abstract.pdb" target="lib\netstandard2.0" />
     <!-- experimentally adding cs files also, due to TeamCity TW-32067 -->
     <file src="*.cs" />
     <file src="bin/Debug/net46/*.xml" />
