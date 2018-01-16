@@ -65,7 +65,7 @@ namespace Moducom.Instrumentation.Experimental
     }
 
 
-#if !NETSTANDARD1_6
+#if !NETSTANDARD1_1
     public class TextFileDumpDaemon : IDisposable
     {
         Timer timer;
@@ -107,9 +107,12 @@ namespace Moducom.Instrumentation.Experimental
 
                 repository.GetCounter("internal/timer_callback").Increment();
 
-                using (var writer = new StreamWriter(filepath, false))
+                using (var stream = new FileStream(filepath, FileMode.CreateNew))
                 {
-                    dump.Dump(writer);
+                    using (var writer = new StreamWriter(stream))
+                    {
+                        dump.Dump(writer);
+                    }
                 }
             }
             catch(Exception e)
