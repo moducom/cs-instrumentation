@@ -16,6 +16,7 @@ using System.Diagnostics.Contracts;
 
 namespace Moducom.Instrumentation.Experimental
 {
+    // Only excluded now due to lack of DBNull, however usage of DBNull is on its way out
 #if !NETSTANDARD1_1
     /// <summary>
     /// Represents our own custom instrumentation repository, complete with our own Node structure
@@ -96,27 +97,6 @@ namespace Moducom.Instrumentation.Experimental
 
         public override Node RootNode => rootNode;
 
-        /// <summary>
-        /// Turn from either anonymous object or dictionary into a key/value label list
-        /// </summary>
-        /// <param name="labels"></param>
-        /// <returns></returns>
-        /// <remarks>TODO:Move this to a better location</remarks>
-        public static IEnumerable<KeyValuePair<string, object>> LabelHelper(object labels)
-        {
-            if (labels == null) return Enumerable.Empty<KeyValuePair<string, object>>();
-
-            if (labels is IDictionary<string, object> dictionaryLabels)
-                return dictionaryLabels;
-            else
-                return from n in labels.GetType().
-                       GetProperties()
-                       select new KeyValuePair<string, object>(n.Name, n.GetValue(labels, null));
-            // NOTE: This was working, but doesnt now.  Not sure what circumstances this is OK for
-            //select KeyValuePair.Create(n.Name, n.GetValue(labels, null));
-        }
-
-
         public class Node : 
             NodeBase<INode>, 
             INamedChildCollection<Node>,
@@ -176,7 +156,7 @@ namespace Moducom.Instrumentation.Experimental
                 {
                     bool isMatched = true;
 
-                    foreach (var label in LabelHelper(labels))
+                    foreach (var label in Utility.LabelHelper(labels))
                     {
                         if (value.GetLabelValue(label.Key, out object targetLabelValue))
                         {
@@ -256,7 +236,7 @@ namespace Moducom.Instrumentation.Experimental
             // which isn't exactly what we're after
             //this.labels.Concat(LabelHelper(labels));
 
-            foreach (var label in MemoryRepository.LabelHelper(labels))
+            foreach (var label in Utility.LabelHelper(labels))
                 this.labels.Add(label);
         }
 

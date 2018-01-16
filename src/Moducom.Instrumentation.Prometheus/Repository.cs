@@ -152,7 +152,7 @@ namespace Moducom.Instrumentation.Prometheus
                 Abstract.IValueGetter,
                 Abstract.Experimental.ILabelsProvider
             {
-                var labelEnum = Experimental.MemoryRepository.LabelHelper(labels);
+                var labelEnum = MOD.Utility.LabelHelper(labels);
 
                 var factory = PRO.Client.Metrics.DefaultFactory;
 

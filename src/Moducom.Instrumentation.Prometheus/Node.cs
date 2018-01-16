@@ -263,7 +263,7 @@ namespace Moducom.Instrumentation.Prometheus
         /// <returns></returns>
         IEnumerable<KeyValuePair<string, object>> LabelHelper(object labels)
         {
-            var labelEnum = Experimental.MemoryRepository.LabelHelper(labels).ToArray();
+            var labelEnum = Utility.LabelHelper(labels).ToArray();
             var labelNames = labelEnum.Select(x => x.Key);
 
             if (collector != null)
@@ -301,7 +301,7 @@ namespace Moducom.Instrumentation.Prometheus
             IEnumerable<KeyValuePair<string, object>> labelEnum;
 
             if (collector == null)
-                labelEnum = Experimental.MemoryRepository.LabelHelper(labels);
+                labelEnum = Utility.LabelHelper(labels);
             else
                 labelEnum = LabelHelper(labels).ToArray();
 

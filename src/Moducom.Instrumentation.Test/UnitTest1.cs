@@ -183,6 +183,18 @@ namespace Moducom.Instrumentation.Test
 
 
         [TestMethod]
+        public void LabelHelperTest()
+        {
+            var labels = Utility.LabelHelper(new { value1 = 1, value2 = "test" }).ToArray();
+
+            Assert.AreEqual("value1", labels[0].Key);
+            Assert.AreEqual(1, labels[0].Value);
+            Assert.AreEqual("value2", labels[1].Key);
+            Assert.AreEqual("test", labels[1].Value);
+        }
+
+
+        [TestMethod]
         public void GaugeTest()
         {
             var repo = new MemoryRepository();
