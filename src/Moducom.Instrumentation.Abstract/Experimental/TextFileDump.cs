@@ -107,7 +107,7 @@ namespace Moducom.Instrumentation.Experimental
 
                 repository.GetCounter("internal/timer_callback").Increment();
 
-                using (var stream = new FileStream(filepath, FileMode.CreateNew))
+                using (var stream = new FileStream(filepath, FileMode.Create))
                 {
                     using (var writer = new StreamWriter(stream))
                     {
