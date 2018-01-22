@@ -30,8 +30,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Fact.Extensions.Collection" Version="1.0.0-beta002" />
-    <PackageReference Include="Fact.Extensions.Experimental" Version="1.0.0-beta002" />
+    <PackageReference Include="Fact.Extensions.Collection" Version="1.0.0-alpha027" />
+    <PackageReference Include="Fact.Extensions.Experimental" Version="1.0.0-alpha027" />
   </ItemGroup>
 
 </Project>
