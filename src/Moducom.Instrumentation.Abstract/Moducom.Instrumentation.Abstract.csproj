@@ -31,7 +31,6 @@
 
   <ItemGroup>
     <PackageReference Include="Fact.Extensions.Collection" Version="1.0.1-alpha002" />
-    <PackageReference Include="Fact.Extensions.Experimental" Version="1.0.1-alpha002" />
   </ItemGroup>
 
 </Project>
