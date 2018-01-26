@@ -1,5 +1,4 @@
 using Fact.Extensions.Collection;
-using Fact.Extensions.Experimental;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moducom.Instrumentation.Abstract;
 using Moducom.Instrumentation.Abstract.Experimental;

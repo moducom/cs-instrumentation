@@ -20,7 +20,7 @@ using Fact.Extensions.Collection;
 namespace Moducom.Instrumentation.Prometheus
 {
     internal class Node : 
-        Fact.Extensions.Experimental.TaxonomyBase.NodeBase<Node>,
+        NamedChildCollection<Node>,
         INode,
         IChild<Node>,
         ILabelNamesProvider
