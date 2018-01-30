@@ -324,7 +324,7 @@ namespace Moducom.Instrumentation.Prometheus
             {
                 var nativeCounter = GetMetricNative<PRO.Client.Counter.ThisChild>(labels);
 
-                var moducomCounter = new CounterMetric(nativeCounter);
+                var moducomCounter = new Counter(nativeCounter);
 
                 return (T)(object)moducomCounter;
             }
@@ -333,7 +333,7 @@ namespace Moducom.Instrumentation.Prometheus
             {
                 var nativeGauge = GetMetricNative<PRO.Client.Gauge.ThisChild>(labels);
 
-                var moducomGauge = new GauageMetric(nativeGauge);
+                var moducomGauge = new Gauge(nativeGauge);
 
                 return (T)(object)moducomGauge;
             }

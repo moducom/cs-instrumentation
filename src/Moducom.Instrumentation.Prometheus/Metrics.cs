@@ -5,13 +5,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+/// <summary>
+/// These are all essentially wrappers around native prometheus metrics
+/// </summary>
 namespace Moducom.Instrumentation.Prometheus
 {
-    public class GauageMetric : IMetricWithLabels, IGauge
+    internal class Gauge : IGauge
     {
         readonly global::Prometheus.Client.IGauge nativeGauge;
 
-        public GauageMetric(global::Prometheus.Client.IGauge nativeGauge)
+        public Gauge(global::Prometheus.Client.IGauge nativeGauge)
         {
             this.nativeGauge = nativeGauge;
         }
@@ -22,141 +25,33 @@ namespace Moducom.Instrumentation.Prometheus
             set => nativeGauge.Set(value);
         }
 
-        public IEnumerable<string> Labels => throw new NotImplementedException();
-
         public void Decrement(double byAmount)
         {
             nativeGauge.Dec(byAmount);
-        }
-
-        public bool GetLabelValue(string label, out object value)
-        {
-            throw new NotImplementedException();
         }
 
         public void Increment(double byAmount)
         {
             nativeGauge.Inc(byAmount);
         }
-
-        public void SetLabels(object labels)
-        {
-            throw new NotImplementedException();
-        }
     }
 
 
-    public class CounterMetric : IMetricWithLabels, ICounter
+    internal class Counter : ICounter
     {
         readonly global::Prometheus.Client.ICounter nativeCounter;
 
-        public CounterMetric(global::Prometheus.Client.ICounter nativeCounter)
+        public Counter(global::Prometheus.Client.ICounter nativeCounter)
         {
             this.nativeCounter = nativeCounter;
         }
 
         public double Value => nativeCounter.Value;
 
-        public bool GetLabelValue(string label, out object value)
-        {
-            throw new NotImplementedException();
-        }
-
         public void Increment(double byAmount)
         {
             nativeCounter.Inc(byAmount);
         }
-
-        public void SetLabels(object labels)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<string> Labels => throw new NotImplementedException();
     }
 
-    public class CounterMetric2 : IMetricWithLabels, ICounter
-    {
-        readonly global::Prometheus.Client.Counter parent;
-        readonly global::Prometheus.Client.ICounter child;
-
-        public double Value => child.Value;
-
-        public CounterMetric2(global::Prometheus.Client.Counter nativeCounter, string[] labelValues)
-        {
-            this.parent = nativeCounter;
-            this.child = nativeCounter.Labels(labelValues);
-        }
-
-
-        public bool GetLabelValue(string label, out object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Increment(double byAmount)
-        {
-            child.Inc(byAmount);
-        }
-
-        public void SetLabels(object labels)
-        {
-            throw new NotImplementedException();
-        }
-
-        public IEnumerable<string> Labels => parent.LabelNames;
-    }
-
-    public class CounterMetric3 : IMetricWithLabels, ICounter
-    {
-        global::Prometheus.Client.Contracts.Counter counter;
-
-        public CounterMetric3(global::Prometheus.Client.Contracts.Counter counter)
-        {
-            this.counter = counter;
-        }
-
-        public IEnumerable<string> Labels => throw new NotImplementedException();
-
-        public double Value => throw new NotImplementedException();
-
-        public bool GetLabelValue(string label, out object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Increment(double byAmount)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SetLabels(object labels)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
-    public class CounterChildMetric : IMetricWithLabels, ICounter
-    {
-        readonly global::Prometheus.Client.Counter.ThisChild nativeCounterChild;
-
-        public IEnumerable<string> Labels => throw new NotImplementedException();
-
-        public double Value => throw new NotImplementedException();
-
-        public bool GetLabelValue(string label, out object value)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Increment(double byAmount)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SetLabels(object labels)
-        {
-            throw new NotImplementedException();
-        }
-    }
 }

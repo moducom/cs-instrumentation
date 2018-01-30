@@ -35,13 +35,11 @@ namespace Moducom.Instrumentation.Experimental
             /// <param name="labels"></param>
             /// <returns></returns>
             /// <remarks>IMetricFactory version</remarks>
-            public T CreateMetric<T>(string key, object labels = null) where T : IValueGetter
+            public T CreateMetric<T>(string key) where T : IValueGetter
             {
                 if (typeof(T) == typeof(ICounter))
                 {
                     var counter = new Counter();
-
-                    counter.SetLabels(labels);
 
                     return (T)(object)counter;
                 }
@@ -49,15 +47,11 @@ namespace Moducom.Instrumentation.Experimental
                 {
                     var retVal = new Gauge();
 
-                    retVal.SetLabels(labels);
-
                     return (T)(IMetricWithLabels)retVal;
                 }
                 else if (typeof(T) == typeof(IHistogram<double>))
                 {
                     var retVal = new Histogram();
-
-                    retVal.SetLabels(labels);
 
                     return (T)(IMetricWithLabels)retVal;
                 }
@@ -78,9 +72,7 @@ namespace Moducom.Instrumentation.Experimental
 
                         // FIX: This is a little bit fragile.  Metric<> itself does implement ILabelsCollection
                         // via MetricBase
-                        var retVal = (ILabelsCollection) Activator.CreateInstance(typeToCreate);
-
-                        retVal.SetLabels(labels);
+                        var retVal = Activator.CreateInstance(typeToCreate);
 
                         return (T)retVal;
                     }
@@ -101,11 +93,19 @@ namespace Moducom.Instrumentation.Experimental
             NamedChildCollection<INode>, 
             INamedChildCollection<Node>,
             INode,
+            IChild<INode>,
             ILabelNamesProvider
         {
+            /// <summary>
+            /// Memory repository nodes specifically combine metric and their labels and track them
+            /// together in one big list, per node
+            /// </summary>
             LinkedList<IMetricWithLabels> metrics = new LinkedList<IMetricWithLabels>();
+            readonly Node parent;
 
-            public Node(string name) : base(name) { }
+            public INode Parent => parent;
+
+            public Node(Node parent, string name) : base(name) { this.parent = parent; }
 
             /// <summary>
             /// Aggregate all labels together.  In our memory repo, labels are pretty flexible so this can morph and change
@@ -203,7 +203,12 @@ namespace Moducom.Instrumentation.Experimental
                 // FIX: Chances of a typecast exception seems high
                 if (foundMetric != null) return (T)foundMetric;
 
-                var metric = metricFactory.CreateMetric<T>(null, labels);
+                var metric = metricFactory.CreateMetric<T>(null);
+
+                // FIX: nasty kludgy typecast AND would prefer to do an is
+                var metricWithLabels = (ILabelsCollection)(object)metric;
+
+                metricWithLabels.SetLabels(labels);
 
                 // FIX: Eventually IMetricBase will only have providers not collections,
                 // making this type cast safer

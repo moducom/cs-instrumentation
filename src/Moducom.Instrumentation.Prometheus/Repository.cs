@@ -161,7 +161,7 @@ namespace Moducom.Instrumentation.Prometheus
 
                     nativeCounter.Labels(labelEnum.Select(x => x.Value.ToString()).ToArray());
 
-                    var wrapped = new CounterMetric(nativeCounter);
+                    var wrapped = new Counter(nativeCounter);
                     return (T)(object)wrapped;
                 }
                 //PRO.Client.Metrics.
@@ -178,9 +178,9 @@ namespace Moducom.Instrumentation.Prometheus
 
         internal class CounterWrapper : MOD.ICounter
         {
-            readonly Counter.ThisChild child;
+            readonly PRO.Client.Counter.ThisChild child;
 
-            internal CounterWrapper(Counter.ThisChild child) { this.child = child; }
+            internal CounterWrapper(PRO.Client.Counter.ThisChild child) { this.child = child; }
 
             public double Value => child.Value;
 

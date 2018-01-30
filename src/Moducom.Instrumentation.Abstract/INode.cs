@@ -46,7 +46,7 @@ namespace Moducom.Instrumentation.Abstract
             void SetLabels(object labels);
         }
 
-        public interface IMetricFactory
+        public interface IMetricFactory<TKey>
         {
             /// <summary>
             /// Create a metric conforming to interface specified by T
@@ -55,9 +55,11 @@ namespace Moducom.Instrumentation.Abstract
             /// <param name="key"></param>
             /// <param name="labels"></param>
             /// <returns></returns>
-            T CreateMetric<T>(string key, object labels = null) 
+            T CreateMetric<T>(TKey key = default(TKey)) 
                 where T : IValueGetter;
         }
+
+        public interface IMetricFactory : IMetricFactory<string> { }
 
 
         /// <summary>
