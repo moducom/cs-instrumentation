@@ -36,7 +36,9 @@ namespace Moducom.Instrumentation.Abstract
     }
 
 
-    public interface ICounter<T> : IMetricWithLabels<T>
+    public interface ICounter<T> : 
+        IMetric,
+        IValueGetter<T>
         where T: IComparable
     {
         // FIX: Kind of a flaw, you can throw a negative number into here

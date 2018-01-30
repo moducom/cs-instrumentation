@@ -136,7 +136,7 @@ namespace Moducom.Instrumentation.Abstract
         /// different metric types in one node 
         /// </summary>
         public interface IMetricNode<T> : IMetricsProvider
-            where T : IMetricWithLabels
+            where T : IMetric
         {
             // Ala https://github.com/phnx47/Prometheus.Client
             T Labels(object labels);

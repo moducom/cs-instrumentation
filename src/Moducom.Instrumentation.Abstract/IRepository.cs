@@ -18,7 +18,7 @@ namespace Moducom.Instrumentation.Abstract
     {
         internal class MetricNodeWrapperExperimental<T> : 
             IMetricNode<T>
-            where T : IMetricWithLabels
+            where T : IMetric
         {
             readonly INode node;
 
