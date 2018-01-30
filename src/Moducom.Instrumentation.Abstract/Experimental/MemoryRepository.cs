@@ -77,15 +77,14 @@ namespace Moducom.Instrumentation.Experimental
                         return (T)retVal;
                     }
 
-                    return default(T);
+                    throw new InvalidCastException($"Cannot determine conrete type for {t.Name}");
                 }
-                throw new NotImplementedException();
             }
         }
 
         static readonly MetricFactory metricFactory = new MetricFactory();
 
-        protected override Node CreateNode(Node parent, string name) => new Node(name);
+        protected override Node CreateNode(Node parent, string name) => new Node(name, parent);
 
         public override Node RootNode => rootNode;
 
@@ -105,7 +104,7 @@ namespace Moducom.Instrumentation.Experimental
 
             public INode Parent => parent;
 
-            public Node(Node parent, string name) : base(name) { this.parent = parent; }
+            public Node(string name, Node parent = null) : base(name) { this.parent = parent; }
 
             /// <summary>
             /// Aggregate all labels together.  In our memory repo, labels are pretty flexible so this can morph and change

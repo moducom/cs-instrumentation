@@ -53,14 +53,12 @@ namespace Moducom.Instrumentation.Abstract
             /// </summary>
             /// <typeparam name="T"></typeparam>
             /// <param name="key"></param>
-            /// <param name="labels"></param>
             /// <returns></returns>
             T CreateMetric<T>(TKey key = default(TKey)) 
                 where T : IValueGetter;
         }
 
         public interface IMetricFactory : IMetricFactory<string> { }
-
 
         /// <summary>
         /// NEW and unused, shall be a semi-wrapper around IMetricFactory so that metric factory can focus
@@ -97,14 +95,6 @@ namespace Moducom.Instrumentation.Abstract
             /// All metrics for this node, unfiltered
             /// </summary>
             IEnumerable<IMetric> Metrics { get; }
-        }
-
-        /// <summary>
-        /// TODO: Phase this out as an "always available" thing
-        /// </summary>
-        public interface IMetricsCollection : IMetricsProvider
-        {
-            void AddMetric(IMetricWithLabels metric);
         }
     }
 
