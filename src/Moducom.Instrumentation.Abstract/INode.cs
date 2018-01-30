@@ -89,12 +89,12 @@ namespace Moducom.Instrumentation.Abstract
             /// </summary>
             /// <param name="labels">Labels to filter by.  Must not be null</param>
             /// <returns></returns>
-            IEnumerable<IMetricWithLabels> GetMetrics(object labels);
+            IEnumerable<IMetric> GetMetrics(object labels);
 
             /// <summary>
             /// All metrics for this node, unfiltered
             /// </summary>
-            IEnumerable<IMetricWithLabels> Metrics { get; }
+            IEnumerable<IMetric> Metrics { get; }
         }
 
         /// <summary>
@@ -123,7 +123,7 @@ namespace Moducom.Instrumentation.Abstract
     /// Mainly amounts to something that can interact directly with labels
     /// </summary>
     public interface IMetricWithLabels :
-        IValueGetter,
+        IMetric,
         Experimental.ILabelsProvider
     {
 
@@ -154,7 +154,7 @@ namespace Moducom.Instrumentation.Abstract
 
     public static class IMetricsProviderExtensions
     {
-        public static IMetricWithLabels GetMetric(this Experimental.IMetricsProvider metricsProvider, object labels = null)
+        public static IMetric GetMetric(this Experimental.IMetricsProvider metricsProvider, object labels = null)
         {
             return metricsProvider.GetMetrics(labels).Single();
         }

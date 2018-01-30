@@ -52,11 +52,12 @@ namespace Moducom.Instrumentation.Test
 
             node.Children.ToArray();
 
-            IEnumerable<IMetricWithLabels> metrics = node.GetMetrics(new { instance = 1 }).ToArray();
+            IEnumerable<IMetric> metrics = node.GetMetrics(new { instance = 1 }).ToArray();
 
             foreach(var metric in metrics)
             {
-                metric.GetLabelValue("instance", out object value);
+                var metricWithLabel = (IMetricWithLabels)metric;
+                metricWithLabel.GetLabelValue("instance", out object value);
 
                 Assert.AreEqual(1, value);
             }
@@ -83,12 +84,13 @@ namespace Moducom.Instrumentation.Test
 
             setup(node);
 
-            var metrics = node.GetMetrics(new { instance = DBNull.Value }).ToArray();
+            var _metrics = node.GetMetrics(new { instance = DBNull.Value });
+            var metrics = _metrics.Cast<IMetricWithLabels>().ToArray();
 
             Assert.AreEqual(1, metrics[0].GetLabelValue("instance"));
             Assert.AreEqual(2, metrics[1].GetLabelValue("instance"));
 
-            var metrics2 = node.Metrics.ToArray();
+            var metrics2 = node.Metrics.Cast<IMetricWithLabels>().ToArray();
 
             Assert.AreEqual(1, metrics2[0].GetLabelValue("instance"));
             Assert.AreEqual(2, metrics2[1].GetLabelValue("instance"));
@@ -118,8 +120,10 @@ namespace Moducom.Instrumentation.Test
             //describer.SetLabels(new { test = 1 });
             describer.Value = "Test";
 
-            Assert.AreEqual("test", describer.Labels.First());
-            Assert.AreEqual(2, describer.GetLabelValue("test"));
+            var descriperWithMetrics = (IMetricWithLabels)describer;
+
+            Assert.AreEqual("test", descriperWithMetrics.Labels.First());
+            Assert.AreEqual(2, descriperWithMetrics.GetLabelValue("test"));
         }
 
         [TestMethod]

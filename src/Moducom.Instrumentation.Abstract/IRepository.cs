@@ -16,7 +16,8 @@ namespace Moducom.Instrumentation.Abstract
 
     namespace Experimental
     {
-        internal class MetricNodeWrapperExperimental<T> : IMetricNode<T>
+        internal class MetricNodeWrapperExperimental<T> : 
+            IMetricNode<T>
             where T : IMetricWithLabels
         {
             readonly INode node;
@@ -26,12 +27,12 @@ namespace Moducom.Instrumentation.Abstract
                 this.node = node;
             }
 
-            public IEnumerable<IMetricWithLabels> GetMetrics(object labels = null)
+            public IEnumerable<IMetric> GetMetrics(object labels = null)
             {
                 return node.GetMetrics(labels);
             }
 
-            public IEnumerable<IMetricWithLabels> Metrics => node.Metrics;
+            public IEnumerable<IMetric> Metrics => node.Metrics;
 
             /// <summary>
             /// FIX: labels could very well result in multiple matches rather than single one.  Unsure how to

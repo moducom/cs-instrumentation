@@ -139,6 +139,12 @@ namespace Moducom.Instrumentation.Experimental
                 }
             }
 
+
+            IEnumerable<IMetric> IMetricsProvider.GetMetrics(object labels)
+            {
+                return GetMetrics(labels);
+            }
+
             /// <summary>
             /// Search for all values with the matching provided labels
             /// </summary>
@@ -173,7 +179,7 @@ namespace Moducom.Instrumentation.Experimental
                 }
             }
 
-            public IEnumerable<IMetricWithLabels> Metrics => metrics;
+            public IEnumerable<IMetric> Metrics => metrics;
 
             public void AddMetric(IMetricWithLabels metric)
             {

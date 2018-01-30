@@ -168,12 +168,12 @@ namespace Moducom.Instrumentation.Prometheus
                 return default(T);
             }
 
-            public IEnumerable<MOD.IMetricWithLabels> GetMetrics(object labels)
+            public IEnumerable<MOD.IMetric> GetMetrics(object labels)
             {
                 throw new NotImplementedException();
             }
 
-            public IEnumerable<MOD.IMetricWithLabels> Metrics => throw new NotImplementedException();
+            public IEnumerable<MOD.IMetric> Metrics => throw new NotImplementedException();
         }
 
         internal class CounterWrapper : MOD.ICounter

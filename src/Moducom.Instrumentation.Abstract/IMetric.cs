@@ -12,25 +12,31 @@ namespace Moducom.Instrumentation.Abstract
         T Value { get; }
     }
 
-    public interface IMetricBase<T> :
+
+    public interface IValueSetter<T>
+    {
+        T Value { set; }
+    }
+
+    public interface IMetricWithLabels<T> :
         IValueGetter<T>,
         IMetricWithLabels
     {
     }
 
-    public interface IMetricSetter<T> : IMetricWithLabels
-    {
-        T Value { set; }
-    }
+    public interface IMetric : IValueGetter { }
 
-
-    public interface IMetric<T> : IMetricBase<T>
+    /// <summary>
+    /// Metrics are all inherently absolutely assignable - even Counters
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public interface IMetric<T> : IMetric, IValueGetter<T>, IValueSetter<T>
     {
         new T Value { get; set; }
     }
 
 
-    public interface ICounter<T> : IMetricBase<T>
+    public interface ICounter<T> : IMetricWithLabels<T>
         where T: IComparable
     {
         // FIX: Kind of a flaw, you can throw a negative number into here
@@ -58,7 +64,9 @@ namespace Moducom.Instrumentation.Abstract
     public interface IGauge : IGauge<double> { }
 
 
-    public interface IHistogram<T> : IMetricSetter<T>
+    public interface IHistogram<T> : 
+        IMetric,
+        IValueSetter<T>
     {
         IEnumerable<IHistogramNode<T>> Values { get; }
     }
