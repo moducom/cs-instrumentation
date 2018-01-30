@@ -15,4 +15,36 @@ namespace Moducom.Instrumentation.Experimental
 
         TINode ITaxonomy<TINode>.RootNode => RootNode;
     }
+
+
+    public abstract class NamedChildCollection<TNode, TINode> :
+        NamedChildCollection<TNode>,
+        INamedChildCollection<TINode>
+        where TNode: TINode
+        where TINode: INamed
+    {
+        IEnumerable<TINode> IChildProvider<TINode>.Children => Children.Cast<TINode>();
+
+        public NamedChildCollection(string name) : base(name) { }
+
+        event Action<object, TINode> IChildCollection<TINode>.ChildAdded
+        {
+            add
+            {
+                throw new NotImplementedException();
+            }
+
+            remove
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        TINode IChildProvider<string, TINode>.GetChild(string key) => GetChild(key);
+
+        void IChildCollection<TINode>.AddChild(TINode child)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

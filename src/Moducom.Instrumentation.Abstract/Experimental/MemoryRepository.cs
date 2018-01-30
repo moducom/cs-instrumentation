@@ -229,7 +229,10 @@ namespace Moducom.Instrumentation.Experimental
 
 #endif
 
-    public class MetricBase : 
+    /// <summary>
+    /// Metric + label fuser for MemoryRepository to use
+    /// </summary>
+    internal class MetricBase : 
         IMetricWithLabels,
         ILabelsCollection
     {
@@ -253,7 +256,7 @@ namespace Moducom.Instrumentation.Experimental
         public IEnumerable<string> Labels => labels.Keys;
     }
 
-    public class Metric<T> : MetricBase, IMetric<T>
+    internal class Metric<T> : MetricBase, IMetric<T>
     {
         T value;
 
