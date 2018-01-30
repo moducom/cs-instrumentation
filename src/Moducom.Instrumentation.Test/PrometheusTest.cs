@@ -167,6 +167,18 @@ namespace Moducom.Instrumentation.Test
 
             var counter_i5 = metric.GetMetric<MOD.IGauge>(new { instance = 5 });
             var counter_i3 = metric.GetMetric<MOD.IGauge>(new { disposition = "good", instance = 3 });
+
+            counter_i5.Increment(1);
+            counter_i3.Decrement(1);
+
+            // Just a sanity check make sure everything is working as expected
+            Assert.AreEqual(1, counter_i5.Value);
+            Assert.AreEqual(-1, counter_i3.Value);
+
+            // not supported any more
+            //Assert.AreEqual(5, counter_i5.GetLabelValue("instance"));
+            //Assert.AreEqual(3, counter_i3.GetLabelValue("instance"));
+
             try
             {
                 var counter_invalid = metric.GetMetric<MOD.IGauge>(new { attitude = "bad", instance = 3 });
