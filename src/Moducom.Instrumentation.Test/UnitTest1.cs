@@ -52,7 +52,7 @@ namespace Moducom.Instrumentation.Test
 
             node.Children.ToArray();
 
-            IEnumerable<IMetricBase> metrics = node.GetMetrics(new { instance = 1 }).ToArray();
+            IEnumerable<IMetricWithLabels> metrics = node.GetMetrics(new { instance = 1 }).ToArray();
 
             foreach(var metric in metrics)
             {

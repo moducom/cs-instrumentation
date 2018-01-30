@@ -14,11 +14,11 @@ namespace Moducom.Instrumentation.Abstract
 
     public interface IMetricBase<T> :
         IValueGetter<T>,
-        IMetricBase
+        IMetricWithLabels
     {
     }
 
-    public interface IMetricSetter<T> : IMetricBase
+    public interface IMetricSetter<T> : IMetricWithLabels
     {
         T Value { set; }
     }

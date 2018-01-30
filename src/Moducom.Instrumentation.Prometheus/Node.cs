@@ -171,7 +171,7 @@ namespace Moducom.Instrumentation.Prometheus
         /// </summary>
         /// <param name="labels"></param>
         /// <returns></returns>
-        public IEnumerable<IMetricBase> GetMetrics(object labels)
+        public IEnumerable<IMetricWithLabels> GetMetrics(object labels)
         {
             // FIX: For now, just returning *ALL* metrics
             // We will want to filter this for real quite soon
@@ -210,11 +210,11 @@ namespace Moducom.Instrumentation.Prometheus
         /// *through* our Node interface
         /// Reason for this is that labels need to be initialized before we can start querying these metrics
         /// </summary>
-        public IEnumerable<IMetricBase> Metrics
+        public IEnumerable<IMetricWithLabels> Metrics
         {
             get
             {
-                if (collector == null) return Enumerable.Empty<IMetricBase>();
+                if (collector == null) return Enumerable.Empty<IMetricWithLabels>();
 
                 var collected = collector.Collect();
 
@@ -226,7 +226,7 @@ namespace Moducom.Instrumentation.Prometheus
                         
                         // FIX: This compiles but yields basically a sparse enumeration,
                         // since Helper doesn't do anything
-                        return collected.Metrics.Select(Helper<IMetricBase>);
+                        return collected.Metrics.Select(Helper<IMetricWithLabels>);
                     }
                 }
 
@@ -318,7 +318,6 @@ namespace Moducom.Instrumentation.Prometheus
         /// <param name="labels"></param>
         /// <returns></returns>
         public T GetMetric<T>(object labels) where T : 
-            ILabelsProvider, 
             IValueGetter
         {
             if (typeof(T) == typeof(ICounter))

@@ -137,7 +137,7 @@ namespace Moducom.Instrumentation.Prometheus
                 throw new NotImplementedException();
             }
 
-            public void AddMetric(MOD.IMetricBase metric)
+            public void AddMetric(MOD.IMetricWithLabels metric)
             {
                 throw new NotImplementedException();
             }
@@ -149,8 +149,7 @@ namespace Moducom.Instrumentation.Prometheus
 
 
             public T GetMetric<T>(object labels) where T: 
-                Abstract.IValueGetter,
-                Abstract.Experimental.ILabelsProvider
+                Abstract.IValueGetter
             {
                 var labelEnum = MOD.Utility.LabelHelper(labels);
 
@@ -169,12 +168,12 @@ namespace Moducom.Instrumentation.Prometheus
                 return default(T);
             }
 
-            public IEnumerable<MOD.IMetricBase> GetMetrics(object labels)
+            public IEnumerable<MOD.IMetricWithLabels> GetMetrics(object labels)
             {
                 throw new NotImplementedException();
             }
 
-            public IEnumerable<MOD.IMetricBase> Metrics => throw new NotImplementedException();
+            public IEnumerable<MOD.IMetricWithLabels> Metrics => throw new NotImplementedException();
         }
 
         internal class CounterWrapper : MOD.ICounter

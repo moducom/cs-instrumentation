@@ -21,7 +21,7 @@ namespace Moducom.Instrumentation.Experimental
         }
 
 
-        protected void Dump(TextWriter writer, IMetricBase metric)
+        protected void Dump(TextWriter writer, IMetricWithLabels metric)
         {
             // FIX: have to compare if it's a gauge first, because gauge currently extends counter...
             if (metric is IGauge g)
@@ -45,7 +45,7 @@ namespace Moducom.Instrumentation.Experimental
 
             writer.WriteLine(indent + "+ " + node.Name);
 
-            foreach (IMetricBase metric in node.Metrics)
+            foreach (IMetricWithLabels metric in node.Metrics)
             {
                 writer.Write(indent + "  - ");
 

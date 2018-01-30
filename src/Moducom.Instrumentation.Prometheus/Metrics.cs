@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Moducom.Instrumentation.Prometheus
 {
-    public class GauageMetric : IMetricBase, IGauge
+    public class GauageMetric : IMetricWithLabels, IGauge
     {
         readonly global::Prometheus.Client.IGauge nativeGauge;
 
@@ -46,7 +46,7 @@ namespace Moducom.Instrumentation.Prometheus
     }
 
 
-    public class CounterMetric : IMetricBase, ICounter
+    public class CounterMetric : IMetricWithLabels, ICounter
     {
         readonly global::Prometheus.Client.ICounter nativeCounter;
 
@@ -75,7 +75,7 @@ namespace Moducom.Instrumentation.Prometheus
         public IEnumerable<string> Labels => throw new NotImplementedException();
     }
 
-    public class CounterMetric2 : IMetricBase, ICounter
+    public class CounterMetric2 : IMetricWithLabels, ICounter
     {
         readonly global::Prometheus.Client.Counter parent;
         readonly global::Prometheus.Client.ICounter child;
@@ -107,7 +107,7 @@ namespace Moducom.Instrumentation.Prometheus
         public IEnumerable<string> Labels => parent.LabelNames;
     }
 
-    public class CounterMetric3 : IMetricBase, ICounter
+    public class CounterMetric3 : IMetricWithLabels, ICounter
     {
         global::Prometheus.Client.Contracts.Counter counter;
 
@@ -136,7 +136,7 @@ namespace Moducom.Instrumentation.Prometheus
         }
     }
 
-    public class CounterChildMetric : IMetricBase, ICounter
+    public class CounterChildMetric : IMetricWithLabels, ICounter
     {
         readonly global::Prometheus.Client.Counter.ThisChild nativeCounterChild;
 

@@ -37,7 +37,7 @@ namespace Moducom.Instrumentation.Experimental
         {
             public IEnumerable<INode> Children => throw new NotImplementedException();
 
-            public IEnumerable<IMetricBase> Metrics => throw new NotImplementedException();
+            public IEnumerable<IMetricWithLabels> Metrics => throw new NotImplementedException();
 
             public string Name => throw new NotImplementedException();
 
@@ -46,12 +46,12 @@ namespace Moducom.Instrumentation.Experimental
                 throw new NotImplementedException();
             }
 
-            public T GetMetric<T>(object labels = null) where T : ILabelsProvider, IValueGetter
+            public T GetMetric<T>(object labels = null) where T : IValueGetter
             {
                 throw new NotImplementedException();
             }
 
-            public IEnumerable<IMetricBase> GetMetrics(object labels)
+            public IEnumerable<IMetricWithLabels> GetMetrics(object labels)
             {
                 throw new NotImplementedException();
             }

@@ -56,7 +56,7 @@ namespace Moducom.Instrumentation.Abstract
             /// <param name="labels"></param>
             /// <returns></returns>
             T CreateMetric<T>(string key, object labels = null) 
-                where T : ILabelsProvider, IValueGetter;
+                where T : IValueGetter;
         }
 
 
@@ -75,7 +75,7 @@ namespace Moducom.Instrumentation.Abstract
             /// <param name="labels">Labels to match on, or null is looking for a metric with no labels</param>
             /// <returns></returns>
             T GetMetric<T>(object labels = null)
-                where T : ILabelsProvider, IValueGetter;
+                where T : IValueGetter;
         }
 
 
@@ -89,12 +89,12 @@ namespace Moducom.Instrumentation.Abstract
             /// </summary>
             /// <param name="labels">Labels to filter by.  Must not be null</param>
             /// <returns></returns>
-            IEnumerable<IMetricBase> GetMetrics(object labels);
+            IEnumerable<IMetricWithLabels> GetMetrics(object labels);
 
             /// <summary>
             /// All metrics for this node, unfiltered
             /// </summary>
-            IEnumerable<IMetricBase> Metrics { get; }
+            IEnumerable<IMetricWithLabels> Metrics { get; }
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace Moducom.Instrumentation.Abstract
         /// </summary>
         public interface IMetricsCollection : IMetricsProvider
         {
-            void AddMetric(IMetricBase metric);
+            void AddMetric(IMetricWithLabels metric);
         }
     }
 
@@ -122,7 +122,7 @@ namespace Moducom.Instrumentation.Abstract
     /// <summary>
     /// Mainly amounts to something that can interact directly with labels
     /// </summary>
-    public interface IMetricBase :
+    public interface IMetricWithLabels :
         IValueGetter,
         Experimental.ILabelsProvider
     {
@@ -136,7 +136,7 @@ namespace Moducom.Instrumentation.Abstract
         /// different metric types in one node 
         /// </summary>
         public interface IMetricNode<T> : IMetricsProvider
-            where T : IMetricBase
+            where T : IMetricWithLabels
         {
             // Ala https://github.com/phnx47/Prometheus.Client
             T Labels(object labels);
@@ -154,7 +154,7 @@ namespace Moducom.Instrumentation.Abstract
 
     public static class IMetricsProviderExtensions
     {
-        public static IMetricBase GetMetric(this Experimental.IMetricsProvider metricsProvider, object labels = null)
+        public static IMetricWithLabels GetMetric(this Experimental.IMetricsProvider metricsProvider, object labels = null)
         {
             return metricsProvider.GetMetrics(labels).Single();
         }

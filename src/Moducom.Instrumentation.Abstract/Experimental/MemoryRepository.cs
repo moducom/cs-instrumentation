@@ -35,7 +35,7 @@ namespace Moducom.Instrumentation.Experimental
             /// <param name="labels"></param>
             /// <returns></returns>
             /// <remarks>IMetricFactory version</remarks>
-            public T CreateMetric<T>(string key, object labels = null) where T : ILabelsProvider, IValueGetter
+            public T CreateMetric<T>(string key, object labels = null) where T : IValueGetter
             {
                 if (typeof(T) == typeof(ICounter))
                 {
@@ -51,7 +51,7 @@ namespace Moducom.Instrumentation.Experimental
 
                     retVal.SetLabels(labels);
 
-                    return (T)(IMetricBase)retVal;
+                    return (T)(IMetricWithLabels)retVal;
                 }
                 else if (typeof(T) == typeof(IHistogram<double>))
                 {
@@ -59,7 +59,7 @@ namespace Moducom.Instrumentation.Experimental
 
                     retVal.SetLabels(labels);
 
-                    return (T)(IMetricBase)retVal;
+                    return (T)(IMetricWithLabels)retVal;
                 }
                 else
                 {
@@ -98,12 +98,12 @@ namespace Moducom.Instrumentation.Experimental
         public override Node RootNode => rootNode;
 
         public class Node : 
-            NodeBase<INode>, 
+            NamedChildCollection<INode>, 
             INamedChildCollection<Node>,
             INode,
             ILabelNamesProvider
         {
-            LinkedList<IMetricBase> metrics = new LinkedList<IMetricBase>();
+            LinkedList<IMetricWithLabels> metrics = new LinkedList<IMetricWithLabels>();
 
             public Node(string name) : base(name) { }
 
@@ -144,7 +144,7 @@ namespace Moducom.Instrumentation.Experimental
             /// </summary>
             /// <param name="labels">Either an IDictionary or an anonymous object.  null value not permitted v</param>
             /// <returns></returns>
-            public IEnumerable<IMetricBase> GetMetrics(object labels)
+            public IEnumerable<IMetricWithLabels> GetMetrics(object labels)
             {
 #if ENABLE_CONTRACTS
                 Contract.Requires<ArgumentNullException>(labels != null, "labels");
@@ -173,18 +173,18 @@ namespace Moducom.Instrumentation.Experimental
                 }
             }
 
-            public IEnumerable<IMetricBase> Metrics => metrics;
+            public IEnumerable<IMetricWithLabels> Metrics => metrics;
 
-            public void AddMetric(IMetricBase metric)
+            public void AddMetric(IMetricWithLabels metric)
             {
                 metrics.AddLast(metric);
             }
 
 
             public T GetMetric<T>(object labels = null)
-                where T: ILabelsProvider, IValueGetter
+                where T: IValueGetter
             {
-                IMetricBase foundMetric;
+                IMetricWithLabels foundMetric;
 
                 if (labels == null)
                     // Since null labels into GetMetrics retrieves *ALL* labels, filter further
@@ -201,7 +201,7 @@ namespace Moducom.Instrumentation.Experimental
 
                 // FIX: Eventually IMetricBase will only have providers not collections,
                 // making this type cast safer
-                AddMetric((IMetricBase)metric);
+                AddMetric((IMetricWithLabels)metric);
 
                 return metric;
             }
@@ -220,7 +220,7 @@ namespace Moducom.Instrumentation.Experimental
 #endif
 
     public class MetricBase : 
-        IMetricBase,
+        IMetricWithLabels,
         ILabelsCollection
     {
         SparseDictionary<string, object> labels;
@@ -366,7 +366,7 @@ namespace Moducom.Instrumentation.Experimental
         public IEnumerable<IHistogramNode<double>> Values => items;
     }
 
-    public class NullMetric : IMetricBase
+    public class NullMetric : IMetricWithLabels
     {
         public bool GetLabelValue(string label, out object value)
         {
