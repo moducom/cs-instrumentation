@@ -3,6 +3,14 @@
   <PropertyGroup>
     <!-- TODO: bring in netstandard1.3 when we can -->
     <TargetFrameworks>net46;netstandard2.0</TargetFrameworks>
+
+    <!-- All this stuff is just for TC versioning to wrap into something else -->
+    <VersionPrefix>1.0.0</VersionPrefix>
+    <VersionSuffix>0</VersionSuffix>
+
+    <FileVersion>1.0.0.0</FileVersion>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Description>Prometheus provider for Moducom.Instrumentation</Description>
   </PropertyGroup>
 
   <ItemGroup>
