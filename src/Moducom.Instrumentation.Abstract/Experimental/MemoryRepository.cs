@@ -9,6 +9,7 @@ using System.Text;
 using System.Reflection;
 using Moducom.Instrumentation.Abstract.Experimental;
 using Fact.Extensions.Collection;
+using System.Collections;
 
 #if ENABLE_CONTRACTS
 using System.Diagnostics.Contracts;
@@ -47,13 +48,19 @@ namespace Moducom.Instrumentation.Experimental
                 {
                     var retVal = new Gauge();
 
-                    return (T)(IMetricWithLabels)retVal;
+                    return (T)(object)retVal;
                 }
                 else if (typeof(T) == typeof(IHistogram<double>))
                 {
                     var retVal = new Histogram();
 
                     return (T)(IMetricWithLabels)retVal;
+                }
+                else if (typeof(T) == typeof(ISummary))
+                {
+                    var retVal = new Summary();
+
+                    return (T)(object)retVal;
                 }
                 else
                 {
@@ -324,6 +331,55 @@ namespace Moducom.Instrumentation.Experimental
         }
     }
 
+
+    internal class Summary : Summary<double>, ISummary { }
+
+    internal class Summary<T> : MetricBase, ISummary<T>
+    {
+        TimeSpan maxDuration = TimeSpan.FromMinutes(5);
+
+        // TODO: Make a max sample size as well, seems like
+        // a very prudent safety measure to avoid filling up
+        // all of memory
+
+        public T Value
+        {
+            set 
+            {
+                var item = new Item { value = value };
+                items.AddLast(item);
+                while (DateTime.Now.Subtract(items.First.Value.timeStamp) > maxDuration)
+                {
+                    items.RemoveFirst();
+                }
+            }
+        }
+
+        internal class Item : ISample<T>
+        {
+            internal readonly DateTime timeStamp = DateTime.Now;
+            internal T value;
+
+            public T Value => value;
+            public DateTime TimeStamp => timeStamp;
+        }
+
+        LinkedList<Item> items = new LinkedList<Item>();
+
+        public int Count => items.Count;
+
+        public IEnumerable<ISample<T>> Values => items;
+
+        public IEnumerator<ISample<T>> GetEnumerator()
+        {
+            return items.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return items.GetEnumerator();
+        }
+    }
 
     /// <summary>
     /// Needs more work binning/bucketing not worked out at all

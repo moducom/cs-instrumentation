@@ -212,6 +212,23 @@ namespace Moducom.Instrumentation.Test
 
 
         [TestMethod]
+        public void SummaryTest()
+        {
+            var repo = new MemoryRepository();
+
+            var summary = repo["summaries/test1"].GetSummary();
+
+            summary.Value = 5;
+            summary.Value = 3;
+            summary.Value = 20;
+
+            var average = summary.Sum(x => x.Value) / summary.Count;
+
+            Assert.AreEqual(28.0 / 3, average);
+        }
+
+
+        [TestMethod]
         public void HistogramTest()
         {
             var repo = new MemoryRepository();

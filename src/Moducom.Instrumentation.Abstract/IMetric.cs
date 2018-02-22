@@ -66,6 +66,40 @@ namespace Moducom.Instrumentation.Abstract
     public interface IGauge : IGauge<double> { }
 
 
+    /// <summary>
+    /// Associates a value to a time
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public interface ISample<T>
+    {
+        T Value { get; }
+        DateTime TimeStamp { get; }
+    }
+
+    /// <summary>
+    /// Tracks many values over a time period
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public interface ISampled<T> : 
+        IMetric,
+        IValueSetter<T>,
+        IReadOnlyCollection<ISample<T>>
+    {
+    }
+
+    /// <summary>
+    /// At its simplest, an ISummary is like a histogram but over a sliding window
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public interface ISummary<T> : ISampled<T>
+    {
+
+    }
+
+
+    public interface ISummary : ISummary<double> { }
+
+
     public interface IHistogram<T> : 
         IMetric,
         IValueSetter<T>
@@ -105,6 +139,13 @@ namespace Moducom.Instrumentation.Abstract
                 throw new KeyNotFoundException(label);
 
             return value;
+        }
+
+
+        public static ISummary<double> GetSummary(this Experimental.IMetricProvider provider, 
+            object labels = null)
+        {
+            return provider.GetMetric<ISummary>(labels);
         }
 
 
