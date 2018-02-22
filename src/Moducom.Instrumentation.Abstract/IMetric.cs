@@ -113,6 +113,19 @@ namespace Moducom.Instrumentation.Abstract
         DateTime TimeStamp { get; }
     }
 
+
+    public interface IMetricOptions
+    {
+        object Labels { get; }
+    }
+
+
+    public class SummaryOptions : IMetricOptions
+    {
+        public TimeSpan MaxAge = TimeSpan.FromMinutes(5);
+        public object Labels { get; set; } = null;
+    }
+
     public static class IMetricExtensions
     {
         /// <summary>
@@ -143,9 +156,10 @@ namespace Moducom.Instrumentation.Abstract
 
 
         public static ISummary<double> GetSummary(this Experimental.IMetricProvider provider, 
-            object labels = null)
+            SummaryOptions options = null)
         {
-            return provider.GetMetric<ISummary>(labels);
+            // FIX: Only do one version of labels, and likely non-option version
+            return provider.GetMetric<ISummary>(options?.Labels, options);
         }
 
 

@@ -317,7 +317,7 @@ namespace Moducom.Instrumentation.Prometheus
         /// <typeparam name="T"></typeparam>
         /// <param name="labels"></param>
         /// <returns></returns>
-        public T GetMetric<T>(object labels) where T : 
+        public T GetMetric<T>(object labels, object options = null) where T : 
             IValueGetter
         {
             if (typeof(T) == typeof(ICounter))

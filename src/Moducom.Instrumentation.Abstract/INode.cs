@@ -53,8 +53,13 @@ namespace Moducom.Instrumentation.Abstract
             /// </summary>
             /// <typeparam name="T"></typeparam>
             /// <param name="key"></param>
+            /// <param name="options"></param>
             /// <returns></returns>
-            T CreateMetric<T>(TKey key = default(TKey)) 
+            /// <remarks>
+            /// TODO: Figure out a smooth way to pass in options also (very likely will
+            /// have to be an object type
+            /// </remarks>
+            T CreateMetric<T>(TKey key = default(TKey), object options = null)
                 where T : IValueGetter;
         }
 
@@ -74,7 +79,7 @@ namespace Moducom.Instrumentation.Abstract
             /// <typeparam name="T"></typeparam>
             /// <param name="labels">Labels to match on, or null is looking for a metric with no labels</param>
             /// <returns></returns>
-            T GetMetric<T>(object labels = null)
+            T GetMetric<T>(object labels = null, object options = null)
                 where T : IValueGetter;
         }
 

@@ -46,7 +46,7 @@ namespace Moducom.Instrumentation.Experimental
                 throw new NotImplementedException();
             }
 
-            public T GetMetric<T>(object labels = null) where T : IValueGetter
+            public T GetMetric<T>(object labels = null, object options = null) where T : IValueGetter
             {
                 throw new NotImplementedException();
             }

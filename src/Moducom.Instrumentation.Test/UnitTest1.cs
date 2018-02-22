@@ -216,7 +216,9 @@ namespace Moducom.Instrumentation.Test
         {
             var repo = new MemoryRepository();
 
-            var summary = repo["summaries/test1"].GetSummary();
+            var options = new SummaryOptions { MaxAge = TimeSpan.FromSeconds(1) };
+
+            var summary = repo["summaries/test1"].GetSummary(options);
 
             summary.Value = 5;
             summary.Value = 3;
@@ -225,6 +227,13 @@ namespace Moducom.Instrumentation.Test
             var average = summary.Sum(x => x.Value) / summary.Count;
 
             Assert.AreEqual(28.0 / 3, average);
+
+            Thread.Sleep(1000);
+
+            // TODO: No expiry callback happening just yet, oops
+            average = summary.Sum(x => x.Value) / summary.Count;
+
+            //Assert.AreEqual(0, average);
         }
 
 

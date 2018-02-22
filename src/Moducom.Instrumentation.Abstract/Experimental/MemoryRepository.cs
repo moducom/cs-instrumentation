@@ -36,7 +36,7 @@ namespace Moducom.Instrumentation.Experimental
             /// <param name="labels"></param>
             /// <returns></returns>
             /// <remarks>IMetricFactory version</remarks>
-            public T CreateMetric<T>(string key) where T : IValueGetter
+            public T CreateMetric<T>(string key, object options) where T : IValueGetter
             {
                 if (typeof(T) == typeof(ICounter))
                 {
@@ -193,7 +193,7 @@ namespace Moducom.Instrumentation.Experimental
             }
 
 
-            public T GetMetric<T>(object labels = null)
+            public T GetMetric<T>(object labels = null, object options = null)
                 where T: IValueGetter
             {
                 IMetricWithLabels foundMetric;
@@ -209,7 +209,7 @@ namespace Moducom.Instrumentation.Experimental
                 // FIX: Chances of a typecast exception seems high
                 if (foundMetric != null) return (T)foundMetric;
 
-                var metric = metricFactory.CreateMetric<T>(null);
+                var metric = metricFactory.CreateMetric<T>(null, options);
 
                 // FIX: nasty kludgy typecast AND would prefer to do an is
                 var metricWithLabels = (ILabelsCollection)(object)metric;
