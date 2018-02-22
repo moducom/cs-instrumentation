@@ -10,6 +10,7 @@ using System.Reflection;
 using Moducom.Instrumentation.Abstract.Experimental;
 using Fact.Extensions.Collection;
 using System.Collections;
+using System.Threading.Tasks;
 
 #if ENABLE_CONTRACTS
 using System.Diagnostics.Contracts;
@@ -337,6 +338,14 @@ namespace Moducom.Instrumentation.Experimental
     internal class Summary<T> : MetricBase, ISummary<T>
     {
         TimeSpan maxDuration = TimeSpan.FromMinutes(5);
+
+        /* Think would be better to actually do a conventional threadloop with a semaphore,
+         * otherwise we risk spawning A LOT of worker tasks - one per sample
+        async Task waitForExpiry(TimeSpan timeToWait)
+        {
+            await Task.Delay(timeToWait);
+            items.RemoveFirst();
+        } */
 
         // TODO: Make a max sample size as well, seems like
         // a very prudent safety measure to avoid filling up
