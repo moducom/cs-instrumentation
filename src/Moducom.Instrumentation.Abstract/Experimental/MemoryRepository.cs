@@ -1,5 +1,7 @@
 ﻿// Contracts, as usual, are confusing and seem flaky
 //#define ENABLE_CONTRACTS
+// In response to SW-214 issues
+#define FEATURE_THREADSAFE
 
 using Moducom.Instrumentation.Abstract;
 using System;
@@ -124,7 +126,11 @@ namespace Moducom.Instrumentation.Experimental
                 {
                     HashSet<string> labels = new HashSet<string>();
 
-                    foreach(var metric in metrics)
+#if FEATURE_THREADSAFE
+                    lock (metrics)
+#endif
+
+                    foreach (var metric in metrics)
                     {
                         labels.UnionWith(metric.Labels);
                     }
@@ -165,13 +171,22 @@ namespace Moducom.Instrumentation.Experimental
                 if (labels == null) throw new ArgumentNullException("labels cannot be null");
 #endif
 
-                foreach(var value in metrics)
+#if FEATURE_THREADSAFE
+                IMetricWithLabels[] metrics;
+
+                lock (this.metrics)
+                {
+                    metrics = this.metrics.ToArray();
+                }
+#endif
+
+                foreach(var metric in metrics)
                 {
                     bool isMatched = true;
 
                     foreach (var label in Utility.LabelHelper(labels))
                     {
-                        if (value.GetLabelValue(label.Key, out object targetLabelValue))
+                        if (metric.GetLabelValue(label.Key, out object targetLabelValue))
                         {
                             // FIX: DbNull represents "wildcard" value and only match on key
                             // this is not super intuitive though, so find a better approach
@@ -182,15 +197,20 @@ namespace Moducom.Instrumentation.Experimental
                         else isMatched = false;
                     }
 
-                    if (isMatched) yield return value;
+                    if (isMatched) yield return metric;
                 }
             }
 
             public IEnumerable<IMetric> Metrics => metrics;
 
-            public void AddMetric(IMetricWithLabels metric)
+            void AddMetric(IMetricWithLabels metric)
             {
-                metrics.AddLast(metric);
+#if FEATURE_THREADSAFE
+                lock (metrics)
+#endif
+                {
+                    metrics.AddLast(metric);
+                }
             }
 
 
@@ -202,7 +222,12 @@ namespace Moducom.Instrumentation.Experimental
                 if (labels == null)
                     // Since null labels into GetMetrics retrieves *ALL* labels, filter further
                     // for a none label
-                    foundMetric = metrics.SingleOrDefault(x => !x.Labels.Any());
+#if FEATURE_THREADSAFE
+                    lock (metrics)
+#endif
+                    {
+                        foundMetric = metrics.SingleOrDefault(x => !x.Labels.Any());
+                    }
                 else
                     // FIX: One and only design decision one not fully fleshed out
                     foundMetric = GetMetrics(labels).SingleOrDefault();
@@ -224,6 +249,39 @@ namespace Moducom.Instrumentation.Experimental
                 return metric;
             }
 
+            // TODO: Make the underlying helper/collection support thread safety instead of
+            // just wrapping it here, OR do a more thorough wrap job here
+#if FEATURE_THREADSAFE
+            void IChildCollection<Node>.AddChild(Node child)
+            {
+                lock (this)
+                {
+                    base.AddChild(child);
+                }
+            }
+
+            /// <summary>
+            /// FIX: This is fragile, resolve the Node vs INode debacle
+            /// </summary>
+            IEnumerable<Node> IChildProvider<Node>.Children
+            {
+                get
+                {
+                    lock (this)
+                    {
+                        return base.Children.Cast<Node>().ToArray();
+                    }
+                }
+            }
+
+            Node IChildProvider<string, Node>.GetChild(string name)
+            {
+                lock (this)
+                {
+                    return (Node)base.GetChild(name);
+                }
+            }
+#else
             void IChildCollection<Node>.AddChild(Node child) => base.AddChild(child);
 
             /// <summary>
@@ -232,15 +290,16 @@ namespace Moducom.Instrumentation.Experimental
             IEnumerable<Node> IChildProvider<Node>.Children => base.Children.Cast<Node>();
 
             Node IChildProvider<string, Node>.GetChild(string name) => (Node)base.GetChild(name);
+#endif
         }
     }
 
 #endif
 
-    /// <summary>
-    /// Metric + label fuser for MemoryRepository to use
-    /// </summary>
-    internal class MetricBase : 
+            /// <summary>
+            /// Metric + label fuser for MemoryRepository to use
+            /// </summary>
+            internal class MetricBase : 
         IMetricWithLabels,
         ILabelsCollection
     {
