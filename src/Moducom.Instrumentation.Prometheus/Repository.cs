@@ -27,14 +27,14 @@ namespace Moducom.Instrumentation.Prometheus
 
         readonly Node rootNode;
 
-        internal Repository(ICollectorRegistry registry)
+        internal Repository(ICollectorRegistry registry, string rootName)
         {
             this.registry = registry;
-            rootNode = CreateNode(null, "root");
+            rootNode = CreateNode(null, rootName);
         }
 
 
-        internal Repository() : this(CollectorRegistry.Instance) { }
+        internal Repository(string rootName = "root") : this(CollectorRegistry.Instance, rootName) { }
 
 
 

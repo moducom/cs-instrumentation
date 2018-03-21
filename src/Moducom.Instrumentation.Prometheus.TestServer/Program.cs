@@ -15,7 +15,7 @@ namespace Moducom.Instrumentation.Prometheus.TestServer
         static void WrappedExporter()
         {
             // TODO: Utilize what minimal IoC tricks we have here
-            var repo = new Moducom.Instrumentation.Prometheus.Repository();
+            var repo = new Moducom.Instrumentation.Prometheus.Repository("testexporter");
             var metricName = "test/metric1";
 
             var testNode = repo[metricName];
