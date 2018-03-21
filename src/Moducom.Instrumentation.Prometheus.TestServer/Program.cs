@@ -1,6 +1,7 @@
 ﻿using Moducom.Instrumentation.Abstract;
 using Prometheus.Client.MetricServer;
 using System;
+using System.Threading;
 
 namespace Moducom.Instrumentation.Prometheus.TestServer
 {
@@ -24,7 +25,12 @@ namespace Moducom.Instrumentation.Prometheus.TestServer
 
             var counter = testNode.GetMetric<ICounter>(new { delineator = 1 });
 
-            counter.Increment();
+            var t = new Timer(delegate 
+            {
+                counter.Increment();
+            }, null, 0, 1000);
+
+            repo["test/metric2"].GetGauge(new { delinerator = 2 }).Value = 77;
         }
 
         static void Main(string[] args)
