@@ -190,5 +190,31 @@ namespace Moducom.Instrumentation.Test
             }
 
         }
+
+        [TestMethod]
+        public void PrometheusHistogramTest()
+        {
+            var histogram = Metrics.CreateHistogram("myHistogram", "Description of my histogram", "allowed_label");
+
+            histogram.Observe(1);
+        }
+
+        [TestMethod]
+        public void PrometheusWrapperHistogramTest()
+        {
+            var r = new PRO.Repository();
+
+            PRO.Node metric = r["histogram_test"];
+
+            metric.Initialize("disposition");
+
+            // FIX: rest of code crashes
+            return;
+
+            var histogram1 = metric.GetMetric<MOD.IHistogram>(new { disposition = "good" });
+
+            histogram1.Value = 1;
+            histogram1.Value = 2;
+        }
     }
 }

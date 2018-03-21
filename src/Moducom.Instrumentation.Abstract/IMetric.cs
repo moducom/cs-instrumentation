@@ -104,8 +104,15 @@ namespace Moducom.Instrumentation.Abstract
         IMetric,
         IValueSetter<T>
     {
+        /// <summary>
+        /// FIX: Only available for our internal histograms, phase this out of interface
+        /// itself
+        /// </summary>
         IEnumerable<IHistogramNode<T>> Values { get; }
     }
+
+
+    public interface IHistogram : IHistogram<double> { }
 
     public interface IHistogramNode<T>
     {

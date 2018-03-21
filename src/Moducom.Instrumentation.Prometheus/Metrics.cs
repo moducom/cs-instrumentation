@@ -54,4 +54,18 @@ namespace Moducom.Instrumentation.Prometheus
         }
     }
 
+
+    internal class Histogram : IHistogram
+    {
+        readonly global::Prometheus.Client.IHistogram nativeHistogram;
+
+        internal Histogram(global::Prometheus.Client.IHistogram nativeHistogram)
+        {
+            this.nativeHistogram = nativeHistogram;
+        }
+
+        public IEnumerable<IHistogramNode<double>> Values => throw new NotImplementedException();
+
+        public double Value { set => nativeHistogram.Observe(value); }
+    }
 }

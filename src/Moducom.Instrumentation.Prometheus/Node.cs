@@ -250,7 +250,9 @@ namespace Moducom.Instrumentation.Prometheus
 
             // FIX: Moducom layer allows omission of labels, but Prometheus
             // layer does not, so this is going to break without additional
-            // support logic
+            // support logic.  Namely we have to un-sprase the labelValues
+            // and stuff in blanks where Prometheus expects them
+            // FIX: For some reason, Histogram breaks this
             var nativeMetricChild = c.Labels(labelValues.ToArray());
 
             return nativeMetricChild;
@@ -317,6 +319,7 @@ namespace Moducom.Instrumentation.Prometheus
         /// <typeparam name="T"></typeparam>
         /// <param name="labels"></param>
         /// <returns></returns>
+        /// <remarks>Would be nice to liberate this to MetricFactory somehow</remarks>
         public T GetMetric<T>(object labels, object options = null) where T : 
             IValueGetter
         {
@@ -336,6 +339,16 @@ namespace Moducom.Instrumentation.Prometheus
                 var moducomGauge = new Gauge(nativeGauge);
 
                 return (T)(object)moducomGauge;
+            }
+            else if (typeof(IHistogram<double>).IsAssignableFrom(typeof(T)))
+            {
+                // FIX: May be something wrong here, might have to use PRO.Client.Histogram
+                // itself
+                var nativeHistogram = GetMetricNative<PRO.Client.Histogram.ThisChild>(labels);
+
+                var moducomHistogram = new Histogram(nativeHistogram);
+
+                return (T)(object)moducomHistogram;
             }
             throw new NotImplementedException();
         }
