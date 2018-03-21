@@ -22,14 +22,15 @@ namespace Moducom.Instrumentation.Prometheus.TestServer
 
             ((Node)testNode).Description = "Service Provider+Facade test";
 
-            var counter = testNode.GetMetric<ICounter>(new { instance = 1 });
+            var counter = testNode.GetMetric<ICounter>(new { delineator = 1 });
 
             counter.Increment();
         }
 
         static void Main(string[] args)
         {
-            IMetricServer metricServer = new MetricServer("localhost", 9100);
+            // Be careful, explicit reference to "localhost" here binds us to ipv6
+            IMetricServer metricServer = new MetricServer(9100);
 
             metricServer.Start();
 
