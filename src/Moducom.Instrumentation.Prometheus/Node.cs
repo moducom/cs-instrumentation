@@ -100,7 +100,7 @@ namespace Moducom.Instrumentation.Prometheus
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        PRO.Client.Collectors.Collector<TNativeMetric> GetOrAdd<TNativeMetric>(string[] labelNames)
+        PRO.Client.Collectors.Collector<TNativeMetric> GetOrAdd<TNativeMetric>(string[] labelNames, object options)
             where TNativeMetric : PRO.Client.Child, new()
         {
             // check to see if we've templated label collector names
@@ -142,8 +142,10 @@ namespace Moducom.Instrumentation.Prometheus
                 {
                     var mf = new PRO.Client.MetricFactory(registry);
 
-                    // TODO: Need a way to pass in buckets here
-                    c = mf.CreateHistogram(fullName, Description, labelNames);
+                    if(options is HistogramOptions o)
+                        c = mf.CreateHistogram(fullName, Description, o.Buckets, labelNames);
+                    else
+                        c = mf.CreateHistogram(fullName, Description, labelNames);
                 }
                 else
                 {
@@ -261,10 +263,11 @@ namespace Moducom.Instrumentation.Prometheus
         /// <returns></returns>
         TNativeMetricChild GetMetricNative<TNativeMetricChild>(
             IEnumerable<string> labelNames,
-            IEnumerable<string> labelValues)
+            IEnumerable<string> labelValues,
+            object options)
             where TNativeMetricChild: PRO.Client.Child, new()
         {
-            var c = GetOrAdd<TNativeMetricChild>(labelNames.ToArray());
+            var c = GetOrAdd<TNativeMetricChild>(labelNames.ToArray(), options);
 
             // FIX: Moducom layer allows omission of labels, but Prometheus
             // layer does not, so this is going to break without additional
@@ -315,7 +318,7 @@ namespace Moducom.Instrumentation.Prometheus
         /// <typeparam name="TNativeMetricChild"></typeparam>
         /// <param name="labels"></param>
         /// <returns></returns>
-        TNativeMetricChild GetMetricNative<TNativeMetricChild>(object labels)
+        TNativeMetricChild GetMetricNative<TNativeMetricChild>(object labels, object options)
             where TNativeMetricChild : PRO.Client.Child, new()
         {
             IEnumerable<KeyValuePair<string, object>> labelEnum;
@@ -328,7 +331,7 @@ namespace Moducom.Instrumentation.Prometheus
             var labelNames = labelEnum.Select(x => x.Key);
             var labelValues = labelEnum.Select(x => x.Value?.ToString());
 
-            return GetMetricNative<TNativeMetricChild>(labelNames, labelValues);
+            return GetMetricNative<TNativeMetricChild>(labelNames, labelValues, options);
         }
 
         /// <summary>
@@ -343,7 +346,7 @@ namespace Moducom.Instrumentation.Prometheus
         {
             if (typeof(T) == typeof(ICounter))
             {
-                var nativeCounter = GetMetricNative<PRO.Client.Counter.ThisChild>(labels);
+                var nativeCounter = GetMetricNative<PRO.Client.Counter.ThisChild>(labels, options);
 
                 var moducomCounter = new Counter(nativeCounter);
 
@@ -352,7 +355,7 @@ namespace Moducom.Instrumentation.Prometheus
             //else if (typeof(T).IsAssignableFrom(typeof(IGauge<double>)))
             else if (typeof(IGauge<double>).IsAssignableFrom(typeof(T)))
             {
-                var nativeGauge = GetMetricNative<PRO.Client.Gauge.ThisChild>(labels);
+                var nativeGauge = GetMetricNative<PRO.Client.Gauge.ThisChild>(labels, options);
 
                 var moducomGauge = new Gauge(nativeGauge);
 
@@ -362,7 +365,7 @@ namespace Moducom.Instrumentation.Prometheus
             {
                 // FIX: May be something wrong here, might have to use PRO.Client.Histogram
                 // itself
-                var nativeHistogram = GetMetricNative<PRO.Client.Histogram.ThisChild>(labels);
+                var nativeHistogram = GetMetricNative<PRO.Client.Histogram.ThisChild>(labels, options);
 
                 var moducomHistogram = new Histogram(nativeHistogram);
 

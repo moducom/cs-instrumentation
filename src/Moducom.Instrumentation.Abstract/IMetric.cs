@@ -137,6 +137,8 @@ namespace Moducom.Instrumentation.Abstract
     public class HistogramOptions : IMetricOptions
     {
         public object Labels { get; set; } = null;
+
+        public double[] Buckets { get; set; }
     }
 
     public static class IMetricExtensions
