@@ -54,11 +54,16 @@ namespace Moducom.Instrumentation.Experimental
                     return (T)(object)retVal;
                 }
                 else if (typeof(T) == typeof(IHistogram<double>) ||
-                    typeof(T) == typeof(Histogram))
+                    typeof(T) == typeof(IHistogram))
                 {
-                    var retVal = new Histogram();
+                    object retVal;
 
-                    return (T)(object)retVal;
+                    if (options is HistogramOptions o)
+                        retVal = new Histogram(o.Buckets);
+                    else
+                        retVal = new Histogram();
+
+                    return (T)retVal;
                 }
                 else if (typeof(T) == typeof(ISummary))
                 {
@@ -453,7 +458,7 @@ namespace Moducom.Instrumentation.Experimental
     /// <summary>
     /// Needs more work binning/bucketing not worked out at all
     /// </summary>
-    internal class Histogram : MetricBase, IHistogram<double>
+    internal class Histogram : MetricBase, IHistogram
     {
         // adapted from https://github.com/phnx47/Prometheus.Client/blob/master/src/Prometheus.Client/Histogram.cs
         readonly double[] bins;

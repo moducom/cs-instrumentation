@@ -242,7 +242,7 @@ namespace Moducom.Instrumentation.Test
         {
             var repo = new MemoryRepository();
 
-            var histogram = repo["gauge/main"].GetMetric<IHistogram<double>>();
+            var histogram = repo["gauge/main"].GetHistogram();
 
             var testStart = DateTime.Now.AddMilliseconds(-5); // do a little time traveling, since we might finish so fast...
 
