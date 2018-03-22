@@ -36,7 +36,7 @@ namespace Moducom.Instrumentation.Experimental
             /// </summary>
             /// <typeparam name="T"></typeparam>
             /// <param name="key"></param>
-            /// <param name="labels"></param>
+            /// <param name="options"></param>
             /// <returns></returns>
             /// <remarks>IMetricFactory version</remarks>
             public T CreateMetric<T>(string key, object options) where T : IValueGetter
@@ -53,11 +53,12 @@ namespace Moducom.Instrumentation.Experimental
 
                     return (T)(object)retVal;
                 }
-                else if (typeof(T) == typeof(IHistogram<double>))
+                else if (typeof(T) == typeof(IHistogram<double>) ||
+                    typeof(T) == typeof(Histogram))
                 {
                     var retVal = new Histogram();
 
-                    return (T)(IMetricWithLabels)retVal;
+                    return (T)(object)retVal;
                 }
                 else if (typeof(T) == typeof(ISummary))
                 {

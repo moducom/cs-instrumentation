@@ -129,11 +129,26 @@ namespace Moducom.Instrumentation.Prometheus
             {
                 // ascertain name in context of taxonomy
                 var fullName = this.GetFullName('_');
-                
+
                 // create Prometheus-native-compatible collector
                 // Will be used DEFINITELY for name lookup in native registry, and POSSIBLY as actual
                 // collector itself if one does not already exist
-                var c = new Collector<TNativeMetric>(fullName, Description, labelNames);
+                PRO.Client.Collectors.ICollector c;
+
+                // FIX: Looking like a mild abuse - we should be using Prometheus.Client.MetricFactory
+                // all the time, and more smoothly (may have to rework calling technique and pass in
+                // MetricType instead - though this might preclude *actual* custom types)
+                if (typeof(TNativeMetric) == typeof(PRO.Client.Histogram.ThisChild))
+                {
+                    var mf = new PRO.Client.MetricFactory(registry);
+
+                    // TODO: Need a way to pass in buckets here
+                    c = mf.CreateHistogram(fullName, Description, labelNames);
+                }
+                else
+                {
+                    c = new Collector<TNativeMetric>(fullName, Description, labelNames);
+                }
 
                 PRO.Client.Collectors.ICollector retrieved_collector;
 

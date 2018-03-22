@@ -133,6 +133,12 @@ namespace Moducom.Instrumentation.Abstract
         public object Labels { get; set; } = null;
     }
 
+
+    public class HistogramOptions : IMetricOptions
+    {
+        public object Labels { get; set; } = null;
+    }
+
     public static class IMetricExtensions
     {
         /// <summary>
@@ -167,6 +173,18 @@ namespace Moducom.Instrumentation.Abstract
         {
             // FIX: Only do one version of labels, and likely non-option version
             return provider.GetMetric<ISummary>(options?.Labels, options);
+        }
+
+
+        public static IHistogram GetHistogram(this Experimental.IMetricProvider provider,
+            object labels = null, double[] bins = null)
+        {
+            var options = new HistogramOptions()
+            {
+                Labels = labels
+            };
+
+            return provider.GetMetric<IHistogram>(labels, options);
         }
 
 
