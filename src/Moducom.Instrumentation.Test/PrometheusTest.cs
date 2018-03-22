@@ -204,6 +204,10 @@ namespace Moducom.Instrumentation.Test
         {
             var r = new PRO.Repository();
 
+            //var c = new PRO.Node.Collector<PROC.Histogram.ThisChild>("histogram_test2", "", "disposition");
+
+            //c.Labels("pensive");
+
             PRO.Node metric = r["histogram_test"];
 
             metric.Initialize("disposition");

@@ -53,6 +53,9 @@ namespace Moducom.Instrumentation.Prometheus
         /// Mostly useful to replace LabelNameOnlyCollector when we encounter it
         /// </summary>
         /// <typeparam name="T"></typeparam>
+#if DEBUG
+        internal
+#endif
         class Collector<T> : PRO.Client.Collectors.Collector<T>
             where T: PRO.Client.Child, new()
         {
