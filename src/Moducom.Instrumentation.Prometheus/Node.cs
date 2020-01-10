@@ -248,47 +248,6 @@ namespace Moducom.Instrumentation.Prometheus
             return (PRO.Client.Collectors.Collector<TNativeMetric, TConfig>)collector;
         }
 
-        TMetric GetOrAddNew<TMetric>(string[] labelNames, object options)
-            where TMetric: PRO.Client.Collectors.Abstractions.ICollector
-        {
-            // Prometheus.Client MetricFactory also adds to registry if item is not already present
-            var factory = MetricFactory;
-            PRO.Client.Collectors.Abstractions.ICollector c;
-
-            if (collector == null)
-            {
-                // ascertain name in context of taxonomy
-                var fullName = this.GetFullName('_');
-
-                switch (typeof(TMetric))
-                {
-                    case Type t when t == typeof(PRO.Client.Abstractions.IHistogram):
-                        c = factory.CreateHistogram(fullName, Description, labelNames);
-                        break;
-
-                    case Type t when t == typeof(PRO.Client.Abstractions.ICounter):
-                        c = factory.CreateCounter(fullName, Description, labelNames);
-                        break;
-
-                    case Type t when t == typeof(PRO.Client.Abstractions.IGauge):
-                        c = factory.CreateGauge(fullName, Description, labelNames);
-                        break;
-
-                    case Type t when t == typeof(PRO.Client.Abstractions.ISummary):
-                        c = factory.CreateSummary(fullName, Description, labelNames);
-                        break;
-
-                    default:
-                        c = null;
-                        break;
-                }
-
-                collector = c;
-            }
-
-            return (TMetric)collector;
-        }
-
         /// <summary>
         /// Retrieve all metrics associated with this node, filtered by label
         /// 
@@ -359,56 +318,7 @@ namespace Moducom.Instrumentation.Prometheus
         }
 
 
-        /// <summary>
-        /// To see if we can get at underlying Unlabelled somehow
-        /// </summary>
-        /// <typeparam name="_TChild"></typeparam>
-        /// <typeparam name="TConfig"></typeparam>
-        internal class Exp1<_TChild, TConfig> : PRO.Client.Collectors.Collector<_TChild, TConfig>
-            where _TChild: PRO.Client.Labelled<TConfig>, new()
-            where TConfig : MetricConfiguration
-        {
-            internal Exp1(PRO.Client.Collectors.Collector<_TChild, TConfig> child) : base(null) 
-            {
-                // Unfortuntely can't get to _child.Unlabelled
-            }
-
-            protected override MetricType Type => throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Get or Add a metric with the provided label template & values,
-        /// in native Prometheus.Client format
-        /// </summary>
-        /// <typeparam name="TNativeMetricChild"></typeparam>
-        /// <param name="labelNames"></param>
-        /// <returns></returns>
-        /// <remarks>
-        /// TODO: This needs to return something more fundamental so that we can return:
-        /// - Unlabelled (basically non child)
-        /// - Labelled (one of the labelled children)
-        /// Right now it's hard wired to labelled children, which is why we are forced to 
-        /// specify a label
-        /// </remarks>
-        TNativeMetricChild GetMetricNative<TNativeMetricChild, TConfig>(
-            IEnumerable<string> labelNames,
-            IEnumerable<string> labelValues,
-            object options)
-            where TNativeMetricChild: PRO.Client.Labelled<TConfig>, new()
-            where TConfig : MetricConfiguration
-        {
-            var c = GetOrAdd<TNativeMetricChild, TConfig>(labelNames.ToArray(), options);
-
-            // FIX: Moducom layer allows omission of labels, but Prometheus
-            // layer does not, so this is going to break without additional
-            // support logic.  Namely we have to un-sprase the labelValues
-            // and stuff in blanks where Prometheus expects them
-            // FIX: For some reason, Histogram breaks this
-            var _labelValues = labelValues.AsArray();
-            var nativeMetricChild = c.WithLabels(_labelValues);
-
-            return nativeMetricChild;
-        }
+ 
 
 
         // Have to pass in TNativeMetricChild & Config as that's the only way to get access
@@ -475,28 +385,6 @@ namespace Moducom.Instrumentation.Prometheus
         }
 
 
-        /// <summary>
-        /// Retrieves metric in native Prometheus.Client format
-        /// </summary>
-        /// <typeparam name="TNativeMetricChild"></typeparam>
-        /// <param name="labels"></param>
-        /// <returns></returns>
-        TNativeMetricChild GetMetricNative<TNativeMetricChild, TConfig>(object labels, object options)
-            where TNativeMetricChild : PRO.Client.Labelled<TConfig>, new()
-            where TConfig : MetricConfiguration
-        {
-            IEnumerable<KeyValuePair<string, object>> labelEnum;
-
-            if (collector == null)
-                labelEnum = Utility.LabelHelper(labels);
-            else
-                labelEnum = LabelHelper(labels).ToArray();
-
-            var labelNames = labelEnum.Select(x => x.Key);
-            var labelValues = labelEnum.Select(x => x.Value == null ? "" : x.Value.ToString());
-
-            return GetMetricNative<TNativeMetricChild, TConfig>(labelNames, labelValues, options);
-        }
 
         (IEnumerable<string> names, IEnumerable<string> values) LabelHelper2(object labels)
         {
@@ -513,44 +401,7 @@ namespace Moducom.Instrumentation.Prometheus
             return (labelNames, labelValues);
         }
 
-        TMetric GetMetricNativeNew<TMetric, TNativeMetricChild, TConfig>(
-            object labels,
-            object options)
-            where TNativeMetricChild : PRO.Client.Labelled<TConfig>, TMetric, new()
-            where TConfig : MetricConfiguration
-        {
-            IEnumerable<KeyValuePair<string, object>> labelEnum;
-
-            if (collector == null)
-                labelEnum = Utility.LabelHelper(labels);
-            else
-                labelEnum = LabelHelper(labels).ToArray();
-
-            var labelNames = labelEnum.Select(x => x.Key);
-            var labelValues = labelEnum.Select(x => x.Value?.ToString());
-
-            return GetMetricNativeNew<TMetric, TNativeMetricChild, TConfig>(
-                labelNames,
-                labelValues,
-                options);
-        }
-
-        // TODO:
-        // FIX:
-        // Very kludgy and brute force.  We're trying to push through the child class of Labelled
-        // which itself has a template.  What would be better is to adapt directly to TConfig rather
-        // than hardcode as we do here
-        TNativeMetricChild GetMetricNative<TNativeMetricChild>(object labels, object options)
-            where TNativeMetricChild : PRO.Client.Labelled<MetricConfiguration>, new()
-        {
-            return GetMetricNative<TNativeMetricChild, MetricConfiguration>(labels, options);
-        }
-
-        TNativeMetricChild GetMetricNative2<TNativeMetricChild>(object labels, object options)
-            where TNativeMetricChild : PRO.Client.Labelled<PRO.Client.Histogram.HistogramConfiguration>, new()
-        {
-            return GetMetricNative<TNativeMetricChild, PRO.Client.Histogram.HistogramConfiguration>(labels, options);
-        }
+        
 
         PRO.Client.Abstractions.ICounter GetNativeCounter(object labels, object options)
         {
@@ -629,12 +480,6 @@ namespace Moducom.Instrumentation.Prometheus
 #if LEGACY
                 var nativeCounter = GetMetricNative<PRO.Client.Counter.LabelledCounter>(labels, options);
 #else
-                /*
-                var nativeCounter = GetMetricNativeNew<
-                    PRO.Client.Abstractions.ICounter,
-                    PRO.Client.Counter.LabelledCounter,
-                    MetricConfiguration
-                    >(labels, options); */
                 var nativeCounter = GetNativeCounter(labels, options);
 #endif
 
