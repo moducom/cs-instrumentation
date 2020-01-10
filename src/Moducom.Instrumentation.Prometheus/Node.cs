@@ -193,19 +193,39 @@ namespace Moducom.Instrumentation.Prometheus
             }
 
 #else
+            // EXPERIMENTAL
+            // hopefully cleaner and better
             var factory = MetricFactory;
             PRO.Client.Collectors.Abstractions.ICollector c;
 
-            switch (typeof(TNativeMetric))
+            if (collector == null)
             {
-                case Type t when t == typeof(PRO.Client.Histogram.LabelledHistogram):
-                    c = factory.CreateHistogram(Name, Description, labelNames);
-                    break;
+                switch (typeof(TNativeMetric))
+                {
+                    case Type t when t == typeof(PRO.Client.Histogram.LabelledHistogram):
+                        c = factory.CreateHistogram(Name, Description, labelNames);
+                        break;
 
-                case Type t when t == typeof(PRO.Client.Counter.LabelledCounter):
-                    c = factory.CreateCounter(Name, Description, labelNames);
-                    break;
+                    case Type t when t == typeof(PRO.Client.Counter.LabelledCounter):
+                        c = factory.CreateCounter(Name, Description, labelNames);
+                        break;
+
+                    case Type t when t == typeof(PRO.Client.Gauge.LabelledGauge):
+                        c = factory.CreateGauge(Name, Description, labelNames);
+                        break;
+
+                    case Type t when t == typeof(PRO.Client.Summary.LabelledSummary):
+                        c = factory.CreateSummary(Name, Description, labelNames);
+                        break;
+
+                    default:
+                        c = null;
+                        break;
+                }
+
+                collector = c;
             }
+
 #endif
             return (PRO.Client.Collectors.Collector<TNativeMetric, TConfig>)collector;
         }
