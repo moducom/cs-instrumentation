@@ -318,37 +318,6 @@ namespace Moducom.Instrumentation.Prometheus
         }
 
 
- 
-
-
-        // Have to pass in TNativeMetricChild & Config as that's the only way to get access
-        // to WithLabels
-        TMetric GetMetricNativeNew<TMetric, TNativeMetricChild, TConfig>(
-            IEnumerable<string> labelNames,
-            IEnumerable<string> labelValues,
-            object options)
-            where TNativeMetricChild : PRO.Client.Labelled<TConfig>, TMetric, new()
-            where TConfig : MetricConfiguration
-        {
-            var c = GetOrAdd<TNativeMetricChild, TConfig>(labelNames.ToArray(), options);
-
-            // FIX: Moducom layer allows omission of labels, but Prometheus
-            // layer does not, so this is going to break without additional
-            // support logic.  Namely we have to un-sprase the labelValues
-            // and stuff in blanks where Prometheus expects them
-            // FIX: For some reason, Histogram breaks this
-            var _labelValues = labelValues.AsArray();
-            if(_labelValues.Length == 0)
-            {
-                // FIX: Clean this nastiness up also
-                return (TMetric)(object)c;
-            }
-            else
-            {
-                var nativeMetricChild = c.WithLabels(_labelValues);
-                return nativeMetricChild;
-            }
-        }
 
         /// <summary>
         /// Pads incoming anon/dictionary label with spaces if prometheus labelling is a superset
@@ -401,7 +370,40 @@ namespace Moducom.Instrumentation.Prometheus
             return (labelNames, labelValues);
         }
 
-        
+        TIChild GetNativeCollector<TIChild, TChild, TConfig, TCollector>(object labels, Func<string, string[], TCollector> factory)
+            where TCollector : 
+                PRO.Client.Collectors.Collector<TChild, TConfig>,
+                PRO.Client.Collectors.Abstractions.ICollector,
+                TIChild
+            where TChild : Labelled<TConfig>, TIChild, new()
+            where TConfig : MetricConfiguration
+                
+        {
+            var fullName = this.GetFullName('_');
+            var label = LabelHelper2(labels);
+            var labelNames = label.names.AsArray();
+
+            var c = factory(fullName, labelNames);
+
+            // NOTE: Tracking this for now still as our label validator utilizes it
+            collector = c;
+
+            if (labelNames.Length != 0)
+                return c.WithLabels(label.values.AsArray());
+            else
+                return c;
+        }
+
+        PRO.Client.Abstractions.ICounter GetNativeCounterExp(object labels, object options)
+        {
+            return GetNativeCollector<PRO.Client.Abstractions.ICounter,
+                PRO.Client.Counter.LabelledCounter,
+                MetricConfiguration,
+                PRO.Client.Counter>(labels, (fullName, labelNames) =>
+                {
+                    return MetricFactory.CreateCounter(fullName, Description, labelNames);
+                });
+        }
 
         PRO.Client.Abstractions.ICounter GetNativeCounter(object labels, object options)
         {
@@ -432,7 +434,11 @@ namespace Moducom.Instrumentation.Prometheus
                 var fullName = this.GetFullName('_');
                 var label = LabelHelper2(labels);
                 var labelNames = label.names.AsArray();
-                var c = MetricFactory.CreateHistogram(fullName, Description, labelNames);
+                PRO.Client.Histogram c;
+                if (options is HistogramOptions o)
+                    c = MetricFactory.CreateHistogram(fullName, Description, o.Buckets, labelNames);
+                else
+                    c = MetricFactory.CreateHistogram(fullName, Description, labelNames);
                 // NOTE: Tracking this for now still as our label validator utilizes it
                 collector = c;
                 if (labelNames.Length != 0)
@@ -477,11 +483,7 @@ namespace Moducom.Instrumentation.Prometheus
         {
             if (typeof(T) == typeof(ICounter))
             {
-#if LEGACY
-                var nativeCounter = GetMetricNative<PRO.Client.Counter.LabelledCounter>(labels, options);
-#else
-                var nativeCounter = GetNativeCounter(labels, options);
-#endif
+                var nativeCounter = GetNativeCounterExp(labels, options);
 
                 var moducomCounter = new Counter(nativeCounter);
 
@@ -490,11 +492,7 @@ namespace Moducom.Instrumentation.Prometheus
             //else if (typeof(T).IsAssignableFrom(typeof(IGauge<double>)))
             else if (typeof(IGauge<double>).IsAssignableFrom(typeof(T)))
             {
-#if LEGACY
-                var nativeGauge = GetMetricNative<PRO.Client.Gauge.LabelledGauge>(labels, options);
-#else
                 var nativeGauge = GetNativeGauge(labels, options);
-#endif
 
                 var moducomGauge = new Gauge(nativeGauge);
 
@@ -502,11 +500,7 @@ namespace Moducom.Instrumentation.Prometheus
             }
             else if (typeof(IHistogram<double>).IsAssignableFrom(typeof(T)))
             {
-#if LEGACY
-                var nativeHistogram = GetMetricNative2<PRO.Client.Histogram.LabelledHistogram>(labels, options);
-#else
                 var nativeHistogram = GetNativeHistogram(labels, options);
-#endif
 
                 var moducomHistogram = new Histogram(nativeHistogram);
 
