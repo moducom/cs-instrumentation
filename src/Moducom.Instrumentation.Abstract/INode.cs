@@ -85,8 +85,11 @@ namespace Moducom.Instrumentation.Abstract
 
 
         /// <summary>
-        /// Can supply and modify metric contents
+        /// Can supply and modify metric contents per node
         /// </summary>
+        /// <remarks>
+        /// Not all metrics tooling supports multiple different metric types per node
+        /// </remarks>
         public interface IMetricsProvider
         {
             /// <summary>

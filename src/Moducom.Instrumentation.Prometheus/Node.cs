@@ -119,14 +119,7 @@ namespace Moducom.Instrumentation.Prometheus
             }
         }
 
-        /// <summary>
-        /// Gets or Adds a metric with label template (as prometheus C# interfaces require)
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        PRO.Client.Collectors.Collector<TNativeMetric, TConfig> GetOrAdd<TNativeMetric, TConfig>(string[] labelNames, object options)
-            where TNativeMetric : PRO.Client.Labelled<TConfig>, new()
-            where TConfig : MetricConfiguration
+        string[] ProcessLabelNameOnlyCollector(string[] labelNames)
         {
             // check to see if we've templated label collector names
             if (collector is LabelNameOnlyCollector labelCollector)
@@ -148,6 +141,20 @@ namespace Moducom.Instrumentation.Prometheus
                 // LabelNameOnlyCollector did its job and cached LabelNames, so remove it
                 collector = null;
             }
+
+            return labelNames;
+        }
+
+        /// <summary>
+        /// Gets or Adds a metric with label template (as prometheus C# interfaces require)
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        PRO.Client.Collectors.Collector<TNativeMetric, TConfig> GetOrAdd<TNativeMetric, TConfig>(string[] labelNames, object options)
+            where TNativeMetric : PRO.Client.Labelled<TConfig>, new()
+            where TConfig : MetricConfiguration
+        {
+            labelNames = ProcessLabelNameOnlyCollector(labelNames);
 
 #if PRE_3
             // If no real data collector for this Node has been instantiated, instantiate one now
@@ -370,6 +377,45 @@ namespace Moducom.Instrumentation.Prometheus
             return (labelNames, labelValues);
         }
 
+        // visualizing how my branched Prometheus.Client might work
+#if UNUSED
+        TIChild GetNativeCollector<TIChild, TCollector>(object labels, Func<string, string[], TCollector> factory)
+            where TCollector: PRO.Client.Collectors.Abstractions.ICollector<TIChild>, TIChild
+        {
+            var fullName = this.GetFullName('_');
+            var label = LabelHelper2(labels);
+            var labelNames = label.names.AsArray();
+
+            var c = factory(fullName, labelNames);
+
+            // NOTE: Tracking this for now still as our label validator utilizes it
+            collector = c;
+
+            if (labelNames.Length != 0)
+                return c.WithLabels(label.values.AsArray());
+            else
+                return c;
+        }
+
+        TIChild GetNativeCollector<TIChild>(object labels, 
+            Func<string, string[], PRO.Client.Collectors.Abstractions.ICollector<TIChild>> factory)
+        {
+            var fullName = this.GetFullName('_');
+            var label = LabelHelper2(labels);
+            var labelNames = label.names.AsArray();
+
+            var c = factory(fullName, labelNames);
+
+            // NOTE: Tracking this for now still as our label validator utilizes it
+            collector = c;
+
+            if (labelNames.Length != 0)
+                return c.WithLabels(label.values.AsArray());
+            else
+                return c.Unlabelled;    // NOTE: See how we require Unlabelled in this flavor
+        }
+#endif
+
         TIChild GetNativeCollector<TIChild, TChild, TConfig, TCollector>(object labels, Func<string, string[], TCollector> factory)
             where TCollector : 
                 PRO.Client.Collectors.Collector<TChild, TConfig>,
@@ -382,6 +428,8 @@ namespace Moducom.Instrumentation.Prometheus
             var fullName = this.GetFullName('_');
             var label = LabelHelper2(labels);
             var labelNames = label.names.AsArray();
+
+            labelNames = ProcessLabelNameOnlyCollector(labelNames);
 
             var c = factory(fullName, labelNames);
 
@@ -434,6 +482,8 @@ namespace Moducom.Instrumentation.Prometheus
                 var fullName = this.GetFullName('_');
                 var label = LabelHelper2(labels);
                 var labelNames = label.names.AsArray();
+                labelNames = ProcessLabelNameOnlyCollector(labelNames);
+
                 PRO.Client.Histogram c;
                 if (options is HistogramOptions o)
                     c = MetricFactory.CreateHistogram(fullName, Description, o.Buckets, labelNames);
@@ -458,6 +508,8 @@ namespace Moducom.Instrumentation.Prometheus
                 var fullName = this.GetFullName('_');
                 var label = LabelHelper2(labels);
                 var labelNames = label.names.AsArray();
+                labelNames = ProcessLabelNameOnlyCollector(labelNames);
+
                 var c = MetricFactory.CreateGauge(fullName, Description, labelNames);
                 // NOTE: Tracking this for now still as our label validator utilizes it
                 collector = c;
