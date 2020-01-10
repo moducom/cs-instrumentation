@@ -217,6 +217,29 @@ namespace Moducom.Instrumentation.Test
             histogram.Observe(1);
         }
 
+
+        [TestMethod]
+        public void MultipleCollectorsAtSameNodeTest()
+        {
+            var r = new PROC.Collectors.CollectorRegistry();
+            var factory = new PROC.MetricFactory(r);
+
+            var counter = factory.CreateCounter("test", "test");
+
+            // Cannot create gauge, get a duplicate collector name exception
+            Assert.ThrowsException<InvalidOperationException>(() => 
+                factory.CreateGauge("test", "test", "label1"));
+
+            /*
+            counter.Inc(1);
+            gauge.Dec(1);
+
+            var counter2 = factory.CreateCounter("test", "test");
+
+            Assert.AreEqual(counter.Value, counter2.Value); */
+        }
+        
+
         [TestMethod]
         public void PrometheusWrapperHistogramTest()
         {
