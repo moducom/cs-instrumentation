@@ -55,7 +55,12 @@ namespace Moducom.Instrumentation.Prometheus.TestServer
             //CollectorRegistry
             IMetricServer metricServer = new MetricServer(
                 registry, 
-                new MetricServerOptions() { Port = 9100 });
+                new MetricServerOptions()
+                {
+                    Host = "+",
+                    Port = 9100
+                    //MapPath = "/metrics"
+                });
 
             metricServer.Start();
 
