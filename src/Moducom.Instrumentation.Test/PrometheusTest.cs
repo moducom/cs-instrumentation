@@ -28,7 +28,9 @@ namespace Moducom.Instrumentation.Test
             var cr = new CollectorRegistry();
             //var cr = CollectorRegistry.Instance;
 
-            var counter = Metrics.CreateCounter("myCounter", "Description of my counter", "allowed_label");
+            var factory = new MetricFactory(cr);
+
+            var counter = factory.CreateCounter("myCounter", "Description of my counter", "allowed_label");
 
             counter.Labels("5").Inc();
 
@@ -40,7 +42,7 @@ namespace Moducom.Instrumentation.Test
 
             // grabs same metric... OK that will get us off the ground for a working codebase
             // Just have to decide if we are gonna maintain our own repo tree or not
-            global::Prometheus.Client.Counter counter2 = Metrics.CreateCounter("myCounter", "Description of my counter", "allowed_label");
+            global::Prometheus.Client.Counter counter2 = factory.CreateCounter("myCounter", "Description of my counter", "allowed_label");
 
             // dummy code so far
             var p = new PRO.Provider();
@@ -49,20 +51,21 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void PrometheusProviderTest()
         {
+            var registry = new CollectorRegistry();
+            var factory = new MetricFactory(registry);
             //var c = Metrics.CreateCounter("test", "TEST");
-            var c = Metrics.CreateCounter("root_test", "TEST");
-            PROC.Counter c2 = Metrics.CreateCounter("test", "TEST", "instance");
+            var c = factory.CreateCounter("root_test", "TEST");
+            PROC.Counter c2 = factory.CreateCounter("test", "TEST2", "instance");
             var writer = new SyntheticMetricsWriter();
 
-            c2.Labels("1").Inc();
-            c2.Labels("2").Inc(5);
+            c2.WithLabels("1").Inc();
+            c2.WithLabels("2").Inc(5);
 
             //ScrapeHandler.ProcessAsync()
             //c2.Collect(writer);
 
-            var registry = new CollectorRegistry();
-
-            registry.Add(c2);
+            // factory adds this already.  I'd consider that somewhat of a side affect            
+            //registry.Add(c2);
 
             var r = new PRO.Repository(registry, "root");
 
@@ -125,7 +128,7 @@ namespace Moducom.Instrumentation.Test
             ICollectorRegistry registry = new CollectorRegistry();
 
             var fakeCounter = new FakeCounter("fake_counter", "Fake Counter", "label1");
-            CollectorConfiguration config = null;
+            CollectorConfiguration config = new CollectorConfiguration("tester");
             IMetricsWriter writer;
 
             registry.GetOrAdd(config, cfg => fakeCounter);
@@ -155,11 +158,13 @@ namespace Moducom.Instrumentation.Test
         {
             // This test specifically tries to INITIALIZE in native prometheus client,
             // then RETRIEVE via our client
-            var c = Metrics.CreateCounter("root_counter1", "No help", "label1");
+            var registry = new CollectorRegistry();
+            var factory = new MetricFactory(registry);
+            var c = factory.CreateCounter("root_counter1", "No help", "label1");
             var _c = c.Labels("5");
             _c.Inc(10);
 
-            var repo = new PRO.Repository();
+            var repo = new PRO.Repository(registry);
 
             var test = repo["counter1"];
 

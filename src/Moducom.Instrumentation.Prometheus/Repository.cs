@@ -21,6 +21,8 @@ namespace Moducom.Instrumentation.Prometheus
     {
         readonly ICollectorRegistry registry;
 
+        const string DEFAULT = "root";
+
         protected override Node CreateNode(Node parent, string name)
         {
             return new Node(registry, parent, name);
@@ -28,7 +30,7 @@ namespace Moducom.Instrumentation.Prometheus
 
         readonly Node rootNode;
 
-        internal Repository(ICollectorRegistry registry, string rootName)
+        internal Repository(ICollectorRegistry registry, string rootName = DEFAULT)
         {
             this.registry = registry;
             rootNode = CreateNode(null, rootName);
@@ -36,7 +38,7 @@ namespace Moducom.Instrumentation.Prometheus
 
         // FIX: Interim constructor, probably want to either use a factory or only pass in
         // ICollectorRegistry
-        internal Repository(string rootName = "root") : this(new CollectorRegistry(), rootName) { }
+        internal Repository(string rootName = DEFAULT) : this(new CollectorRegistry(), rootName) { }
 
 
 

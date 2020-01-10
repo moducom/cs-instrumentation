@@ -193,29 +193,31 @@ namespace Moducom.Instrumentation.Prometheus
             }
 
 #else
-            // EXPERIMENTAL
-            // hopefully cleaner and better
+            // Prometheus.Client MetricFactory also adds to registry if item is not already present
             var factory = MetricFactory;
             PRO.Client.Collectors.Abstractions.ICollector c;
 
             if (collector == null)
             {
+                // ascertain name in context of taxonomy
+                var fullName = this.GetFullName('_');
+
                 switch (typeof(TNativeMetric))
                 {
                     case Type t when t == typeof(PRO.Client.Histogram.LabelledHistogram):
-                        c = factory.CreateHistogram(Name, Description, labelNames);
+                        c = factory.CreateHistogram(fullName, Description, labelNames);
                         break;
 
                     case Type t when t == typeof(PRO.Client.Counter.LabelledCounter):
-                        c = factory.CreateCounter(Name, Description, labelNames);
+                        c = factory.CreateCounter(fullName, Description, labelNames);
                         break;
 
                     case Type t when t == typeof(PRO.Client.Gauge.LabelledGauge):
-                        c = factory.CreateGauge(Name, Description, labelNames);
+                        c = factory.CreateGauge(fullName, Description, labelNames);
                         break;
 
                     case Type t when t == typeof(PRO.Client.Summary.LabelledSummary):
-                        c = factory.CreateSummary(Name, Description, labelNames);
+                        c = factory.CreateSummary(fullName, Description, labelNames);
                         break;
 
                     default:
@@ -308,6 +310,24 @@ namespace Moducom.Instrumentation.Prometheus
             }
         }
 
+
+        /// <summary>
+        /// To see if we can get at underlying Unlabelled somehow
+        /// </summary>
+        /// <typeparam name="_TChild"></typeparam>
+        /// <typeparam name="TConfig"></typeparam>
+        internal class Exp1<_TChild, TConfig> : PRO.Client.Collectors.Collector<_TChild, TConfig>
+            where _TChild: PRO.Client.Labelled<TConfig>, new()
+            where TConfig : MetricConfiguration
+        {
+            internal Exp1(PRO.Client.Collectors.Collector<_TChild, TConfig> child) : base(null) 
+            {
+                // Unfortuntely can't get to _child.Unlabelled
+            }
+
+            protected override MetricType Type => throw new NotImplementedException();
+        }
+
         /// <summary>
         /// Get or Add a metric with the provided label template & values,
         /// in native Prometheus.Client format
@@ -315,6 +335,13 @@ namespace Moducom.Instrumentation.Prometheus
         /// <typeparam name="TNativeMetricChild"></typeparam>
         /// <param name="labelNames"></param>
         /// <returns></returns>
+        /// <remarks>
+        /// TODO: This needs to return something more fundamental so that we can return:
+        /// - Unlabelled (basically non child)
+        /// - Labelled (one of the labelled children)
+        /// Right now it's hard wired to labelled children, which is why we are forced to 
+        /// specify a label
+        /// </remarks>
         TNativeMetricChild GetMetricNative<TNativeMetricChild, TConfig>(
             IEnumerable<string> labelNames,
             IEnumerable<string> labelValues,
@@ -329,7 +356,8 @@ namespace Moducom.Instrumentation.Prometheus
             // support logic.  Namely we have to un-sprase the labelValues
             // and stuff in blanks where Prometheus expects them
             // FIX: For some reason, Histogram breaks this
-            var nativeMetricChild = c.Labels(labelValues.ToArray());
+            var _labelValues = labelValues.AsArray();
+            var nativeMetricChild = c.WithLabels(_labelValues);
 
             return nativeMetricChild;
         }
@@ -408,41 +436,6 @@ namespace Moducom.Instrumentation.Prometheus
             return GetMetricNative<TNativeMetricChild, PRO.Client.Histogram.HistogramConfiguration>(labels, options);
         }
 
-        // FIX: Copy/pasted from above
-        // Tester to see how far we can get with native MetricFactory
-        void FactoryTester(MetricType metricType, object labels, object options = null)
-        {
-            IEnumerable<KeyValuePair<string, object>> labelEnum;
-
-            // remember, we might already have a metric associated with this node
-            if (collector == null)
-                labelEnum = Utility.LabelHelper(labels);
-            else
-                labelEnum = LabelHelper(labels).ToArray();
-
-            var labelNames = labelEnum.Select(x => x.Key);
-            var labelValues = labelEnum.Select(x => x.Value?.ToString());
-            var factory = MetricFactory;
-
-            switch (metricType)
-            {
-                case MetricType.Counter:
-                    var counter = factory.CreateCounter(Name, Description, labelNames.ToArray());
-                    break;
-
-                case MetricType.Gauge:
-                    break;
-
-                case MetricType.Histogram:
-                    break;
-
-                case MetricType.Summary:
-                    break;
-
-                case MetricType.Untyped:
-                    break;
-            }
-        }
 
         /// <summary>
         /// Look up or create the metric in Moducom format
