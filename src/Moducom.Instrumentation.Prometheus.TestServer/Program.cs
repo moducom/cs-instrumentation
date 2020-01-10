@@ -19,15 +19,29 @@ namespace Moducom.Instrumentation.Prometheus.TestServer
             var repo = new Moducom.Instrumentation.Prometheus.Repository("testexporter");
             var metricName = "test/metric1";
 
-            var testNode = repo[metricName];
+            Node testNode = repo[metricName];
 
-            ((Node)testNode).Description = "Service Provider+Facade test";
+            testNode.Description = "Service Provider+Facade test";
 
-            var counter = testNode.GetMetric<ICounter>(new { delineator = 1 });
+            INode node = testNode;
+
+            var counter = node.GetMetric<ICounter>(new { delineator = 1 });
+            var histogram = repo["test/metric3"].GetHistogram();
 
             var t = new Timer(delegate 
             {
                 counter.Increment();
+
+                histogram.Value = 5;
+
+                // Once every 5 times, record also a histogram value of 1 and 5.1 just for visual
+                // observation/testing
+                if (counter.Value % 5 == 0)
+                {
+                    histogram.Value = 5.1;
+                    histogram.Value = 1;
+                }
+
             }, null, 0, 1000);
 
             repo["test/metric2"].GetGauge(new { delinerator = 2 }).Value = 77;
