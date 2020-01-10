@@ -21,6 +21,7 @@ namespace Moducom.Instrumentation.Prometheus
 {
     using PRO.Client;
 
+    // TODO: Refactor to use Fact.Extension-consolidated INode
     internal class Node : 
         NamedChildCollection<Node>,
         INode,
@@ -37,7 +38,7 @@ namespace Moducom.Instrumentation.Prometheus
             {
                 var configuration = (MetricConfiguration)collector.Configuration;
 
-                return configuration.LabelNames;
+                return configuration.LabelNames ?? Enumerable.Empty<string>();
             }
         }
 
@@ -452,7 +453,7 @@ namespace Moducom.Instrumentation.Prometheus
         {
             var labelEnum = Utility.LabelHelper(labels).ToArray();
             var labelNames = labelEnum.Select(x => x.Key);
-            var collectorLabelNames = ((MetricConfiguration)collector.Configuration).LabelNames;
+            var collectorLabelNames = LabelNames;
 
             if (collector != null)
             {
