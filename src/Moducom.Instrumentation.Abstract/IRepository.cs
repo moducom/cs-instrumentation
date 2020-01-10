@@ -8,10 +8,6 @@ namespace Moducom.Instrumentation.Abstract
 {
     public interface IRepository : ITaxonomy<INode>
     {
-        /*
-        INode RootNode { get; }
-
-        INode this[string path] { get; } */
     }
 
     namespace Experimental
@@ -86,6 +82,8 @@ namespace Moducom.Instrumentation.Abstract
         /// <returns></returns>
         /// <remarks>
         /// FIX: Undefined behavior if labels match multiple, but shouldn't be undefined
+        /// FIX: Swallowing up this Exception is a no no.  Phase this out once entire UCPRO build is online
+        /// and we can properly test this
         /// </remarks>
         public static ICounter GetCounter(this IRepository repository, string path, object labels = null)
         {

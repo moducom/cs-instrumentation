@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-
+using Prometheus.Client.Collectors.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +17,15 @@ namespace Moducom.Instrumentation
         /// <param name="rootName"></param>
         public static void AddPrometheus(this IServiceCollection collection, string rootName)
         {
-            collection.AddSingleton<Abstract.IRepository>(x => new Prometheus.Repository(rootName));
+            // Prometheus.Repository itself is rather lightweight, so a transient is fine
+            // It's the underlying ICollectorRegistry which does all the heavy lifting
+            collection.AddTransient<Abstract.IRepository>(sp =>
+            {
+                var registry = sp.GetService<ICollectorRegistry>() ??
+                    global::Prometheus.Client.Metrics.DefaultCollectorRegistry;
+
+                return new Prometheus.Repository(registry, rootName);
+            });
         }
     }
 }

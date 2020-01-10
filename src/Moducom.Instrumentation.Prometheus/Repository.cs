@@ -35,14 +35,9 @@ namespace Moducom.Instrumentation.Prometheus
         internal Repository(ICollectorRegistry registry, string rootName = DEFAULT)
         {
             this.registry = registry;
+            // TODO: Utilize _CreateNode or change CreateNode signature so that node creation events fire
             rootNode = CreateNode(null, rootName);
         }
-
-        // FIX: Interim constructor, probably want to either use a factory or only pass in
-        // ICollectorRegistry
-        internal Repository(string rootName = DEFAULT) : this(new CollectorRegistry(), rootName) { }
-
-
 
         public override Node RootNode => rootNode;
     }

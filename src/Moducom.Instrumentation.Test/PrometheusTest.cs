@@ -180,7 +180,8 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void PrometheusLabelValidatorTest()
         {
-            var r = new PRO.Repository();
+            var _r = new CollectorRegistry();
+            var r = new PRO.Repository(_r);
 
             var metric = (PRO.Node) r["label_validator_test"];
 
@@ -251,7 +252,8 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void PrometheusWrapperHistogramTest()
         {
-            var r = new PRO.Repository();
+            var _r = new CollectorRegistry();
+            var r = new PRO.Repository(_r);
 
             PRO.Node metric = r["histogram_test"];
 
