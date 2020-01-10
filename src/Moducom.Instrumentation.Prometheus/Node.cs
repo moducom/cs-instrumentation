@@ -9,8 +9,11 @@ using System.Threading.Tasks;
 using PRO = global::Prometheus;
 using Moducom.Instrumentation.Abstract.Experimental;
 using Moducom.Instrumentation.Experimental;
-//using Prometheus.Client.Contracts;
 using Fact.Extensions.Collection;
+
+#if NETSTANDARD1_3
+using System.Reflection;
+#endif
 
 #if DEBUG
 [assembly: InternalsVisibleTo("Moducom.Instrumentation.Test")]
