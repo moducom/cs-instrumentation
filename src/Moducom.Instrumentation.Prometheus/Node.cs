@@ -29,13 +29,14 @@ namespace Moducom.Instrumentation.Prometheus
     {
         //internal PRO.Client.Contracts.MetricFamily metricsFamily;
         PRO.Client.Collectors.Abstractions.ICollector collector;
-        //PRO.Client.MetricFactory metricFactory = PRO.Client.Metrics.DefaultFactory;
         readonly PRO.Client.Collectors.Abstractions.ICollectorRegistry registry;
 
         // so that we can get fully-qualified name
         readonly INode parent;
 
         public Node Parent => (Node)parent;
+
+        PRO.Client.MetricFactory MetricFactory => new PRO.Client.MetricFactory(registry);
 
         internal Node(PRO.Client.Collectors.Abstractions.ICollectorRegistry registry, INode parent, string name) : base(name)
         {
@@ -111,6 +112,7 @@ namespace Moducom.Instrumentation.Prometheus
             where TNativeMetric : PRO.Client.Labelled<TConfig>, new()
             where TConfig : MetricConfiguration
         {
+#if PRE_3
             // check to see if we've templated label collector names
             if (collector is LabelNameOnlyCollector labelCollector)
             {
@@ -190,7 +192,22 @@ namespace Moducom.Instrumentation.Prometheus
                 collector = retrieved_collector;
             }
 
-            return (PRO.Client.Collectors.Collector<TNativeMetric, TConfig>) collector;
+#else
+            var factory = MetricFactory;
+            PRO.Client.Collectors.Abstractions.ICollector c;
+
+            switch (typeof(TNativeMetric))
+            {
+                case Type t when t == typeof(PRO.Client.Histogram.LabelledHistogram):
+                    c = factory.CreateHistogram(Name, Description, labelNames);
+                    break;
+
+                case Type t when t == typeof(PRO.Client.Counter.LabelledCounter):
+                    c = factory.CreateCounter(Name, Description, labelNames);
+                    break;
+            }
+#endif
+            return (PRO.Client.Collectors.Collector<TNativeMetric, TConfig>)collector;
         }
 
         /// <summary>
@@ -369,6 +386,42 @@ namespace Moducom.Instrumentation.Prometheus
             where TNativeMetricChild : PRO.Client.Labelled<PRO.Client.Histogram.HistogramConfiguration>, new()
         {
             return GetMetricNative<TNativeMetricChild, PRO.Client.Histogram.HistogramConfiguration>(labels, options);
+        }
+
+        // FIX: Copy/pasted from above
+        // Tester to see how far we can get with native MetricFactory
+        void FactoryTester(MetricType metricType, object labels, object options = null)
+        {
+            IEnumerable<KeyValuePair<string, object>> labelEnum;
+
+            // remember, we might already have a metric associated with this node
+            if (collector == null)
+                labelEnum = Utility.LabelHelper(labels);
+            else
+                labelEnum = LabelHelper(labels).ToArray();
+
+            var labelNames = labelEnum.Select(x => x.Key);
+            var labelValues = labelEnum.Select(x => x.Value?.ToString());
+            var factory = MetricFactory;
+
+            switch (metricType)
+            {
+                case MetricType.Counter:
+                    var counter = factory.CreateCounter(Name, Description, labelNames.ToArray());
+                    break;
+
+                case MetricType.Gauge:
+                    break;
+
+                case MetricType.Histogram:
+                    break;
+
+                case MetricType.Summary:
+                    break;
+
+                case MetricType.Untyped:
+                    break;
+            }
         }
 
         /// <summary>

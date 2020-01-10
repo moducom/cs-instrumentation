@@ -13,7 +13,7 @@ namespace Moducom.Instrumentation.Prometheus
     {
         public Provider()
         {
-            var instance = CollectorRegistry.Instance;
+            //var instance = CollectorRegistry.Instance;
         }
     }
 }

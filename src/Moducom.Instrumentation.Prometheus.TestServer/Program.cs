@@ -50,13 +50,16 @@ namespace Moducom.Instrumentation.Prometheus.TestServer
 
         static void Main(string[] args)
         {
+            var registry = new global::Prometheus.Client.Collectors.CollectorRegistry();
             // Be careful, explicit reference to "localhost" here binds us to ipv6
             //CollectorRegistry
-            IMetricServer metricServer = new MetricServer(9100);
+            IMetricServer metricServer = new MetricServer(
+                registry, 
+                new MetricServerOptions() { Port = 9100 });
 
             metricServer.Start();
 
-            WrappedExporter();
+            WrappedExporter(registry);
 
             Console.WriteLine("Metric server running");
             Console.ReadLine();
