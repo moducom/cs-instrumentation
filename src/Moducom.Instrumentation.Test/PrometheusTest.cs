@@ -91,21 +91,24 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void PrometheusLabelBreakerTest()
         {
-            Metrics.CreateCounter("breaker_test", 
+            var r = new CollectorRegistry();
+            var factory = new MetricFactory(r);
+
+            factory.CreateCounter("breaker_test", 
                 "Hopefully this doesn't break", 
                 new[] { "label1", "label2" });
 
             return;
 
-            // all 3 of these break
-            Metrics.CreateCounter("breaker_test",
+            // all 3 of these break, labels must aligned perfectly
+            factory.CreateCounter("breaker_test",
                 "Hopefully this doesn't break");
 
-            Metrics.CreateCounter("breaker_test",
+            factory.CreateCounter("breaker_test",
                 "Hopefully this doesn't break",
                 new[] { "label2" });
 
-            Metrics.CreateCounter("breaker_test",
+            factory.CreateCounter("breaker_test",
                 "Hopefully this doesn't break",
                 new[] { "label3", "label2" });
         }
@@ -182,6 +185,11 @@ namespace Moducom.Instrumentation.Test
             var metric = (PRO.Node) r["label_validator_test"];
 
             metric.Initialize("instance", "test_a", "disposition");
+
+            Assert.ThrowsException<IndexOutOfRangeException>(delegate
+            {
+                metric.GetGauge(new { attitude = "bad", instance = 3 });
+            });
 
             var counter_i5 = metric.GetMetric<MOD.IGauge>(new { instance = 5 });
             var counter_i3 = metric.GetMetric<MOD.IGauge>(new { disposition = "good", instance = 3 });

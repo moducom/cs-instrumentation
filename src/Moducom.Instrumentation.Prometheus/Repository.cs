@@ -16,6 +16,8 @@ namespace Moducom.Instrumentation.Prometheus
     /// <summary>
     /// Repository oriented specifically towards wrapping a prometheus client ICollectorRegistry
     /// </summary>
+    /// <remarks>
+    /// </remarks>
     internal class Repository : 
         Moducom.Instrumentation.Experimental.TaxonomyBase<Node, MOD.INode>, MOD.IRepository
     {

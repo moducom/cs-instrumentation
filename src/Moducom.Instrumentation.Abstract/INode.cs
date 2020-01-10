@@ -66,7 +66,7 @@ namespace Moducom.Instrumentation.Abstract
         public interface IMetricFactory : IMetricFactory<string> { }
 
         /// <summary>
-        /// NEW and unused, shall be a semi-wrapper around IMetricFactory so that metric factory can focus
+        /// Expected to act as a semi-wrapper around IMetricFactory so that metric factory can focus
         /// purely on creating new metrics
         /// </summary>
         public interface IMetricProvider
@@ -78,6 +78,7 @@ namespace Moducom.Instrumentation.Abstract
             /// </summary>
             /// <typeparam name="T"></typeparam>
             /// <param name="labels">Labels to match on, or null is looking for a metric with no labels</param>
+            /// <param name="options">Currently supported are HistogramOptions and SummaryOptions</param>
             /// <returns></returns>
             T GetMetric<T>(object labels = null, object options = null)
                 where T : IValueGetter;

@@ -5,8 +5,18 @@ using System.Text;
 
 using Fact.Extensions.Collection;
 
+// Only experimental due to naming
+// Once we obsolete out NamedChildCollection and migrate TaxonomyBase into Fact.Extensions, this cs file can go
 namespace Moducom.Instrumentation.Experimental
 {
+    /// <summary>
+    /// Special flavor of TaxonomyBase which exposes both TNode and an interface to TNode
+    /// </summary>
+    /// <typeparam name="TNode"></typeparam>
+    /// <typeparam name="TINode"></typeparam>
+    /// <remarks>
+    /// TODO: Move this to Fact.Extensions
+    /// </remarks>
     public abstract class TaxonomyBase<TNode, TINode> : TaxonomyBase<TNode>, ITaxonomy<TINode>
         where TNode: INamedChildProvider<TNode>, TINode
         where TINode: INamedChildProvider<TINode>, INamed
@@ -16,7 +26,7 @@ namespace Moducom.Instrumentation.Experimental
         TINode ITaxonomy<TINode>.RootNode => RootNode;
     }
 
-
+    [Obsolete("Use Fact.Extensions flavor instead")]
     public abstract class NamedChildCollection<TNode, TINode> :
         NamedChildCollection<TNode>,
         INamedChildCollection<TINode>

@@ -190,6 +190,10 @@ namespace Moducom.Instrumentation.Abstract
         }
 
 
+        /// <summary>
+        /// Increment counter by 1
+        /// </summary>
+        /// <param name="counter"></param>
         public static void Increment(this ICounter counter)
         {
             counter.Increment(1);
