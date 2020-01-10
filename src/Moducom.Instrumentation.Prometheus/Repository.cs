@@ -9,6 +9,7 @@ using PRO = global::Prometheus;
 using global::Prometheus.Client;
 using global::Prometheus.Client.Collectors;
 using Moducom.Instrumentation.Abstract.Experimental;
+using Prometheus.Client.Collectors.Abstractions;
 
 namespace Moducom.Instrumentation.Prometheus
 {
@@ -33,8 +34,9 @@ namespace Moducom.Instrumentation.Prometheus
             rootNode = CreateNode(null, rootName);
         }
 
-
-        internal Repository(string rootName = "root") : this(CollectorRegistry.Instance, rootName) { }
+        // FIX: Interim constructor, probably want to either use a factory or only pass in
+        // ICollectorRegistry
+        internal Repository(string rootName = "root") : this(new CollectorRegistry(), rootName) { }
 
 
 

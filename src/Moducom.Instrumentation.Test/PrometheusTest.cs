@@ -12,7 +12,8 @@ using Prometheus.Client.Collectors;
 //using Prometheus.Contracts;
 
 using PROC = Prometheus.Client;
-using PROCR = Prometheus.Client.Contracts;
+using Prometheus.Client.Collectors.Abstractions;
+//using PROCR = Prometheus.Client.Contracts;
 
 namespace Moducom.Instrumentation.Test
 {
@@ -22,7 +23,8 @@ namespace Moducom.Instrumentation.Test
         [TestMethod]
         public void PrometheusBaseTest()
         {
-            var cr = CollectorRegistry.Instance;
+            var cr = new CollectorRegistry();
+            //var cr = CollectorRegistry.Instance;
 
             var counter = Metrics.CreateCounter("myCounter", "Description of my counter", "allowed_label");
 
@@ -98,24 +100,26 @@ namespace Moducom.Instrumentation.Test
         }
 
 
-        class FakeCounter : Collector<PROC.Counter.ThisChild>
+        class FakeCounter : PRO.Node.Collector<PROC.Counter.LabelledCounter>
         {
             public FakeCounter(string name, string help, params string[] labelNames) : 
                 base(name, help, labelNames)
             {
             }
 
-            protected override PROCR.MetricType Type => PROCR.MetricType.Counter;
+            protected override MetricType Type => MetricType.Counter;
         }
 
         [TestMethod]
         public void PrometheusLowLevelTest()
         {
-            ICollectorRegistry registry = CollectorRegistry.Instance;
+            //ICollectorRegistry registry = CollectorRegistry.Instance;
+            ICollectorRegistry registry = new CollectorRegistry();
 
             var fakeCounter = new FakeCounter("fake_counter", "Fake Counter", "label1");
+            CollectorConfiguration config = null;
 
-            registry.GetOrAdd(fakeCounter);
+            registry.GetOrAdd(config, cfg => fakeCounter);
 
             fakeCounter.Labels("1").Inc(7);
             fakeCounter.Labels("2").Inc(14);
@@ -125,9 +129,9 @@ namespace Moducom.Instrumentation.Test
             var fakeCounter2 = new FakeCounter("fake_counter", "Fake Counter", "label2", "label3");
 
             return;
-
+            
             // label mismatch induces an exception here
-            var fakeCounter2_retrieved = registry.GetOrAdd(fakeCounter2);
+            var fakeCounter2_retrieved = registry.GetOrAdd(config, cfg => fakeCounter2);
 
             Assert.AreSame(fakeCounter, fakeCounter2_retrieved);
             Assert.AreNotSame(fakeCounter2, fakeCounter2_retrieved);

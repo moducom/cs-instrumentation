@@ -12,9 +12,9 @@ namespace Moducom.Instrumentation.Prometheus
 {
     internal class Gauge : IGauge
     {
-        readonly global::Prometheus.Client.IGauge nativeGauge;
+        readonly global::Prometheus.Client.Abstractions.IGauge nativeGauge;
 
-        public Gauge(global::Prometheus.Client.IGauge nativeGauge)
+        public Gauge(global::Prometheus.Client.Abstractions.IGauge nativeGauge)
         {
             this.nativeGauge = nativeGauge;
         }
@@ -39,9 +39,9 @@ namespace Moducom.Instrumentation.Prometheus
 
     internal class Counter : ICounter
     {
-        readonly global::Prometheus.Client.ICounter nativeCounter;
+        readonly global::Prometheus.Client.Abstractions.ICounter nativeCounter;
 
-        public Counter(global::Prometheus.Client.ICounter nativeCounter)
+        public Counter(global::Prometheus.Client.Abstractions.ICounter nativeCounter)
         {
             this.nativeCounter = nativeCounter;
         }
@@ -57,9 +57,9 @@ namespace Moducom.Instrumentation.Prometheus
 
     internal class Histogram : IHistogram
     {
-        readonly global::Prometheus.Client.IHistogram nativeHistogram;
+        readonly global::Prometheus.Client.Abstractions.IHistogram nativeHistogram;
 
-        internal Histogram(global::Prometheus.Client.IHistogram nativeHistogram)
+        internal Histogram(global::Prometheus.Client.Abstractions.IHistogram nativeHistogram)
         {
             this.nativeHistogram = nativeHistogram;
         }

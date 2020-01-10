@@ -1,4 +1,5 @@
 ﻿using Moducom.Instrumentation.Abstract;
+using Prometheus.Client.Collectors.Abstractions;
 using Prometheus.Client.MetricServer;
 using System;
 using System.Threading;
@@ -13,10 +14,10 @@ namespace Moducom.Instrumentation.Prometheus.TestServer
         }
 
 
-        static void WrappedExporter()
+        static void WrappedExporter(ICollectorRegistry registry)
         {
             // TODO: Utilize what minimal IoC tricks we have here
-            var repo = new Moducom.Instrumentation.Prometheus.Repository("testexporter");
+            var repo = new Moducom.Instrumentation.Prometheus.Repository(registry, "testexporter");
             var metricName = "test/metric1";
 
             Node testNode = repo[metricName];
@@ -50,6 +51,7 @@ namespace Moducom.Instrumentation.Prometheus.TestServer
         static void Main(string[] args)
         {
             // Be careful, explicit reference to "localhost" here binds us to ipv6
+            //CollectorRegistry
             IMetricServer metricServer = new MetricServer(9100);
 
             metricServer.Start();

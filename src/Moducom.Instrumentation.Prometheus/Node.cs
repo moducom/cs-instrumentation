@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using PRO = global::Prometheus;
 using Moducom.Instrumentation.Abstract.Experimental;
 using Moducom.Instrumentation.Experimental;
-using Prometheus.Client.Contracts;
+//using Prometheus.Client.Contracts;
 using Fact.Extensions.Collection;
 
 #if DEBUG
@@ -19,6 +19,8 @@ using Fact.Extensions.Collection;
 
 namespace Moducom.Instrumentation.Prometheus
 {
+    using PRO.Client;
+
     internal class Node : 
         NamedChildCollection<Node>,
         INode,
@@ -26,16 +28,16 @@ namespace Moducom.Instrumentation.Prometheus
         ILabelNamesProvider
     {
         //internal PRO.Client.Contracts.MetricFamily metricsFamily;
-        PRO.Client.Collectors.ICollector collector;
+        PRO.Client.Collectors.Abstractions.ICollector collector;
         //PRO.Client.MetricFactory metricFactory = PRO.Client.Metrics.DefaultFactory;
-        readonly PRO.Client.Collectors.ICollectorRegistry registry;
+        readonly PRO.Client.Collectors.Abstractions.ICollectorRegistry registry;
 
         // so that we can get fully-qualified name
         readonly INode parent;
 
         public Node Parent => (Node)parent;
 
-        internal Node(PRO.Client.Collectors.ICollectorRegistry registry, INode parent, string name) : base(name)
+        internal Node(PRO.Client.Collectors.Abstractions.ICollectorRegistry registry, INode parent, string name) : base(name)
         {
             this.registry = registry;
             this.parent = parent;
@@ -56,11 +58,11 @@ namespace Moducom.Instrumentation.Prometheus
 #if DEBUG
         internal
 #endif
-        class Collector<T> : PRO.Client.Collectors.Collector<T>
-            where T: PRO.Client.Child, new()
+        class Collector<T> : PRO.Client.Collectors.Collector<T, MetricConfiguration>
+            where T: PRO.Client.Labelled<MetricConfiguration>, new()
         {
             public Collector(string name, string help, params string[] labelNames) : 
-                base(name, help, labelNames)
+                base(new MetricConfiguration(name, help, true, false, labelNames))
             {
             }
 
@@ -72,7 +74,7 @@ namespace Moducom.Instrumentation.Prometheus
         /// Use this to pre-initialize labelnames so that subsequent partial-label lookups
         /// don't incorrectly initialize Prometheus
         /// </summary>
-        class LabelNameOnlyCollector : PRO.Client.Collectors.ICollector
+        class LabelNameOnlyCollector : PRO.Client.Collectors.Abstractions.ICollector
         {
             public string Name => "label_name_only";
 
@@ -85,9 +87,14 @@ namespace Moducom.Instrumentation.Prometheus
                 this.labelNames = labelNames;
             }
 
+            // NOTE: Probably obsolete naming
             public string[] LabelNames => labelNames;
 
-            public MetricFamily Collect()
+            public IReadOnlyList<string> MetricNames => LabelNames;
+
+            public PRO.Client.Collectors.Abstractions.ICollectorConfiguration Configuration { get; }
+
+            public void Collect(PRO.Client.MetricsWriter.Abstractions.IMetricsWriter w)
             {
                 // Since this is a shim collector only to hold on to label names,
                 // retrieving actual metrics is an undefined/unsupported operation
@@ -100,8 +107,8 @@ namespace Moducom.Instrumentation.Prometheus
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        PRO.Client.Collectors.Collector<TNativeMetric> GetOrAdd<TNativeMetric>(string[] labelNames, object options)
-            where TNativeMetric : PRO.Client.Child, new()
+        PRO.Client.Collectors.Collector<TNativeMetric, MetricConfiguration> GetOrAdd<TNativeMetric>(string[] labelNames, object options)
+            where TNativeMetric : PRO.Client.Labelled<MetricConfiguration>, new()
         {
             // check to see if we've templated label collector names
             if (collector is LabelNameOnlyCollector labelCollector)
@@ -133,12 +140,12 @@ namespace Moducom.Instrumentation.Prometheus
                 // create Prometheus-native-compatible collector
                 // Will be used DEFINITELY for name lookup in native registry, and POSSIBLY as actual
                 // collector itself if one does not already exist
-                PRO.Client.Collectors.ICollector c;
+                PRO.Client.Collectors.Abstractions.ICollector c;
 
                 // FIX: Looking like a mild abuse - we should be using Prometheus.Client.MetricFactory
                 // all the time, and more smoothly (may have to rework calling technique and pass in
                 // MetricType instead - though this might preclude *actual* custom types)
-                if (typeof(TNativeMetric) == typeof(PRO.Client.Histogram.ThisChild))
+                if (typeof(TNativeMetric) == typeof(PRO.Client.Histogram.LabelledHistogram))
                 {
                     var mf = new PRO.Client.MetricFactory(registry);
 
@@ -152,13 +159,15 @@ namespace Moducom.Instrumentation.Prometheus
                     c = new Collector<TNativeMetric>(fullName, Description, labelNames);
                 }
 
-                PRO.Client.Collectors.ICollector retrieved_collector;
+                PRO.Client.Collectors.Abstractions.ICollector retrieved_collector;
+                // FIX: this config needs work, just here to get things compiling during upgrade
+                MetricConfiguration configuration = new MetricConfiguration("test", "test", true, true, null);
 
                 // try/catch no longer specifically needed, just keeping around for debug 
                 // convenience
                 try
                 {
-                    retrieved_collector = registry.GetOrAdd(c);
+                    retrieved_collector = registry.GetOrAdd(configuration, cfg => c);
                 }
                 catch(Exception e)
                 {
@@ -180,7 +189,7 @@ namespace Moducom.Instrumentation.Prometheus
                 collector = retrieved_collector;
             }
 
-            return (PRO.Client.Collectors.Collector<TNativeMetric>) collector;
+            return (PRO.Client.Collectors.Collector<TNativeMetric, MetricConfiguration>) collector;
         }
 
         /// <summary>
@@ -220,7 +229,8 @@ namespace Moducom.Instrumentation.Prometheus
             {
                 if (collector == null) return Enumerable.Empty<string>();
 
-                return collector.LabelNames;
+                //return collector.LabelNames;
+                return collector.MetricNames;
             }
         }
 
@@ -242,7 +252,7 @@ namespace Moducom.Instrumentation.Prometheus
                 {
                     case MetricType.Counter:
                     {
-                        var counterCollector = (PRO.Client.Collectors.Collector<PRO.Client.Counter.ThisChild>)collector;
+                        var counterCollector = (PRO.Client.Collectors.Collector<PRO.Client.Counter.LabelledCounter, MetricConfiguration>)collector;
                         
                         // FIX: This compiles but yields basically a sparse enumeration,
                         // since Helper doesn't do anything
@@ -265,7 +275,7 @@ namespace Moducom.Instrumentation.Prometheus
             IEnumerable<string> labelNames,
             IEnumerable<string> labelValues,
             object options)
-            where TNativeMetricChild: PRO.Client.Child, new()
+            where TNativeMetricChild: PRO.Client.Labelled<MetricConfiguration>, new()
         {
             var c = GetOrAdd<TNativeMetricChild>(labelNames.ToArray(), options);
 
@@ -292,14 +302,14 @@ namespace Moducom.Instrumentation.Prometheus
             if (collector != null)
             {
                 // any labelNames which DON'T appear in canonical collector are foreign labels
-                var foreignLabels = labelNames.Except(collector.LabelNames);
+                var foreignLabels = labelNames.Except(collector.MetricNames);
 
                 if (foreignLabels.Any())
                     throw new IndexOutOfRangeException(
                         $"Invalid label specified: {foreignLabels.ToString(",")}");
             }
 
-            foreach (var labelName in collector.LabelNames)
+            foreach (var labelName in collector.MetricNames)
             {
                 var hasLabel = labelEnum.SingleOrDefault(x => x.Key == labelName);
 
@@ -319,7 +329,7 @@ namespace Moducom.Instrumentation.Prometheus
         /// <param name="labels"></param>
         /// <returns></returns>
         TNativeMetricChild GetMetricNative<TNativeMetricChild>(object labels, object options)
-            where TNativeMetricChild : PRO.Client.Child, new()
+            where TNativeMetricChild : PRO.Client.Labelled<MetricConfiguration>, new()
         {
             IEnumerable<KeyValuePair<string, object>> labelEnum;
 
@@ -346,7 +356,7 @@ namespace Moducom.Instrumentation.Prometheus
         {
             if (typeof(T) == typeof(ICounter))
             {
-                var nativeCounter = GetMetricNative<PRO.Client.Counter.ThisChild>(labels, options);
+                var nativeCounter = GetMetricNative<PRO.Client.Counter.LabelledCounter>(labels, options);
 
                 var moducomCounter = new Counter(nativeCounter);
 
@@ -355,7 +365,7 @@ namespace Moducom.Instrumentation.Prometheus
             //else if (typeof(T).IsAssignableFrom(typeof(IGauge<double>)))
             else if (typeof(IGauge<double>).IsAssignableFrom(typeof(T)))
             {
-                var nativeGauge = GetMetricNative<PRO.Client.Gauge.ThisChild>(labels, options);
+                var nativeGauge = GetMetricNative<PRO.Client.Gauge.LabelledGauge>(labels, options);
 
                 var moducomGauge = new Gauge(nativeGauge);
 
@@ -365,7 +375,7 @@ namespace Moducom.Instrumentation.Prometheus
             {
                 // FIX: May be something wrong here, might have to use PRO.Client.Histogram
                 // itself
-                var nativeHistogram = GetMetricNative<PRO.Client.Histogram.ThisChild>(labels, options);
+                var nativeHistogram = GetMetricNative<PRO.Client.Histogram.LabelledHistogram>(labels, options);
 
                 var moducomHistogram = new Histogram(nativeHistogram);
 
