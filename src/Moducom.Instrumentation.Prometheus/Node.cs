@@ -107,8 +107,9 @@ namespace Moducom.Instrumentation.Prometheus
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <returns></returns>
-        PRO.Client.Collectors.Collector<TNativeMetric, MetricConfiguration> GetOrAdd<TNativeMetric>(string[] labelNames, object options)
-            where TNativeMetric : PRO.Client.Labelled<MetricConfiguration>, new()
+        PRO.Client.Collectors.Collector<TNativeMetric, TConfig> GetOrAdd<TNativeMetric, TConfig>(string[] labelNames, object options)
+            where TNativeMetric : PRO.Client.Labelled<TConfig>, new()
+            where TConfig : MetricConfiguration
         {
             // check to see if we've templated label collector names
             if (collector is LabelNameOnlyCollector labelCollector)
@@ -189,7 +190,7 @@ namespace Moducom.Instrumentation.Prometheus
                 collector = retrieved_collector;
             }
 
-            return (PRO.Client.Collectors.Collector<TNativeMetric, MetricConfiguration>) collector;
+            return (PRO.Client.Collectors.Collector<TNativeMetric, TConfig>) collector;
         }
 
         /// <summary>
@@ -207,7 +208,9 @@ namespace Moducom.Instrumentation.Prometheus
             return Metrics;
         }
 
-        T Helper<T>(PRO.Client.Contracts.Metric metric)
+        // FIX: Not gonna work, just trying to get things compiling
+        //T Helper<T>(PRO.Client.Contracts.Metric metric)
+        T Helper<T>(PRO.Client.Abstractions.IMetric<int> metric)
         {
             //new CounterMetric2(metric.counter, metric.label.Select(x => x.value).ToArray());
             return default(T);
@@ -244,6 +247,9 @@ namespace Moducom.Instrumentation.Prometheus
         {
             get
             {
+                throw new NotSupportedException();
+                // FIX: For 3.0+ Prometheus not sure we can even attempt this
+#if UNUSED
                 if (collector == null) return Enumerable.Empty<IMetric>();
 
                 var collected = collector.Collect();
@@ -261,6 +267,7 @@ namespace Moducom.Instrumentation.Prometheus
                 }
 
                 return null;
+#endif
             }
         }
 
@@ -271,13 +278,14 @@ namespace Moducom.Instrumentation.Prometheus
         /// <typeparam name="TNativeMetricChild"></typeparam>
         /// <param name="labelNames"></param>
         /// <returns></returns>
-        TNativeMetricChild GetMetricNative<TNativeMetricChild>(
+        TNativeMetricChild GetMetricNative<TNativeMetricChild, TConfig>(
             IEnumerable<string> labelNames,
             IEnumerable<string> labelValues,
             object options)
-            where TNativeMetricChild: PRO.Client.Labelled<MetricConfiguration>, new()
+            where TNativeMetricChild: PRO.Client.Labelled<TConfig>, new()
+            where TConfig : MetricConfiguration
         {
-            var c = GetOrAdd<TNativeMetricChild>(labelNames.ToArray(), options);
+            var c = GetOrAdd<TNativeMetricChild, TConfig>(labelNames.ToArray(), options);
 
             // FIX: Moducom layer allows omission of labels, but Prometheus
             // layer does not, so this is going to break without additional
@@ -328,8 +336,9 @@ namespace Moducom.Instrumentation.Prometheus
         /// <typeparam name="TNativeMetricChild"></typeparam>
         /// <param name="labels"></param>
         /// <returns></returns>
-        TNativeMetricChild GetMetricNative<TNativeMetricChild>(object labels, object options)
-            where TNativeMetricChild : PRO.Client.Labelled<MetricConfiguration>, new()
+        TNativeMetricChild GetMetricNative<TNativeMetricChild, TConfig>(object labels, object options)
+            where TNativeMetricChild : PRO.Client.Labelled<TConfig>, new()
+            where TConfig : MetricConfiguration
         {
             IEnumerable<KeyValuePair<string, object>> labelEnum;
 
@@ -341,7 +350,25 @@ namespace Moducom.Instrumentation.Prometheus
             var labelNames = labelEnum.Select(x => x.Key);
             var labelValues = labelEnum.Select(x => x.Value?.ToString());
 
-            return GetMetricNative<TNativeMetricChild>(labelNames, labelValues, options);
+            return GetMetricNative<TNativeMetricChild, TConfig>(labelNames, labelValues, options);
+        }
+
+
+        // TODO:
+        // FIX:
+        // Very kludgy and brute force.  We're trying to push through the child class of Labelled
+        // which itself has a template.  What would be better is to adapt directly to TConfig rather
+        // than hardcode as we do here
+        TNativeMetricChild GetMetricNative<TNativeMetricChild>(object labels, object options)
+            where TNativeMetricChild : PRO.Client.Labelled<MetricConfiguration>, new()
+        {
+            return GetMetricNative<TNativeMetricChild, MetricConfiguration>(labels, options);
+        }
+
+        TNativeMetricChild GetMetricNative2<TNativeMetricChild>(object labels, object options)
+            where TNativeMetricChild : PRO.Client.Labelled<PRO.Client.Histogram.HistogramConfiguration>, new()
+        {
+            return GetMetricNative<TNativeMetricChild, PRO.Client.Histogram.HistogramConfiguration>(labels, options);
         }
 
         /// <summary>
@@ -373,9 +400,7 @@ namespace Moducom.Instrumentation.Prometheus
             }
             else if (typeof(IHistogram<double>).IsAssignableFrom(typeof(T)))
             {
-                // FIX: May be something wrong here, might have to use PRO.Client.Histogram
-                // itself
-                var nativeHistogram = GetMetricNative<PRO.Client.Histogram.LabelledHistogram>(labels, options);
+                var nativeHistogram = GetMetricNative2<PRO.Client.Histogram.LabelledHistogram>(labels, options);
 
                 var moducomHistogram = new Histogram(nativeHistogram);
 

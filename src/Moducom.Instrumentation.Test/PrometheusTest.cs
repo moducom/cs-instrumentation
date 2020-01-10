@@ -13,6 +13,8 @@ using Prometheus.Client.Collectors;
 
 using PROC = Prometheus.Client;
 using Prometheus.Client.Collectors.Abstractions;
+using Prometheus.Client.MetricsWriter.Abstractions;
+using System.Threading.Tasks;
 //using PROCR = Prometheus.Client.Contracts;
 
 namespace Moducom.Instrumentation.Test
@@ -50,13 +52,19 @@ namespace Moducom.Instrumentation.Test
             //var c = Metrics.CreateCounter("test", "TEST");
             var c = Metrics.CreateCounter("root_test", "TEST");
             PROC.Counter c2 = Metrics.CreateCounter("test", "TEST", "instance");
+            var writer = new SyntheticMetricsWriter();
 
             c2.Labels("1").Inc();
             c2.Labels("2").Inc(5);
 
-            var collected = c2.Collect();
+            //ScrapeHandler.ProcessAsync()
+            //c2.Collect(writer);
 
-            var r = new PRO.Repository();
+            var registry = new CollectorRegistry();
+
+            registry.Add(c2);
+
+            var r = new PRO.Repository(registry, "root");
 
             var metric = r["test"];
 
@@ -118,13 +126,14 @@ namespace Moducom.Instrumentation.Test
 
             var fakeCounter = new FakeCounter("fake_counter", "Fake Counter", "label1");
             CollectorConfiguration config = null;
+            IMetricsWriter writer;
 
             registry.GetOrAdd(config, cfg => fakeCounter);
 
             fakeCounter.Labels("1").Inc(7);
             fakeCounter.Labels("2").Inc(14);
 
-            var fakeCounters = fakeCounter.Collect();
+            //var fakeCounters = fakeCounter.Collect();
 
             var fakeCounter2 = new FakeCounter("fake_counter", "Fake Counter", "label2", "label3");
 
