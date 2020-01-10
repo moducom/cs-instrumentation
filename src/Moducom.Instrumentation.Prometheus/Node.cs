@@ -493,7 +493,7 @@ namespace Moducom.Instrumentation.Prometheus
                 labelEnum = LabelHelper(labels).ToArray();
 
             var labelNames = labelEnum.Select(x => x.Key);
-            var labelValues = labelEnum.Select(x => x.Value?.ToString());
+            var labelValues = labelEnum.Select(x => x.Value == null ? "" : x.Value.ToString());
 
             return GetMetricNative<TNativeMetricChild, TConfig>(labelNames, labelValues, options);
         }
@@ -508,7 +508,7 @@ namespace Moducom.Instrumentation.Prometheus
                 labelEnum = LabelHelper(labels).ToArray();
 
             var labelNames = labelEnum.Select(x => x.Key);
-            var labelValues = labelEnum.Select(x => x.Value?.ToString());
+            var labelValues = labelEnum.Select(x => x.Value == null ? "" : x.Value.ToString());
 
             return (labelNames, labelValues);
         }
@@ -572,6 +572,26 @@ namespace Moducom.Instrumentation.Prometheus
         }
 
 
+        PRO.Client.Abstractions.IHistogram GetNativeHistogram(object labels, object options)
+        {
+            // TODO: Forgo our local collector, as it only gets in the way of us shimming into
+            // Prometheus.Client's hierarchy
+            //if (collector == null)
+            {
+                var fullName = this.GetFullName('_');
+                var label = LabelHelper2(labels);
+                var labelNames = label.names.AsArray();
+                var c = MetricFactory.CreateHistogram(fullName, Description, labelNames);
+                // NOTE: Tracking this for now still as our label validator utilizes it
+                collector = c;
+                if (labelNames.Length != 0)
+                    return c.WithLabels(label.values.AsArray());
+                else
+                    return c;
+            }
+        }
+
+
         PRO.Client.Abstractions.IGauge GetNativeGauge(object labels, object options)
         {
             // TODO: Forgo our local collector, as it only gets in the way of us shimming into
@@ -585,7 +605,10 @@ namespace Moducom.Instrumentation.Prometheus
                 // NOTE: Tracking this for now still as our label validator utilizes it
                 collector = c;
                 if (labelNames.Length != 0)
-                    return c.WithLabels(label.values.AsArray());
+                {
+                    var labelValues = label.values.AsArray();
+                    return c.WithLabels(labelValues);
+                }
                 else
                     return c;
             }
@@ -634,7 +657,11 @@ namespace Moducom.Instrumentation.Prometheus
             }
             else if (typeof(IHistogram<double>).IsAssignableFrom(typeof(T)))
             {
+#if LEGACY
                 var nativeHistogram = GetMetricNative2<PRO.Client.Histogram.LabelledHistogram>(labels, options);
+#else
+                var nativeHistogram = GetNativeHistogram(labels, options);
+#endif
 
                 var moducomHistogram = new Histogram(nativeHistogram);
 
