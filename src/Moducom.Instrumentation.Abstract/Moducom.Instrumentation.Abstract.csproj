@@ -19,8 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
-    <PackageReference Include="System.Diagnostics.Contracts">
-      <Version>4.3.0</Version>
+    <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0">
     </PackageReference>
     <!-- Most of this is in support of MemoryRepository -->
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
