@@ -22,7 +22,7 @@
     <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0">
     </PackageReference>
     <!-- Most of this is in support of MemoryRepository -->
-    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
+    <PackageReference  Condition="'$(TargetFramework)' != 'netstandard1.1'" Include="System.Reflection.TypeExtensions" Version="4.7.0" />
     <PackageReference Include="System.Threading.Timer" Version="4.3.0" />
     <PackageReference Include="System.Data.Common" Version="4.3.0" />
     <PackageReference Include="System.IO" Version="4.3.0" />
