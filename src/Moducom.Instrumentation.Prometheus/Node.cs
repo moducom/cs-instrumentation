@@ -43,13 +43,15 @@ namespace Moducom.Instrumentation.Prometheus
         PRO.Client.Collectors.Abstractions.ICollector collector;
         readonly PRO.Client.Collectors.Abstractions.ICollectorRegistry registry;
 
+        // NOTE: Consider throwing an exception here if we aren't associated with a collector yet
+        // (don't have labels set up yet)
         IEnumerable<string> LabelNames
         {
             get
             {
-                var configuration = (MetricConfiguration)collector.Configuration;
+                var configuration = (MetricConfiguration)collector?.Configuration;
 
-                return configuration.LabelNames ?? Enumerable.Empty<string>();
+                return configuration?.LabelNames ?? Enumerable.Empty<string>();
             }
         }
 
@@ -375,7 +377,19 @@ namespace Moducom.Instrumentation.Prometheus
                 labelEnum = LabelHelper(labels).ToArray();
 
             var labelNames = labelEnum.Select(x => x.Key);
-            var labelValues = labelEnum.Select(x => x.Value == null ? "" : x.Value.ToString());
+            var labelValues = labelEnum.Select(x =>
+            {
+                var v = x.Value;
+
+                // Prometheus client does not tolerate nulls for input
+                if (v == null) return "";
+
+                // TODO: Repair this kludginess, reporting initializer from the bottom up like this is
+                // not ideal - not to mention depending on null to signal an initialize mode is limiting
+                if (v == Utility.Initializer) return null;
+
+                return v.ToString();
+            });
 
             return (labelNames, labelValues);
         }
@@ -440,7 +454,11 @@ namespace Moducom.Instrumentation.Prometheus
             collector = c;
 
             if (labelNames.Length != 0)
-                return c.WithLabels(label.values.AsArray());
+            {
+                var labelValues = label.values.AsArray();
+                if (labelValues[0] == null) return c;
+                return c.WithLabels(labelValues);
+            }
             else
                 return c;
         }
@@ -495,7 +513,11 @@ namespace Moducom.Instrumentation.Prometheus
                 // NOTE: Tracking this for now still as our label validator utilizes it
                 collector = c;
                 if (labelNames.Length != 0)
-                    return c.WithLabels(label.values.AsArray());
+                {
+                    var labelValues = label.values.AsArray();
+                    if (labelValues[0] == null) return c;
+                    return c.WithLabels(labelValues);
+                }
                 else
                     return c;
             }
@@ -519,6 +541,7 @@ namespace Moducom.Instrumentation.Prometheus
                 if (labelNames.Length != 0)
                 {
                     var labelValues = label.values.AsArray();
+                    if (labelValues[0] == null) return c;
                     return c.WithLabels(labelValues);
                 }
                 else

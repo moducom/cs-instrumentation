@@ -264,5 +264,28 @@ namespace Moducom.Instrumentation.Test
             histogram1.Value = 1;
             histogram1.Value = 2;
         }
+
+
+        // Initialize metrics before use, wrap style
+        [TestMethod]
+        public void PrometheusInitTest()
+        {
+            var _r = new CollectorRegistry();
+            var r = new PRO.Repository(_r);
+
+            var metric = r["initializer"];
+
+            Assert.AreEqual(0, metric.Labels.Count());
+
+            //metric.Initialize();
+            // passing in a string array puts it into init mode and doesn't grab a specific labelled
+            // counter.  If I understand prometheus right, this avoids burning up a spot with "" in the
+            // labels
+            var c = metric.GetCounter(new[] { "hi2u" });
+            // Normal, non init syntax
+            //var c = metric.GetCounter(new { hi2u = "" });
+
+            Assert.AreEqual(1, metric.Labels.Count());
+        }
     }
 }
